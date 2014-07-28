@@ -56,6 +56,7 @@ SA_OBJS = \
 	lwmsurface.o \
 	lwpsurface.o \
 	lwtin.o \
+	lwout_vt.o \
 	lwout_wkb.o \
 	lwin_geojson.o \
 	lwin_wkb.o \
@@ -171,7 +172,6 @@ parser:
 #	$(YACC) --debug --verbose -o'$@' -d $<
 #	$(YACC) -o'$@' -d $^
 #	$(LEX) -i $<
-
 
 liblwgeom.h: liblwgeom.h.in
 	cd .. && ./config.status

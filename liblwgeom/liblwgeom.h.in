@@ -565,6 +565,22 @@ typedef struct
 }
 twkb_geom_arrays;
 
+typedef struct
+{
+  /** X ordinate value of the tile origin */
+  double ipx;
+
+  /** Y ordinate value of the tile origin */
+  double ipy;
+
+  /** Scale factor X */
+  double sfx;
+
+  /** Scale factor Y */
+  double sfy;
+
+} lw_vt_cfg;
+
 /* Casts LWGEOM->LW* (return NULL if cast is illegal) */
 extern LWMPOLY *lwgeom_as_lwmpoly(const LWGEOM *lwgeom);
 extern LWMLINE *lwgeom_as_lwmline(const LWGEOM *lwgeom);
@@ -1819,6 +1835,20 @@ extern uint8_t*  lwgeom_to_wkb(const LWGEOM *geom, uint8_t variant, size_t *size
 
 extern uint8_t* lwgeom_to_twkb(const LWGEOM *geom, uint8_t variant, size_t *size_out,int8_t prec, int64_t id,int method);
 extern uint8_t* lwgeom_agg_to_twkb(const twkb_geom_arrays *lwgeom_arrays,uint8_t variant , size_t *size_out,int8_t prec, int method);
+
+/**
+ * Takes a GEOMETRY and returns a VectorTile.geometry representation
+ * See https://github.com/mapbox/vector-tile-spec
+ *
+ * @param size output parameter, will get written size of the returned buffer
+ *
+ * @return a newly allocated memory filled up with the
+ *         vector_tile.feature.geometry representation
+ *         of the input geometry.
+ *  
+ */
+extern uint8_t *lwgeom_to_vt_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, size_t *size);
+
 
 /**
 * @param lwgeom geometry to convert to HEXWKB

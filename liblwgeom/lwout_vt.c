@@ -10,7 +10,7 @@
  *
  **********************************************************************/
 
-#include "lwout_vt.h"
+#include "liblwgeom.h"
 #include "liblwgeom_internal.h"
 #include "varint.h"
 
@@ -261,16 +261,15 @@ vt_draw_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, dbuf *buf)
  * See https://github.com/mapbox/vector-tile-spec
  */
 uint8_t *
-lwgeom_to_vt_geom(const LWGEOM *geom, const lw_vt_cfg *cfg)
+lwgeom_to_vt_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, size_t *size)
 {
   dbuf *buf = dbuf_new(8);
-  size_t encoded_size;
   uint8_t *encoded;
 
   vt_draw_geom(geom, cfg, buf);
 
-  encoded_size = dbuf_encoded_size(buf);
-  encoded = lwalloc(encoded_size);
+  *size = dbuf_encoded_size(buf);
+  encoded = lwalloc(*size);
   dbuf_encode_buf(buf, encoded);
 
   return encoded;

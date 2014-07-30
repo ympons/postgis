@@ -463,6 +463,56 @@ Datum TWKBFromLWGEOM(PG_FUNCTION_ARGS)
 	PG_RETURN_BYTEA_P(result);
 }
 
+PG_FUNCTION_INFO_V1(LWGEOM_AsMVT_Geometry);
+Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS)
+{
+  GSERIALIZED *geom_in = (GSERIALIZED*)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+  lw_vt_cfg cfg;
+  LWGEOM *lwgeom;
+  size_t size;
+  uint8_t *vt;
+  bytea *result;
+
+  cfg.ipx = PG_GETARG_FLOAT8(1);
+  cfg.ipy = PG_GETARG_FLOAT8(2);
+  cfg.sfx = PG_GETARG_FLOAT8(3);
+  cfg.sfy = PG_ARGISNULL(4) ? -cfg.sfx : PG_GETARG_FLOAT8(4);
+
+  /* tolerance */
+  if ( !PG_ARGISNULL(5) )
+  {
+    lwerror("tolerance is unsupported at the moment");
+  }
+
+  /* identifier */
+  if ( !PG_ARGISNULL(6) )
+  {
+    lwerror("identifier is unsupported at the moment");
+  }
+
+  /* crop */
+  if ( !PG_ARGISNULL(7) )
+  {
+    lwerror("crop is unsupported at the moment");
+  }
+
+	/* Create VectorTile geometry bin string */
+	lwgeom = lwgeom_from_gserialized(geom_in);
+	vt = lwgeom_to_vt_geom(lwgeom, &cfg, &size);
+	lwgeom_free(lwgeom);
+	PG_FREE_IF_COPY(geom_in, 0);
+	
+	/* Prepare the PgSQL text return type */
+	result = palloc(size + VARHDRSZ);
+	memcpy(VARDATA(result), vt, size);
+	lwfree(vt);
+
+	SET_VARSIZE(result, size+VARHDRSZ);
+	
+	/* Clean up and return */
+	PG_RETURN_BYTEA_P(result);
+}
+
 /* puts a bbox inside the geometry */
 PG_FUNCTION_INFO_V1(LWGEOM_addBBOX);
 Datum LWGEOM_addBBOX(PG_FUNCTION_ARGS)

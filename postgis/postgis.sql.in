@@ -1398,7 +1398,14 @@ CREATE OR REPLACE FUNCTION ST_AsTWKB(geometry,int4,int8)
 	RETURNS bytea
 	AS 'MODULE_PATHNAME','TWKBFromLWGEOM'
 	LANGUAGE 'c' IMMUTABLE STRICT;
-	
+
+-- Availability: 2.2.0
+CREATE OR REPLACE FUNCTION ST_AsVT_Geometry(geometry geom, double ipx, double ipy, double scalex, double scaley DEFAULT NULL, int2 tolerance DEFAULT 0, text id DEFAULT NULL, box2d crop DEFAULT NULL)
+	RETURNS bytea
+	AS 'MODULE_PATHNAME','LWGEOM_AsVectorTile_Geometry'
+	LANGUAGE 'c' IMMUTABLE;
+
+-- Availability: 2.2.0
 -- Availability: 1.2.2
 CREATE OR REPLACE FUNCTION ST_AsEWKB(geometry)
 	RETURNS BYTEA

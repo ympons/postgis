@@ -12,6 +12,11 @@
 
 #include "liblwgeom.h"
 #include "liblwgeom_internal.h"
+#include "../postgis_config.h"
+
+#define POSTGIS_DEBUG_LEVEL 2
+
+#include "lwgeom_log.h"
 #include "varint.h"
 
 typedef struct
@@ -30,8 +35,8 @@ typedef struct
   draw_command *cmds;
   unsigned int size;
   unsigned int capacity;
-  int x0;
-  int y0;
+  double x0;
+  double y0;
 } dbuf;
 
 
@@ -39,21 +44,23 @@ typedef struct
 #define TRANSFORMX(x,c) ((int)rint(((x)-c->ipx)/c->sfx))
 
 static dbuf*
-dbuf_new(size_t init_size)
+dbuf_new(size_t init_capacity)
 {
   dbuf *b = lwalloc(sizeof(dbuf));
   if ( ! b ) {
     lwerror("Out of virtual memory creating draw buffer");
     return NULL;
   }
-  b->capacity = b->size = init_size;
+  b->capacity = init_capacity;
   b->cmds = lwalloc(b->capacity * sizeof(draw_command));
   if ( ! b->cmds ) {
     lwfree(b);
-    lwerror("Could not allocate %d commands in draw buffer", init_size);
+    lwerror("Could not allocate %d commands in draw buffer", init_capacity);
     return NULL;
   }
-  b->x0 = b->y0 = 0;
+  b->x0 = 0;
+  b->y0 = 0;
+  b->size = 0;
   return b;
 }
 
@@ -110,6 +117,8 @@ dbuf_encoded_size(const dbuf *buf)
 
   /* worst case: no commands are grouped, all params are 4 bytes */
   /* return buf->size * ( 1 + 4 + 4 ); */
+
+	LWDEBUGF(2, "dbuf_encoded_size, dbuf size is %d", buf->size);
 
   for (i=0; i<buf->size; ++i) {
     draw_command* dc = &(buf->cmds[i]);
@@ -173,25 +182,37 @@ vt_draw_ptarray(const POINTARRAY *pa, const lw_vt_cfg *cfg, dbuf *buf)
   int xd, yd;
   double *dptr;
 
+	LWDEBUGF(2, "vt_draw_ptarray, npoints %d, last_point %g,%g",
+      pa->npoints, buf->x0, buf->y0);
+
   if ( ! pa->npoints ) return;
 
   for ( i = 0; i < pa->npoints; ++i )
   {
     dptr = (double*)getPoint_internal(pa, i);
+	  LWDEBUGF(2, "vt_draw_ptarray, point %d : %g, %g", i, dptr[0], dptr[1]);
     x = TRANSFORMX(*dptr++, cfg);
     y = TRANSFORMY(*dptr, cfg);
+	  LWDEBUGF(2, "vt_draw_ptarray, trans point %d : %d, %d", i, x, y);
     xd = x - buf->x0;
     yd = y - buf->y0;
-    if ( xd || yd ) {
-      if ( ! i ) {
-        /* Write first moveTo */
-        dbuf_moveTo(buf, xd, yd);
-      } else {
-        /* Write lineTo for subsequent vertices */
+	  LWDEBUGF(2, "vt_draw_ptarray, delta point %d : %d, %d", i, xd, yd);
+    if ( ! i ) {
+      /* Always write first moveTo */
+      dbuf_moveTo(buf, xd, yd);
+      buf->x0 = x;
+      buf->y0 = y;
+    }
+    else {
+      /*
+       * Write lineTo for subsequent vertices only if
+       * the delta is visible (TODO: use tolerance here)
+       */
+      if ( xd || yd ) {
         dbuf_lineTo(buf, xd, yd);
+        buf->x0 = x;
+        buf->y0 = y;
       }
-      buf->x0=x;
-      buf->y0=y;
     }
   }
 }
@@ -199,6 +220,7 @@ vt_draw_ptarray(const POINTARRAY *pa, const lw_vt_cfg *cfg, dbuf *buf)
 static void
 vt_draw_point(const LWPOINT *g, const lw_vt_cfg *cfg, dbuf *buf)
 {
+	LWDEBUG(2, "vt_draw_point enter");
   vt_draw_ptarray(g->point, cfg, buf);
 }
 
@@ -232,6 +254,7 @@ static void
 vt_draw_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, dbuf *buf)
 {
   int type = geom->type;
+	LWDEBUGF(2, "vt_draw_geom, type is %d", type);
   switch (type)
   {
     case POINTTYPE:
@@ -266,11 +289,18 @@ lwgeom_to_vt_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, size_t *size)
   dbuf *buf = dbuf_new(8);
   uint8_t *encoded;
 
+	LWDEBUGF(2, "dbuf initialized with size %d and capacity %d", buf->size, buf->capacity);
+	LWDEBUGF(2, "                      x0 %d", buf->x0);
+	LWDEBUGF(2, "                      y0 %d", buf->y0);
+
   vt_draw_geom(geom, cfg, buf);
 
   *size = dbuf_encoded_size(buf);
+	LWDEBUGF(2, "lwgeom_to_vt_geom size(1) is %d", *size);
+  if ( ! *size ) return NULL;
   encoded = lwalloc(*size);
-  dbuf_encode_buf(buf, encoded);
+  *size = dbuf_encode_buf(buf, encoded) - encoded;
+	LWDEBUGF(2, "lwgeom_to_vt_geom size(2) is %d", *size);
 
   return encoded;
 }

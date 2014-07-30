@@ -45,6 +45,8 @@ typedef struct
   draw_command *cmds;
   unsigned int size;
   unsigned int capacity;
+  int x0;
+  int y0;
 } dbuf;
 
 
@@ -66,6 +68,7 @@ dbuf_new(size_t init_size)
     lwerror("Could not allocate %d commands in draw buffer", init_size);
     return NULL;
   }
+  b->x0 = b->y0 = 0;
   return b;
 }
 
@@ -182,32 +185,28 @@ vt_draw_ptarray(const POINTARRAY *pa, const tile_config *cfg, dbuf *buf)
 {
   int i;
   int dims = 2; /* discard higher dimensions */
-  int x0=0, y0=0;
   int x, y;
+  int xd, yd;
   double *dptr;
 
   if ( ! pa->npoints ) return;
 
-  /* Write first moveTo, if not = 0,0 */
-  dptr = (double*)getPoint_internal(pa, 0);
-  x = TRANSFORMX(*dptr++, cfg);
-  y = TRANSFORMY(*dptr, cfg);
-  if ( x || y ) {
-    dbuf_moveTo(buf, x, y);
-    x0=x; y0=y;
-  }
-
   for ( i = 0; i < pa->npoints; ++i )
   {
-    int xd, yd;
     dptr = (double*)getPoint_internal(pa, i);
     x = TRANSFORMX(*dptr++, cfg);
     y = TRANSFORMY(*dptr, cfg);
-    xd = x - x0;
-    yd = y - y0;
+    xd = x - dbuf->x0;
+    yd = y - dbuf->y0;
     if ( xd || yd ) {
-      dbuf_moveTo(buf, xd, yd);
-      x0=x; y0=y;
+      if ( ! i ) {
+        /* Write first moveTo */
+        dbuf_moveTo(buf, xd, yd);
+      } else {
+        /* Write lineTo for subsequent vertices */
+        dbuf_lineTo(buf, xd, yd);
+      }
+      dbuf->x0=x; dbuf->y0=y;
     }
   }
 }
@@ -215,13 +214,61 @@ vt_draw_ptarray(const POINTARRAY *pa, const tile_config *cfg, dbuf *buf)
 static void
 vt_draw_point(const LWPOINT *g, const tile_config *cfg, dbuf *buf)
 {
-  vt_draw_ptarray(g->point, cfg, buf);
+  vt_draw_ptarray(g->point, cfg, buf)
 }
 
 static void
 vt_draw_line(const LWLINE *g, const tile_config *cfg, dbuf *buf)
 {
-  vt_draw_ptarray(g->points, cfg, buf);
+  vt_draw_ptarray(g->points, cfg, buf)
+}
+
+static void
+vt_draw_poly(const LWPOLY *g, const tile_config *cfg, dbuf *buf)
+{
+  int i = g->nrings;
+  for ( i = 0; i < g->nrings; ++i ) {
+    vt_draw_ptarray(g->rings[i]->points, cfg, buf);
+  }
+}
+
+static void vt_draw_geom(const LWGEOM *g, const tile_config *cfg, dbuf *buf);
+
+static void
+vt_draw_coll(const LWCOLLECTION *g, const tile_config *cfg, dbuf *buf)
+{
+  int i = g->ngeoms;
+  for ( i = 0; i < g->ngeoms; ++i ) {
+    vt_draw_geom(g->geoms[i], cfg, buf);
+  }
+}
+
+static void
+vt_draw_geom(const LWGEOM *g, const tile_config *cfg, dbuf *buf)
+{
+  int type = geom->type;
+  switch (type)
+  {
+    case POINTTYPE:
+      vt_draw_point((LWPOINT*)geom, cfg, buf);
+      break;
+    case LINETYPE:
+      vt_draw_line((LWLINE*)geom, cfg, buf);
+      break;
+    case POLYGONTYPE:
+      vt_draw_poly((LWPOLY*)geom, cfg, buf);
+      break;
+    case MULTIPOINTTYPE:
+    case MULTILINETYPE:
+    case MULTIPOLYGONTYPE:
+    case COLLECTIONTYPE:
+      vt_draw_coll((LWCOLLECTION*)geom, cfg, buf);
+      break;
+    default:
+      lwerror("vt_draw_geom: '%s' geometry type not supported",
+            lwtype_name(type));
+      break;
+  }
 }
 
 /**
@@ -234,26 +281,8 @@ lwgeom_to_vt_geom(const LWGEOM *geom, const tile_config *cfg)
   dbuf *buf = dbuf_new(8);
   size_t encoded_size;
   uint8_t *encoded;
-  int type = geom->type;
 
-  switch (type)
-  {
-    case POINTTYPE:
-      vt_draw_point((LWPOINT*)geom, cfg, buf);
-      break;
-    case LINETYPE:
-      vt_draw_line((LWLINE*)geom, cfg, buf);
-      break;
-    case POLYGONTYPE:
-    case MULTIPOINTTYPE:
-    case MULTILINETYPE:
-    case MULTIPOLYGONTYPE:
-    case COLLECTIONTYPE:
-    default:
-      lwerror("lwgeom_to_vt_geom: '%s' geometry type not supported",
-            lwtype_name(type));
-      return NULL;
-  }
+  vt_draw_geom(geom, cfg, buf);
 
   encoded_size = dbuf_encoded_size(buf);
   encoded = lwalloc(encoded_size);

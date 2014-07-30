@@ -463,6 +463,7 @@ Datum TWKBFromLWGEOM(PG_FUNCTION_ARGS)
 	PG_RETURN_BYTEA_P(result);
 }
 
+Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(LWGEOM_AsMVT_Geometry);
 Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS)
 {
@@ -472,6 +473,7 @@ Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS)
   size_t size;
   uint8_t *vt;
   bytea *result;
+  int tol = 0;
 
   cfg.ipx = PG_GETARG_FLOAT8(1);
   cfg.ipy = PG_GETARG_FLOAT8(2);
@@ -487,7 +489,8 @@ Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS)
   /* identifier */
   if ( !PG_ARGISNULL(6) )
   {
-    lwerror("identifier is unsupported at the moment");
+    tol = PG_GETARG_INT16(6);
+    if ( tol ) lwerror("identifier is unsupported at the moment");
   }
 
   /* crop */

@@ -109,6 +109,7 @@ LT_OBJS = $(LT_SA_OBJS) $(LT_NM_OBJS)
 SA_HEADERS = \
 	liblwgeom.h \
 	liblwgeom_internal.h \
+	lwout_vt.h \
 	lwgeom_log.h \
 	lwgeom_geos.h \
   varint.h

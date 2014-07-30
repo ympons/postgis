@@ -10,24 +10,9 @@
  *
  **********************************************************************/
 
+#include "lwout_vt.h"
 #include "liblwgeom_internal.h"
 #include "varint.h"
-
-typedef struct
-{
-  /** X ordinate value of the tile origin */
-  double ipx;
-
-  /** Y ordinate value of the tile origin */
-  double ipy;
-
-  /** Scale factor X */
-  double sfx;
-
-  /** Scale factor Y */
-  double sfy;
-
-} tile_config;
 
 typedef struct
 {
@@ -127,16 +112,16 @@ dbuf_encoded_size(const dbuf *buf)
   /* return buf->size * ( 1 + 4 + 4 ); */
 
   for (i=0; i<buf->size; ++i) {
-    draw_command* dc = buf->cmds[i];
+    draw_command* dc = &(buf->cmds[i]);
     if ( ! last_command ) {
       ++sz;
-      last_command = dc.c;
+      last_command = dc->c;
     }
-    else if ( dc.c != last_command ) {
+    else if ( dc->c != last_command ) {
       ++sz;
     }
-    sz += varint_s32_encoded_size(dc.x);
-    sz += varint_s32_encoded_size(dc.y);
+    sz += varint_s32_encoded_size(dc->x);
+    sz += varint_s32_encoded_size(dc->y);
   }
 
   return sz;
@@ -160,31 +145,30 @@ dbuf_encode_buf(const dbuf *buf, uint8_t *to)
   const int cmd_bits = 3;
 
   for (i=0; i<buf->size; ++i) {
-    draw_command* dc = buf->cmds[i];
-    if ( ! last_command || dc.c != last_command ) {
-      last_command = dc.c;
+    draw_command* dc = &(buf->cmds[i]);
+    if ( ! last_command || dc->c != last_command ) {
+      last_command = dc->c;
       /* find size of this command */
       for (j=i+1; j<buf->size; ++j) {
         if ( buf->cmds[j].c != last_command ) break;
       }
       sz = j-1;
       /* encode command + length */
-      *to++ = sz << cmd_bits | dc.c;
+      *to++ = sz << cmd_bits | dc->c;
     }
     /* encode X parameter */
-    to = varint_s32_encode_buf(dc.x, to);
+    to = varint_s32_encode_buf(dc->x, to);
     /* encode Y parameter */
-    to = varint_s32_encode_buf(dc.y, to);
+    to = varint_s32_encode_buf(dc->y, to);
   }
 
   return to;
 }
 
 static void
-vt_draw_ptarray(const POINTARRAY *pa, const tile_config *cfg, dbuf *buf)
+vt_draw_ptarray(const POINTARRAY *pa, const lw_vt_cfg *cfg, dbuf *buf)
 {
   int i;
-  int dims = 2; /* discard higher dimensions */
   int x, y;
   int xd, yd;
   double *dptr;
@@ -196,8 +180,8 @@ vt_draw_ptarray(const POINTARRAY *pa, const tile_config *cfg, dbuf *buf)
     dptr = (double*)getPoint_internal(pa, i);
     x = TRANSFORMX(*dptr++, cfg);
     y = TRANSFORMY(*dptr, cfg);
-    xd = x - dbuf->x0;
-    yd = y - dbuf->y0;
+    xd = x - buf->x0;
+    yd = y - buf->y0;
     if ( xd || yd ) {
       if ( ! i ) {
         /* Write first moveTo */
@@ -206,36 +190,37 @@ vt_draw_ptarray(const POINTARRAY *pa, const tile_config *cfg, dbuf *buf)
         /* Write lineTo for subsequent vertices */
         dbuf_lineTo(buf, xd, yd);
       }
-      dbuf->x0=x; dbuf->y0=y;
+      buf->x0=x;
+      buf->y0=y;
     }
   }
 }
 
 static void
-vt_draw_point(const LWPOINT *g, const tile_config *cfg, dbuf *buf)
+vt_draw_point(const LWPOINT *g, const lw_vt_cfg *cfg, dbuf *buf)
 {
-  vt_draw_ptarray(g->point, cfg, buf)
+  vt_draw_ptarray(g->point, cfg, buf);
 }
 
 static void
-vt_draw_line(const LWLINE *g, const tile_config *cfg, dbuf *buf)
+vt_draw_line(const LWLINE *g, const lw_vt_cfg *cfg, dbuf *buf)
 {
-  vt_draw_ptarray(g->points, cfg, buf)
+  vt_draw_ptarray(g->points, cfg, buf);
 }
 
 static void
-vt_draw_poly(const LWPOLY *g, const tile_config *cfg, dbuf *buf)
+vt_draw_poly(const LWPOLY *g, const lw_vt_cfg *cfg, dbuf *buf)
 {
   int i = g->nrings;
   for ( i = 0; i < g->nrings; ++i ) {
-    vt_draw_ptarray(g->rings[i]->points, cfg, buf);
+    vt_draw_ptarray(g->rings[i], cfg, buf);
   }
 }
 
-static void vt_draw_geom(const LWGEOM *g, const tile_config *cfg, dbuf *buf);
+static void vt_draw_geom(const LWGEOM *g, const lw_vt_cfg *cfg, dbuf *buf);
 
 static void
-vt_draw_coll(const LWCOLLECTION *g, const tile_config *cfg, dbuf *buf)
+vt_draw_coll(const LWCOLLECTION *g, const lw_vt_cfg *cfg, dbuf *buf)
 {
   int i = g->ngeoms;
   for ( i = 0; i < g->ngeoms; ++i ) {
@@ -244,7 +229,7 @@ vt_draw_coll(const LWCOLLECTION *g, const tile_config *cfg, dbuf *buf)
 }
 
 static void
-vt_draw_geom(const LWGEOM *g, const tile_config *cfg, dbuf *buf)
+vt_draw_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, dbuf *buf)
 {
   int type = geom->type;
   switch (type)
@@ -276,7 +261,7 @@ vt_draw_geom(const LWGEOM *g, const tile_config *cfg, dbuf *buf)
  * See https://github.com/mapbox/vector-tile-spec
  */
 uint8_t *
-lwgeom_to_vt_geom(const LWGEOM *geom, const tile_config *cfg)
+lwgeom_to_vt_geom(const LWGEOM *geom, const lw_vt_cfg *cfg)
 {
   dbuf *buf = dbuf_new(8);
   size_t encoded_size;
@@ -290,6 +275,4 @@ lwgeom_to_vt_geom(const LWGEOM *geom, const tile_config *cfg)
 
   return encoded;
 }
-
-
 

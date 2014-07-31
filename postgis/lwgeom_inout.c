@@ -464,12 +464,12 @@ Datum TWKBFromLWGEOM(PG_FUNCTION_ARGS)
 }
 
 Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(LWGEOM_AsMVT_Geometry);
+PG_FUNCTION_INFO_V1(LWGEOM_AsVectorTile_Geometry);
 Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS)
 {
-  GSERIALIZED *geom_in = (GSERIALIZED*)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
-  lw_vt_cfg cfg;
+  GSERIALIZED *geom_in;
   LWGEOM *lwgeom;
+  lw_vt_cfg cfg;
   size_t size;
   uint8_t *vt;
   bytea *result;
@@ -478,42 +478,54 @@ Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS)
   cfg.ipx = PG_GETARG_FLOAT8(1);
   cfg.ipy = PG_GETARG_FLOAT8(2);
   cfg.sfx = PG_GETARG_FLOAT8(3);
-  cfg.sfy = PG_ARGISNULL(4) ? -cfg.sfx : PG_GETARG_FLOAT8(4);
+  cfg.sfy = -cfg.sfx;
+  if ( (PG_NARGS()>4) && (!PG_ARGISNULL(4)) ) cfg.sfx = PG_GETARG_FLOAT8(4);
 
   /* tolerance */
-  if ( !PG_ARGISNULL(5) )
+  if ( (PG_NARGS()>5) && (!PG_ARGISNULL(5)) )
   {
-    lwerror("tolerance is unsupported at the moment");
-  }
+    tol = PG_GETARG_INT32(5);
+    if ( tol ) {
+      lwerror("tolerance (%d) is unsupported at the moment", tol);
+      PG_RETURN_NULL();
+    }
+  } 
 
   /* identifier */
-  if ( !PG_ARGISNULL(6) )
+  if ( (PG_NARGS()>6) && (!PG_ARGISNULL(6)) )
   {
-    tol = PG_GETARG_INT16(6);
-    if ( tol ) lwerror("identifier is unsupported at the moment");
+    lwnotice("identifier is not supported at the moment");
   }
 
   /* crop */
-  if ( !PG_ARGISNULL(7) )
+  if ( (PG_NARGS()>7) && (!PG_ARGISNULL(7)) )
   {
     lwerror("crop is unsupported at the moment");
   }
 
-	/* Create VectorTile geometry bin string */
-	lwgeom = lwgeom_from_gserialized(geom_in);
-	vt = lwgeom_to_vt_geom(lwgeom, &cfg, &size);
-	lwgeom_free(lwgeom);
-	PG_FREE_IF_COPY(geom_in, 0);
-	
-	/* Prepare the PgSQL text return type */
-	result = palloc(size + VARHDRSZ);
-	memcpy(VARDATA(result), vt, size);
-	lwfree(vt);
+  POSTGIS_DEBUG(2, "Detoasting...");
+  geom_in = (GSERIALIZED*)PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
 
-	SET_VARSIZE(result, size+VARHDRSZ);
-	
-	/* Clean up and return */
-	PG_RETURN_BYTEA_P(result);
+  /* Create VectorTile geometry bin string */
+  POSTGIS_DEBUG(2, "Deserializing...");
+  lwgeom = lwgeom_from_gserialized(geom_in);
+
+  POSTGIS_DEBUG(2, "Rendering...");
+  vt = lwgeom_to_vt_geom(lwgeom, &cfg, &size);
+
+  lwgeom_free(lwgeom);
+  PG_FREE_IF_COPY(geom_in, 0);
+
+  /* Prepare the PgSQL text return type */
+  POSTGIS_DEBUG(2, "Converting...");
+  result = palloc(size + VARHDRSZ);
+  memcpy(VARDATA(result), vt, size);
+  lwfree(vt);
+
+  SET_VARSIZE(result, size+VARHDRSZ);
+
+  /* Clean up and return */
+  PG_RETURN_BYTEA_P(result);
 }
 
 /* puts a bbox inside the geometry */

@@ -1400,7 +1400,7 @@ CREATE OR REPLACE FUNCTION ST_AsTWKB(geometry,int4,int8)
 	LANGUAGE 'c' IMMUTABLE STRICT;
 
 -- Availability: 2.2.0
-CREATE OR REPLACE FUNCTION ST_AsVT_Geometry(geom geometry, ipx float8, ipy float8, scalex float8, scaley float8 DEFAULT NULL, tolerance int2 DEFAULT 0, id text DEFAULT NULL, crop box2d DEFAULT NULL)
+CREATE OR REPLACE FUNCTION ST_AsVectorTile_Geometry(geom geometry, ipx float8, ipy float8, scalex float8, scaley float8 DEFAULT NULL, tolerance int DEFAULT 0, id text DEFAULT NULL, crop box2d DEFAULT NULL)
 	RETURNS bytea
 	AS 'MODULE_PATHNAME','LWGEOM_AsVectorTile_Geometry'
 	LANGUAGE 'c' IMMUTABLE;

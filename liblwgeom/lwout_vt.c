@@ -161,7 +161,7 @@ dbuf_encode_buf(const dbuf *buf, uint8_t *to)
       for (j=i+1; j<buf->size; ++j) {
         if ( buf->cmds[j].c != last_command ) break;
       }
-      sz = j-1;
+      sz = j-i;
       /* encode command + length */
       *to++ = sz << cmd_bits | dc->c;
     }

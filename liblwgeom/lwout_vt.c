@@ -65,6 +65,13 @@ dbuf_new(size_t init_capacity)
 }
 
 static void
+dbuf_destroy(dbuf *buf)
+{
+  if ( buf->cmds ) lwfree( buf->cmds );
+  lwfree( buf );
+}
+
+static void
 dbuf_append(dbuf *buf, const draw_command* c)
 {
   draw_command *tmp;
@@ -301,6 +308,8 @@ lwgeom_to_vt_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, size_t *size)
   encoded = lwalloc(*size);
   *size = dbuf_encode_buf(buf, encoded) - encoded;
 	LWDEBUGF(2, "lwgeom_to_vt_geom size(2) is %d", *size);
+
+  dbuf_destroy(buf);
 
   return encoded;
 }

@@ -22,6 +22,7 @@
 ** Global variable to hold hex VT strings
 */
 char *s;
+lwvt_cfg *default_cfg;
 
 /*
 ** The suite initialization function.
@@ -30,6 +31,7 @@ char *s;
 static int init_out_vt_suite(void)
 {
 	s = NULL;
+  default_cfg = lwvt_cfg_create(0,0,1,1);
 	return 0;
 }
 
@@ -40,6 +42,7 @@ static int init_out_vt_suite(void)
 static int clean_out_vt_suite(void)
 {
 	if (s) free(s);
+  if ( default_cfg ) lwvt_cfg_release(default_cfg);
 	s = NULL;
 	return 0;
 }
@@ -50,20 +53,13 @@ static int clean_out_vt_suite(void)
 ** @param cfg Vector Tileconfiguration to use, or null for a default
 **            being ipx=ipy=0, sfx=sfy=1
 */
-static void cu_vt(const char *wkt, lw_vt_cfg *cfg)
+static void cu_vt(const char *wkt, lwvt_cfg *cfg)
 {
 	LWGEOM *g = lwgeom_from_wkt(wkt, LW_PARSER_CHECK_NONE);
-  /* Default configuration */
-  lw_vt_cfg default_cfg = {
-    0, /* ipx */
-    0, /* ipy */
-    1, /* sfx */
-    1  /* sfy */
-  };
   size_t sz;
   uint8_t *vt;
 
-  if ( ! cfg ) cfg = &default_cfg;
+  if ( ! cfg ) cfg = default_cfg;
   vt = lwgeom_to_vt_geom(g, cfg, &sz);
 
   if ( s ) free(s);

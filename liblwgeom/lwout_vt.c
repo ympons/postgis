@@ -14,7 +14,7 @@
 #include "liblwgeom_internal.h"
 #include "../postgis_config.h"
 
-#define POSTGIS_DEBUG_LEVEL 2
+/* #define POSTGIS_DEBUG_LEVEL 2 */
 
 #include "lwgeom_log.h"
 #include "varint.h"
@@ -181,8 +181,45 @@ dbuf_encode_buf(const dbuf *buf, uint8_t *to)
   return to;
 }
 
+typedef struct lwvt_cfg_t
+{
+  /** X ordinate value of the tile origin */
+  double ipx;
+
+  /** Y ordinate value of the tile origin */
+  double ipy;
+
+  /** Scale factor X */
+  double sfx;
+
+  /** Scale factor Y */
+  double sfy;
+
+} lwvt_cfg;
+
+lwvt_cfg *
+lwvt_cfg_create(double ipx, double ipy, double sfx, double sfy)
+{
+  lwvt_cfg *cfg = lwalloc(sizeof(lwvt_cfg));
+  if ( ! cfg ) {
+    lwerror("Out of virtual memory allocating virtual tile configuration");
+    return NULL;
+  }
+  cfg->ipx = ipx;
+  cfg->ipy = ipy;
+  cfg->sfx = sfx;
+  cfg->sfy = sfy;
+  return cfg;
+}
+
+void
+lwvt_cfg_release(lwvt_cfg *cfg)
+{
+  lwfree(cfg);
+}
+
 static void
-vt_draw_ptarray(const POINTARRAY *pa, const lw_vt_cfg *cfg, dbuf *buf)
+vt_draw_ptarray(const POINTARRAY *pa, const lwvt_cfg *cfg, dbuf *buf)
 {
   int i;
   int x, y;
@@ -225,20 +262,20 @@ vt_draw_ptarray(const POINTARRAY *pa, const lw_vt_cfg *cfg, dbuf *buf)
 }
 
 static void
-vt_draw_point(const LWPOINT *g, const lw_vt_cfg *cfg, dbuf *buf)
+vt_draw_point(const LWPOINT *g, const lwvt_cfg *cfg, dbuf *buf)
 {
 	LWDEBUG(2, "vt_draw_point enter");
   vt_draw_ptarray(g->point, cfg, buf);
 }
 
 static void
-vt_draw_line(const LWLINE *g, const lw_vt_cfg *cfg, dbuf *buf)
+vt_draw_line(const LWLINE *g, const lwvt_cfg *cfg, dbuf *buf)
 {
   vt_draw_ptarray(g->points, cfg, buf);
 }
 
 static void
-vt_draw_poly(const LWPOLY *g, const lw_vt_cfg *cfg, dbuf *buf)
+vt_draw_poly(const LWPOLY *g, const lwvt_cfg *cfg, dbuf *buf)
 {
   int i = g->nrings;
   for ( i = 0; i < g->nrings; ++i ) {
@@ -246,10 +283,10 @@ vt_draw_poly(const LWPOLY *g, const lw_vt_cfg *cfg, dbuf *buf)
   }
 }
 
-static void vt_draw_geom(const LWGEOM *g, const lw_vt_cfg *cfg, dbuf *buf);
+static void vt_draw_geom(const LWGEOM *g, const lwvt_cfg *cfg, dbuf *buf);
 
 static void
-vt_draw_coll(const LWCOLLECTION *g, const lw_vt_cfg *cfg, dbuf *buf)
+vt_draw_coll(const LWCOLLECTION *g, const lwvt_cfg *cfg, dbuf *buf)
 {
   int i = g->ngeoms;
   for ( i = 0; i < g->ngeoms; ++i ) {
@@ -258,7 +295,7 @@ vt_draw_coll(const LWCOLLECTION *g, const lw_vt_cfg *cfg, dbuf *buf)
 }
 
 static void
-vt_draw_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, dbuf *buf)
+vt_draw_geom(const LWGEOM *geom, const lwvt_cfg *cfg, dbuf *buf)
 {
   int type = geom->type;
 	LWDEBUGF(2, "vt_draw_geom, type is %d", type);
@@ -287,11 +324,16 @@ vt_draw_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, dbuf *buf)
 }
 
 /**
- * Takes a GEOMETRY and returns a VectorTile.geometry representation
+ * Takes a GEOMETRY and returns an encoded VectorTile.Feature.geometry
+ *
  * See https://github.com/mapbox/vector-tile-spec
+ *
+ * @param cfg configuration of the vector tile
+ * @param size output parameter, size of the returned buffer
+ *
  */
 uint8_t *
-lwgeom_to_vt_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, size_t *size)
+lwgeom_to_vt_geom(const LWGEOM *geom, const lwvt_cfg *cfg, size_t *size)
 {
   dbuf *buf = dbuf_new(8);
   uint8_t *encoded;
@@ -314,3 +356,25 @@ lwgeom_to_vt_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, size_t *size)
   return encoded;
 }
 
+typedef struct
+{
+  char *v; /* value, encoded as string */
+  lwvt_valtype t; /* value type */
+}
+lw_typed_value;
+
+typedef struct
+{
+  lw_typed_value *v;
+  int size;
+  int capacity;
+}
+lwvt_values;
+
+uint8_t *
+lwgeom_to_vt_feature(const LWGEOM *geom, const lwvt_cfg *cfg,
+                     unsigned flags, uint64_t id,
+                     unsigned nattrs, lwvt_fieldspec *attrs)
+{
+  return NULL;
+}

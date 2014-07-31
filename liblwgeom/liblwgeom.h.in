@@ -565,22 +565,6 @@ typedef struct
 }
 twkb_geom_arrays;
 
-typedef struct
-{
-  /** X ordinate value of the tile origin */
-  double ipx;
-
-  /** Y ordinate value of the tile origin */
-  double ipy;
-
-  /** Scale factor X */
-  double sfx;
-
-  /** Scale factor Y */
-  double sfy;
-
-} lw_vt_cfg;
-
 /* Casts LWGEOM->LW* (return NULL if cast is illegal) */
 extern LWMPOLY *lwgeom_as_lwmpoly(const LWGEOM *lwgeom);
 extern LWMLINE *lwgeom_as_lwmline(const LWGEOM *lwgeom);
@@ -1836,6 +1820,46 @@ extern uint8_t*  lwgeom_to_wkb(const LWGEOM *geom, uint8_t variant, size_t *size
 extern uint8_t* lwgeom_to_twkb(const LWGEOM *geom, uint8_t variant, size_t *size_out,int8_t prec, int64_t id,int method);
 extern uint8_t* lwgeom_agg_to_twkb(const twkb_geom_arrays *lwgeom_arrays,uint8_t variant , size_t *size_out,int8_t prec, int method);
 
+/** ------ VectorTile ----------------------------------------------- @{ */
+
+/** Type of values for attributes of VectorTile features */
+typedef enum lwvt_valtype_t {
+  lwvt_valtype_string = 1,
+  lwvt_valtype_float  = 2,
+  lwvt_valtype_double = 3,
+  lwvt_valtype_int    = 4,
+  lwvt_valtype_uint   = 5,
+  lwvt_valtype_sint   = 6,
+  lwvt_valtype_bool   = 7
+} lwvt_valtype;
+
+/** Specification of a VectorTile.Feature attribute */
+typedef struct
+{
+  const char *n; /* field name */
+  const char *v; /* field value, encoded as string */
+  lwvt_valtype t;  /* field type */
+}
+lwvt_fieldspec;
+
+/** Configuration for VectorTile */
+typedef struct lwvt_cfg_t lwvt_cfg;
+
+/**
+ * Create a VectorTile configuration
+ *
+ * @param ipx X ordinate value of the tile origin
+ * @param ipy Y ordinate value of the tile origin
+ * @param sfx Scale factor X 
+ * @param sfy Scale factor Y 
+ *
+ * @return a vector tile configuration, to be released with lwvt_cfg_release
+ */
+extern lwvt_cfg *lwvt_cfg_create(double ipx, double ipy, double sfx, double sfy);
+
+/** Release memory associated with a vector tile configuration */
+extern void lwvt_cfg_release(lwvt_cfg *cfg);
+
 /**
  * Takes a GEOMETRY and returns a VectorTile.geometry representation
  * See https://github.com/mapbox/vector-tile-spec
@@ -1847,8 +1871,28 @@ extern uint8_t* lwgeom_agg_to_twkb(const twkb_geom_arrays *lwgeom_arrays,uint8_t
  *         of the input geometry.
  *  
  */
-extern uint8_t *lwgeom_to_vt_geom(const LWGEOM *geom, const lw_vt_cfg *cfg, size_t *size);
+extern uint8_t *lwgeom_to_vt_geom(const LWGEOM *geom, const lwvt_cfg *cfg, size_t *size);
 
+/** Flags for use with lwgeom_to_vt_feature */
+#define LW_VT_FLAG_ADD_IDENTIFIER (1<<0)
+#define LW_VT_FLAG_ADD_GEOMTYPE   (1<<1)
+
+/**
+ * Takes a GEOMETRY and returns an encoded VectorTile.Feature
+ *
+ * See https://github.com/mapbox/vector-tile-spec
+ *
+ * @param cfg vector tile configuration
+ * @param flags see LW_VT_FLAG* 
+ * @param id feature identifier, only used if flags contain
+ *           LW_VT_FLAG_ADD_IDENTIFIER
+ * @param nattrs number of attributes to write for the feature
+ * @param lwvt_fieldspec pointer to array of attributes
+ *
+ */
+uint8_t * lwgeom_to_vt_feature(const LWGEOM *geom, const lwvt_cfg *cfg, unsigned flags, uint64_t id, unsigned nattrs, lwvt_fieldspec *attrs);
+
+/** ------ VectorTile ----------------------------------------------- @} */
 
 /**
 * @param lwgeom geometry to convert to HEXWKB

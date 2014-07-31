@@ -469,17 +469,22 @@ Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS)
 {
   GSERIALIZED *geom_in;
   LWGEOM *lwgeom;
-  lw_vt_cfg cfg;
+  lwvt_cfg *cfg;
+  double ipx, ipy, sfx, sfy;
   size_t size;
   uint8_t *vt;
   bytea *result;
   int tol = 0;
 
-  cfg.ipx = PG_GETARG_FLOAT8(1);
-  cfg.ipy = PG_GETARG_FLOAT8(2);
-  cfg.sfx = PG_GETARG_FLOAT8(3);
-  cfg.sfy = -cfg.sfx;
-  if ( (PG_NARGS()>4) && (!PG_ARGISNULL(4)) ) cfg.sfx = PG_GETARG_FLOAT8(4);
+  /* first 3 args are required */
+  if ( PG_ARGISNULL(1) || PG_ARGISNULL(2) || PG_ARGISNULL(3) )
+    PG_RETURN_NULL();
+
+  ipx = PG_GETARG_FLOAT8(1);
+  ipy = PG_GETARG_FLOAT8(2);
+  sfx = PG_GETARG_FLOAT8(3);
+  sfy = -sfx;
+  if ( (PG_NARGS()>4) && (!PG_ARGISNULL(4)) ) sfx = PG_GETARG_FLOAT8(4);
 
   /* tolerance */
   if ( (PG_NARGS()>5) && (!PG_ARGISNULL(5)) )
@@ -491,14 +496,8 @@ Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS)
     }
   } 
 
-  /* identifier */
-  if ( (PG_NARGS()>6) && (!PG_ARGISNULL(6)) )
-  {
-    lwnotice("identifier is not supported at the moment");
-  }
-
   /* crop */
-  if ( (PG_NARGS()>7) && (!PG_ARGISNULL(7)) )
+  if ( (PG_NARGS()>6) && (!PG_ARGISNULL(6)) )
   {
     lwerror("crop is unsupported at the moment");
   }
@@ -511,8 +510,10 @@ Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS)
   lwgeom = lwgeom_from_gserialized(geom_in);
 
   POSTGIS_DEBUG(2, "Rendering...");
-  vt = lwgeom_to_vt_geom(lwgeom, &cfg, &size);
+  cfg = lwvt_cfg_create(ipx, ipy, sfx, sfy);
+  vt = lwgeom_to_vt_geom(lwgeom, cfg, &size);
 
+  lwvt_cfg_release(cfg);
   lwgeom_free(lwgeom);
   PG_FREE_IF_COPY(geom_in, 0);
 

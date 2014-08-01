@@ -1401,7 +1401,7 @@ CREATE OR REPLACE FUNCTION ST_AsTWKB(geometry,int4,int8)
 
 -- Availability: 2.2.0
 DROP FUNCTION IF EXISTS ST_AsVectorTile_Geometry(geometry, float8, float8, float8, float8, int, text, box2d);
-CREATE OR REPLACE FUNCTION ST_AsVectorTile_Geometry(geom geometry, ipx float8, ipy float8, scalex float8, scaley float8 DEFAULT NULL, tolerance int DEFAULT 0, crop geometry DEFAULT NULL)
+CREATE OR REPLACE FUNCTION ST_AsVectorTile_Geometry(geom geometry, ipx float8, ipy float8, scalex float8, scaley float8 DEFAULT NULL, tolerance float8 DEFAULT 0, crop geometry DEFAULT NULL)
 	RETURNS bytea
 	AS 'MODULE_PATHNAME','LWGEOM_AsVectorTile_Geometry'
 	LANGUAGE 'c' IMMUTABLE;

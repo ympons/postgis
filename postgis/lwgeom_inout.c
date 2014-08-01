@@ -489,7 +489,7 @@ Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS)
   /* tolerance */
   if ( (PG_NARGS()>5) && (!PG_ARGISNULL(5)) )
   {
-    tol = PG_GETARG_INT32(5);
+    tol = PG_GETARG_FLOAT8(5);
     if ( tol ) {
       lwerror("tolerance (%d) is unsupported at the moment", tol);
       PG_RETURN_NULL();

@@ -129,11 +129,8 @@ dbuf_encoded_size(const dbuf *buf)
 
   for (i=0; i<buf->size; ++i) {
     draw_command* dc = &(buf->cmds[i]);
-    if ( ! last_command ) {
-      ++sz;
+    if ( dc->c != last_command ) {
       last_command = dc->c;
-    }
-    else if ( dc->c != last_command ) {
       ++sz;
     }
     sz += varint_s32_encoded_size(dc->x);
@@ -156,26 +153,28 @@ static uint8_t *
 dbuf_encode_buf(const dbuf *buf, uint8_t *to)
 {
   unsigned int i, j;
-  size_t sz;
-  int last_command = 0;
+  int sz = 0;
   const int cmd_bits = 3;
+  uint32_t cmd;
 
   for (i=0; i<buf->size; ++i) {
     draw_command* dc = &(buf->cmds[i]);
-    if ( ! last_command || dc->c != last_command ) {
-      last_command = dc->c;
+    if ( ! sz ) 
+    {
       /* find size of this command */
       for (j=i+1; j<buf->size; ++j) {
-        if ( buf->cmds[j].c != last_command ) break;
+        if ( buf->cmds[j].c != dc->c ) break;
       }
       sz = j-i;
       /* encode command + length */
-      *to++ = sz << cmd_bits | dc->c;
+      cmd = sz << cmd_bits | dc->c;
+      to = varint_u32_encode_buf(cmd, to);
     }
     /* encode X parameter */
     to = varint_s32_encode_buf(dc->x, to);
     /* encode Y parameter */
     to = varint_s32_encode_buf(dc->y, to);
+    --sz;
   }
 
   return to;

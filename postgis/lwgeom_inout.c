@@ -2,6 +2,8 @@
 
 #include "../postgis_config.h"
 
+//#define POSTGIS_DEBUG_LEVEL 2 
+
 #include <math.h>
 #include <float.h>
 #include <string.h>
@@ -484,7 +486,12 @@ Datum LWGEOM_AsVectorTile_Geometry(PG_FUNCTION_ARGS)
   ipy = PG_GETARG_FLOAT8(2);
   sfx = PG_GETARG_FLOAT8(3);
   sfy = -sfx;
-  if ( (PG_NARGS()>4) && (!PG_ARGISNULL(4)) ) sfx = PG_GETARG_FLOAT8(4);
+  if ( (PG_NARGS()>4) && (!PG_ARGISNULL(4)) ) sfy = PG_GETARG_FLOAT8(4);
+
+  POSTGIS_DEBUGF(2, "IPX is %g", ipx);
+  POSTGIS_DEBUGF(2, "IPY is %g", ipy);
+  POSTGIS_DEBUGF(2, "SFX is %g", sfx);
+  POSTGIS_DEBUGF(2, "SFY is %g", sfy);
 
   /* tolerance */
   if ( (PG_NARGS()>5) && (!PG_ARGISNULL(5)) )

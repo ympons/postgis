@@ -6,3 +6,4 @@
 *.h         eol=lf
 GNUmakefile.in eol=lf
 *_expected  eol=lf
+*.dmp       eol=lf

@@ -1,0 +1,5 @@
+*.vcproj	eol=crlf
+*.bat	    eol=crlf
+*.sh		eol=lf
+*.ac        eol=lf
+*_expected  eol=lf

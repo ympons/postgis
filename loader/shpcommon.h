@@ -3,7 +3,7 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright (C) 2014 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2014 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2010 Mark Cave-Ayland <mark.cave-ayland@siriusit.co.uk>
  *
  * This is free software; you can redistribute and/or modify it under
@@ -23,6 +23,8 @@
 #else
 #define _(String) String
 #endif
+
+
 
 typedef struct shp_connection_state
 {
@@ -48,20 +50,20 @@ char *escape_connection_string(char *str);
 
 /* Column map between pgsql and dbf */
 typedef struct colmap_t {
-	
+
 	/* Column map pgfieldnames */
 	char **pgfieldnames;
-	
+
 	/* Column map dbffieldnames */
 	char **dbffieldnames;
-	
+
 	/* Number of entries within column map */
 	int size;
 
 } colmap;
 
 /**
- * Read the content of filename into a symbol map 
+ * Read the content of filename into a symbol map
  *
  * The content of the file is lines of two names separated by
  * white space and no trailing or leading space:
@@ -99,5 +101,8 @@ void colmap_clean(colmap *map);
 const char *colmap_dbf_by_pg(colmap *map, const char *pgname);
 
 const char *colmap_pg_by_dbf(colmap *map, const char *dbfname);
+
+char *codepage2encoding(const char *cpg);
+char *encoding2codepage(const char *encoding);
 
 #endif

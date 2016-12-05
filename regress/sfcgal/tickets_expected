@@ -114,7 +114,7 @@ NOTICE:  IllegalArgumentException: Invalid number of points in LinearRing found 
 #687|f
 #689|f
 #690
-010200000003000000F771D98DE33826C00000000000004440F771D98DE33826C000000000008051400000000000805140F771D98DE33826C0
+010200000003000000f771d98de33826c00000000000004440f771d98de33826c000000000008051400000000000805140f771d98de33826c0
 #693a|POLYGON M ((-71.1319 42.2503 1,-71.132 42.2502 3,-71.1323 42.2504 -2,-71.1322 42.2505 1,-71.1319 42.2503 0))
 #693b|POLYGON M ((-71.1319 42.2512 0,-71.1318 42.2511 20,-71.1317 42.2511 -20,-71.1317 42.251 5,-71.1317 42.2509 4,-71.132 42.2511 6,-71.1319 42.2512 30))
 #694
@@ -143,11 +143,15 @@ ERROR:  First argument must be a LINESTRING
 #1060|FFFFFFFF2
 #1273|t
 #1273.1|t
-ERROR:  stats for "t.g" do not exist
-ERROR:  stats for "t.g" do not exist
+WARNING:  stats for "t.g" do not exist
+#877.1|
+WARNING:  stats for "t.g" do not exist
+#877.2|
 WARNING:  ST_Estimated_Extent signature was deprecated in 2.1.0. Please use ST_EstimatedExtent
-ERROR:  stats for "t.g" do not exist
-ERROR:  stats for "t.g" do not exist
+WARNING:  stats for "t.g" do not exist
+#877.2.deprecated|
+WARNING:  stats for "t.g" do not exist
+#877.3||||
 #877.4|-10.15000|20.15000|-50.40000|30.40000
 #877.5|-10.15000|20.15000|-50.40000|30.40000
 #1292|GEOMETRYCOLLECTION(POINT(180 90),POLYGON((140 50,150 50,180 50,140 50),(140 60,150 60,180 60,140 60)))
@@ -212,7 +216,7 @@ ERROR:  invalid SRID: 999000 not found in spatial_ref_sys
 NOTICE:  SRID value -1 converted to the officially unknown SRID value 0
 #1596.6|public.road_pg.roads_geom SRID changed to 0
 #1596.7|0
-#1596|Point[BGS]
+#1596|Point[GS]
 #1695|MULTIPOLYGON EMPTY
 #1697.1|0
 #1697.2|0

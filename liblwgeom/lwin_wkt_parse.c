@@ -1,4 +1,27 @@
-/* A Bison parser, made by GNU Bison 3.0.4.  */
+/**********************************************************************
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
+ *
+ **********************************************************************/
+
 
 /* Bison implementation for Yacc-like parsers in C
 
@@ -95,16 +118,16 @@ LWGEOM_PARSER_RESULT global_parser_result;
 /* Turn on/off verbose parsing (turn off for production) */
 int wkt_yydebug = 0;
 
-/* 
-* Error handler called by the bison parser. Mostly we will be 
+/*
+* Error handler called by the bison parser. Mostly we will be
 * catching our own errors and filling out the message and errlocation
-* from WKT_ERROR in the grammar, but we keep this one 
+* from WKT_ERROR in the grammar, but we keep this one
 * around just in case.
 */
 void wkt_yyerror(const char *str)
 {
 	/* If we haven't already set a message and location, let's set one now. */
-	if ( ! global_parser_result.message ) 
+	if ( ! global_parser_result.message )
 	{
 		global_parser_result.message = parser_error_messages[PARSER_ERROR_OTHER];
 		global_parser_result.errcode = PARSER_ERROR_OTHER;
@@ -144,7 +167,7 @@ int lwgeom_parse_wkt(LWGEOM_PARSER_RESULT *parser_result, char *wktstr, int pars
 	wkt_lexer_close(); /* Clean up lexer */
 	
 	/* A non-zero parser return is an error. */
-	if ( parse_rv != 0 ) 
+	if ( parse_rv != 0 )
 	{
 		if( ! global_parser_result.errcode )
 		{
@@ -153,9 +176,9 @@ int lwgeom_parse_wkt(LWGEOM_PARSER_RESULT *parser_result, char *wktstr, int pars
 			global_parser_result.errlocation = wkt_yylloc.last_column;
 		}
 
-		LWDEBUGF(5, "error returned by wkt_yyparse() @ %d: [%d] '%s'", 
-		            global_parser_result.errlocation, 
-		            global_parser_result.errcode, 
+		LWDEBUGF(5, "error returned by wkt_yyparse() @ %d: [%d] '%s'",
+		            global_parser_result.errlocation,
+		            global_parser_result.errcode,
 		            global_parser_result.message);
 		
 		/* Copy the global values into the return pointer */

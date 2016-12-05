@@ -2,12 +2,26 @@
  *
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2008 Paul Ramsey
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "liblwgeom_internal.h"
 #include "lwgeom_log.h"
@@ -77,7 +91,7 @@ lw_seg_length(const POINT2D *A1, const POINT2D *A2)
 }
 
 /**
-* Returns true if P is on the same side of the plane partition 
+* Returns true if P is on the same side of the plane partition
 * defined by A1/A3 as A2 is. Only makes sense if P has already been
 * determined to be on the circle defined by A1/A2/A3.
 */
@@ -104,7 +118,7 @@ lw_pt_in_seg(const POINT2D *P, const POINT2D *A1, const POINT2D *A2)
 int
 lw_arc_is_pt(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3)
 {
-	if ( A1->x == A2->x && A2->x == A3->x && 
+	if ( A1->x == A2->x && A2->x == A3->x &&
 	     A1->y == A2->y && A2->y == A3->y )
 		return LW_TRUE;
 	else
@@ -129,7 +143,7 @@ lw_arc_length(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3)
 	radius_A = lw_arc_center(A1, A2, A3, &C);
 
 	/* Co-linear! Return linear distance! */
-	if ( radius_A < 0 ) 
+	if ( radius_A < 0 )
 	{
         double dx = A1->x - A3->x;
         double dy = A1->y - A3->y;
@@ -144,11 +158,11 @@ lw_arc_length(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3)
 	/* Determine the orientation of the arc */
 	a2_side = lw_segment_side(A1, A3, A2);
 
-	/* The side of the A1/A3 line that A2 falls on dictates the sweep  
+	/* The side of the A1/A3 line that A2 falls on dictates the sweep
 	   direction from A1 to A3. */
-	if ( a2_side == -1 ) 
+	if ( a2_side == -1 )
 		clockwise = LW_TRUE;
-	else 
+	else
 		clockwise = LW_FALSE;
 		
 	/* Angles of each point that defines the arc section */
@@ -161,7 +175,7 @@ lw_arc_length(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3)
 		if ( a1 > a3 )
 			angle = a1 - a3;
 		else
-			angle = 2*M_PI + a1 - a3; 
+			angle = 2*M_PI + a1 - a3;
 	}
 	else
 	{
@@ -204,8 +218,8 @@ int lw_arc_side(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3, const P
 		return -1 * side_A2;
 	}
 	
-	/* 
-	* Q is inside the arc boundary, so it's not on the side we 
+	/*
+	* Q is inside the arc boundary, so it's not on the side we
 	* might think from examining only the end points
 	*/
 	if ( d < radius_A && side_Q == side_A2 )
@@ -224,13 +238,13 @@ int lw_arc_side(const POINT2D *A1, const POINT2D *A2, const POINT2D *A3, const P
 * point is coincident with either end point, they are taken as colinear.
 */
 double
-lw_arc_center(const POINT2D *p1, const POINT2D *p2, const POINT2D *p3, POINT2D *result)
+lw_arc_center(const POINT2D *p1, const POINT2D *p2, const POINT2D *p3, POINT2D *result)	
 {
 	POINT2D c;
 	double cx, cy, cr;
-	double temp, bc, cd, det;
+	double dx21, dy21, dx31, dy31, h21, h31, d;
 
-    c.x = c.y = 0.0;
+	c.x = c.y = 0.0;
 
 	LWDEBUGF(2, "lw_arc_center called (%.16f,%.16f), (%.16f,%.16f), (%.16f,%.16f).", p1->x, p1->y, p2->x, p2->y, p3->x, p3->y);
 
@@ -247,29 +261,34 @@ lw_arc_center(const POINT2D *p1, const POINT2D *p2, const POINT2D *p3, POINT2D *
 		return cr;
 	}
 
-	temp = p2->x*p2->x + p2->y*p2->y;
-	bc = (p1->x*p1->x + p1->y*p1->y - temp) / 2.0;
-	cd = (temp - p3->x*p3->x - p3->y*p3->y) / 2.0;
-	det = (p1->x - p2->x)*(p2->y - p3->y)-(p2->x - p3->x)*(p1->y - p2->y);
+	/* Using cartesian eguations from page https://en.wikipedia.org/wiki/Circumscribed_circle */
+	dx21 = p2->x - p1->x;
+	dy21 = p2->y - p1->y;
+	dx31 = p3->x - p1->x;
+	dy31 = p3->y - p1->y;
 
-	/* Check colinearity */
-	if (fabs(det) < EPSILON_SQLMM)
+	h21 = pow(dx21, 2.0) + pow(dy21, 2.0);
+	h31 = pow(dx31, 2.0) + pow(dy31, 2.0);
+
+	/* 2 * |Cross product|, d<0 means clockwise and d>0 counterclockwise sweeping angle */
+	d = 2 * (dx21 * dy31 - dx31 * dy21);
+
+	/* Check colinearity, |Cross product| = 0 */
+	if (fabs(d) < EPSILON_SQLMM)
 		return -1.0;
 
-
-	det = 1.0 / det;
-	cx = (bc*(p2->y - p3->y)-cd*(p1->y - p2->y))*det;
-	cy = ((p1->x - p2->x)*cd-(p2->x - p3->x)*bc)*det;
+	/* Calculate centroid coordinates and radius */
+	cx = p1->x + (h21 * dy31 - h31 * dy21) / d;
+	cy = p1->y - (h21 * dx31 - h31 * dx21) / d;
 	c.x = cx;
 	c.y = cy;
 	*result = c;
-	cr = sqrt((cx-p1->x)*(cx-p1->x)+(cy-p1->y)*(cy-p1->y));
-	
+	cr = sqrt(pow(cx - p1->x, 2) + pow(cy - p1->y, 2));
+
 	LWDEBUGF(2, "lw_arc_center center is (%.16f,%.16f)", result->x, result->y);
-	
+
 	return cr;
 }
-
 
 int
 pt_in_ring_2d(const POINT2D *p, const POINTARRAY *ring)
@@ -327,7 +346,7 @@ pt_in_ring_2d(const POINT2D *p, const POINTARRAY *ring)
 }
 
 
-static int 
+static int
 lw_seg_interact(const POINT2D *p1, const POINT2D *p2, const POINT2D *q1, const POINT2D *q2)
 {
 	double minq=FP_MIN(q1->x,q2->x);
@@ -835,7 +854,9 @@ char *lwgeom_geohash(const LWGEOM *lwgeom, int precision)
 	/* Return error if we are being fed something outside our working bounds */
 	if ( gbox.xmin < -180 || gbox.ymin < -90 || gbox.xmax > 180 || gbox.ymax > 90 )
 	{
-		lwerror("Geohash requires inputs in decimal degrees.");
+		lwerror("Geohash requires inputs in decimal degrees, got (%g %g, %g %g).",
+			 gbox.xmin, gbox.ymin,
+			 gbox.xmax, gbox.ymax);
 		return NULL;
 	}
 

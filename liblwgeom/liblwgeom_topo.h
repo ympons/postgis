@@ -3,12 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright (C) 2015 Sandro Santilli <strk@keybit.net>
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright (C) 2015 Sandro Santilli <strk@kbt.io>
  *
  **********************************************************************/
+
 
 #ifndef LIBLWGEOM_TOPO_H
 #define LIBLWGEOM_TOPO_H 1
@@ -380,7 +393,7 @@ typedef struct LWT_BE_CALLBACKS_T {
    * Update TopoGeometry objects after an edge split event
    *
    * @param topo the topology to act upon
-   * @param split_edge identifier of the edge that was splitted.
+   * @param split_edge identifier of the edge that was split.
    * @param new_edge1 identifier of the first new edge that was created
    *        as a result of edge splitting.
    * @param new_edge2 identifier of the second new edge that was created
@@ -444,7 +457,7 @@ typedef struct LWT_BE_CALLBACKS_T {
    * Get edges whose bounding box overlaps a given 2D bounding box
    *
    * @param topo the topology to act upon
-   * @param box the query box
+   * @param box the query box, to be considered infinite if NULL
    * @param numelems output parameter, gets number of elements found
    *                 if the return is not null, otherwise see @return
    *                 section for semantic.
@@ -517,7 +530,7 @@ typedef struct LWT_BE_CALLBACKS_T {
    * Update TopoGeometry objects after a face split event
    *
    * @param topo the topology to act upon
-   * @param split_face identifier of the face that was splitted.
+   * @param split_face identifier of the face that was split.
    * @param new_face1 identifier of the first new face that was created
    *        as a result of face splitting.
    * @param new_face2 identifier of the second new face that was created
@@ -618,7 +631,9 @@ typedef struct LWT_BE_CALLBACKS_T {
   );
 
   /**
+   * \brief
    * Get edges that have any of the given faces on the left or right side
+   * and optionally whose bounding box overlaps the given one.
    *
    * @param topo the topology to act upon
    * @param ids an array of face identifiers
@@ -628,6 +643,8 @@ typedef struct LWT_BE_CALLBACKS_T {
    *                 section for semantic.
    * @param fields fields to be filled in the returned structure, see
    *               LWT_COL_EDGE_* macros
+   * @param box optional bounding box to further restrict matches, use
+   *            NULL for no further restriction.
    *
    * @return an array of edges identifiers or NULL in the following cases:
    *         - no edge found ("numelems" is set to 0)
@@ -635,7 +652,8 @@ typedef struct LWT_BE_CALLBACKS_T {
    */
   LWT_ISO_EDGE* (*getEdgeByFace) (
       const LWT_BE_TOPOLOGY* topo,
-      const LWT_ELEMID* ids, int* numelems, int fields
+      const LWT_ELEMID* ids, int* numelems, int fields,
+      const GBOX *box
   );
 
   /**
@@ -649,6 +667,8 @@ typedef struct LWT_BE_CALLBACKS_T {
    *                 otherwise see @return section for semantic.
    * @param fields fields to be filled in the returned structure, see
    *               LWT_COL_NODE_* macros
+   * @param box optional bounding box to further restrict matches, use
+   *            NULL for no further restriction.
    *
    * @return an array of nodes or NULL in the following cases:
    *         - no nod found ("numelems" is set to 0)
@@ -656,7 +676,8 @@ typedef struct LWT_BE_CALLBACKS_T {
    */
   LWT_ISO_NODE* (*getNodeByFace) (
       const LWT_BE_TOPOLOGY* topo,
-      const LWT_ELEMID* faces, int* numelems, int fields
+      const LWT_ELEMID* faces, int* numelems, int fields,
+      const GBOX *box
   );
 
   /**

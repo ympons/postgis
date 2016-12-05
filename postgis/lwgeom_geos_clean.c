@@ -3,36 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright 2009-2010 Sandro Santilli <strk@keybit.net>
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
  *
  **********************************************************************
  *
- * ST_MakeValid
- *
- * Attempts to make an invalid geometries valid w/out losing
- * points.
- *
- * Polygons may become lines or points or a collection of
- * polygons lines and points (collapsed ring cases).
- *
- * Author: Sandro Santilli <strk@keybit.net>
- *
- * Work done for Faunalia (http://www.faunalia.it) with fundings
- * from Regione Toscana - Sistema Informativo per il Governo
- * del Territorio e dell'Ambiente (RT-SIGTA).
- *
- * Thanks to Dr. Horst Duester for previous work on a plpgsql version
- * of the cleanup logic [1]
- *
- * Thanks to Andrea Peri for recommandations on constraints.
- *
- * [1] http://www.sogis1.so.ch/sogis/dl/postgis/cleanGeometry.sql
- *
+ * Copyright 2009-2010 Sandro Santilli <strk@kbt.io>
  *
  **********************************************************************/
+
 
 #include "postgres.h"
 #include "fmgr.h"
@@ -52,11 +41,6 @@ Datum ST_MakeValid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(ST_MakeValid);
 Datum ST_MakeValid(PG_FUNCTION_ARGS)
 {
-#if POSTGIS_GEOS_VERSION < 33
-	elog(ERROR, "You need GEOS-3.3.0 or up for ST_MakeValid");
-	PG_RETURN_NULL();
-#else /* POSTGIS_GEOS_VERSION >= 33 */
-
 	GSERIALIZED *in, *out;
 	LWGEOM *lwgeom_in, *lwgeom_out;
 
@@ -91,10 +75,7 @@ Datum ST_MakeValid(PG_FUNCTION_ARGS)
 	out = geometry_serialize(lwgeom_out);
 
 	PG_RETURN_POINTER(out);
-#endif /* POSTGIS_GEOS_VERSION >= 33 */
 }
-
-#if POSTGIS_GEOS_VERSION >= 33
 
 /* Uses GEOS internally */
 static LWGEOM* lwgeom_clean(LWGEOM* lwgeom_in);
@@ -138,18 +119,11 @@ lwgeom_clean(LWGEOM* lwgeom_in)
 	return lwgeom_out;
 }
 
-#endif /* POSTGIS_GEOS_VERSION >= 33 */
-
 
 Datum ST_CleanGeometry(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(ST_CleanGeometry);
 Datum ST_CleanGeometry(PG_FUNCTION_ARGS)
 {
-#if POSTGIS_GEOS_VERSION < 33
-	elog(ERROR, "You need GEOS-3.3.0 or up for ST_CleanGeometry");
-	PG_RETURN_NULL();
-#else /* POSTGIS_GEOS_VERSION >= 33 */
-
 	GSERIALIZED *in, *out;
 	LWGEOM *lwgeom_in, *lwgeom_out;
 
@@ -175,7 +149,5 @@ Datum ST_CleanGeometry(PG_FUNCTION_ARGS)
 
 	out = geometry_serialize(lwgeom_out);
 	PG_RETURN_POINTER(out);
-
-#endif /* POSTGIS_GEOS_VERSION >= 33 */
 }
 

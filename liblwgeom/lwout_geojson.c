@@ -2,13 +2,27 @@
  *
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2001-2003 Refractions Research Inc.
  * Copyright 2009-2010 Olivier Courtin <olivier.courtin@oslandia.com>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of hte GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "liblwgeom_internal.h"
 #include <string.h>	/* strlen */
@@ -39,9 +53,9 @@ lwgeom_to_geojson(const LWGEOM *geom, char *srs, int precision, int has_bbox)
 
 	if ( precision > OUT_MAX_DOUBLE_PRECISION ) precision = OUT_MAX_DOUBLE_PRECISION;
 
-	if (has_bbox) 
+	if (has_bbox)
 	{
-		/* Whether these are geography or geometry, 
+		/* Whether these are geography or geometry,
 		   the GeoJSON expects a cartesian bounding box */
 		lwgeom_calculate_gbox_cartesian(geom, &tmp);
 		bbox = &tmp;
@@ -259,7 +273,7 @@ asgeojson_poly_size(const LWPOLY *poly, char *srs, GBOX *bbox, int precision)
 	if (srs) size += asgeojson_srs_size(srs);
 	if (bbox) size += asgeojson_bbox_size(FLAGS_GET_Z(poly->flags), precision);
 	size += sizeof("\"coordinates\":[");
-	for (i=0, size=0; i<poly->nrings; i++)
+	for (i=0; i<poly->nrings; i++)
 	{
 		size += pointArray_geojson_size(poly->rings[i], precision);
 		size += sizeof("[]");

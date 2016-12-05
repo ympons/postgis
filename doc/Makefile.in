@@ -7,7 +7,7 @@
 #
 # PostGIS documentation build Makefile
 #
-# Copyright 2003-2012 Sandro Santilli <strk@keybit.net>
+# Copyright 2003-2012 Sandro Santilli <strk@kbt.io>
 # Copyright 2004-2012 Paul Ramsey <pramsey@cleverelephant.ca>
 # Copyright 2009-2011 Regina Obe <lr@pcorp.us>
 # Copyright 2008-2010 Mark Cave-Ayland
@@ -21,7 +21,7 @@
 # that we could produce a large number of files (think chunked HTML)
 #
 
-translations = it_IT pt_BR fr es pl ko_KR
+translations = it_IT pt_BR fr es pl ko_KR de_DE ja
 
 POSTGIS_MAJOR_VERSION=@POSTGIS_MAJOR_VERSION@
 POSTGIS_MINOR_VERSION=@POSTGIS_MINOR_VERSION@
@@ -395,6 +395,12 @@ else
 check: $(XML_INPUTS)
 	$(XMLLINT) --loaddtd --xinclude --valid postgis-out.xml > /dev/null
 endif
+
+check-localized:
+	@for lang in $(translations); do \
+    echo "Creating html for language $$lang..."; \
+    $(MAKE) -C po/$$lang local-check; \
+  done
 
 
 requirements_not_met_xsltproc:

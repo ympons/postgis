@@ -23,6 +23,8 @@ IMAGES= \
 	../images/de9im02.png \
 	../images/st_azimuth01.png \
 	../images/st_azimuth02.png \
+	../images/st_boundary01.png \
+	../images/st_boundary02.png \
 	../images/st_buffer01.png \
 	../images/st_buffer02.png \
 	../images/st_buffer03.png \
@@ -35,6 +37,8 @@ IMAGES= \
 	../images/st_buildarea02.png \
 	../images/st_closestpoint01.png \
 	../images/st_closestpoint02.png \
+	../images/st_clusterkmeans01.png \
+	../images/st_clusterkmeans02.png \
 	../images/st_centroid01.png \
 	../images/st_centroid02.png \
 	../images/st_centroid03.png \
@@ -63,6 +67,9 @@ IMAGES= \
 	../images/st_dumppoints01.png \
 	../images/st_extrude01.png \
 	../images/st_extrude03.png \
+	../images/st_generatepoints01.png \
+	../images/st_generatepoints02.png \
+	../images/st_geometricmedian01.png \
 	../images/st_issimple01.png \
 	../images/st_issimple02.png \
 	../images/st_issimple03.png \
@@ -129,6 +136,9 @@ IMAGES= \
 	../images/st_touches04.png \
 	../images/st_touches05.png \
 	../images/st_touches06.png \
+	../images/st_voronoi01.png \
+	../images/st_voronoi02.png \
+	../images/st_voronoi03.png \
 	../images/st_within01.png
 
 # Images that are created with dimensions 100x100

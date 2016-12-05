@@ -3,12 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2001-2006 Refractions Research Inc.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 
 #include "liblwgeom_internal.h"
@@ -17,11 +30,26 @@
 #include <stdio.h>
 #include <errno.h>
 #include <assert.h>
+#include "../postgis_svn_revision.h"
 
 /*
  * Lower this to reduce integrity checks
  */
 #define PARANOIA_LEVEL 1
+
+const char *
+lwgeom_version()
+{
+  static char *ptr = NULL;
+  static char buf[256];
+  if ( ! ptr )
+  {
+    ptr = buf;
+    snprintf(ptr, 256, LIBLWGEOM_VERSION" r%d", POSTGIS_SVN_REVISION);
+  }
+
+  return ptr;
+}
 
 
 /**********************************************************************
@@ -211,6 +239,8 @@ getPoint4d(const POINTARRAY *pa, int n)
  * will set point's m=NO_M_VALUE  if pa is 3d or 2d
  *
  * NOTE: this will modify the point4d pointed to by 'point'.
+ *
+ * @return 0 on error, 1 on success
  */
 int
 getPoint4d_p(const POINTARRAY *pa, int n, POINT4D *op)
@@ -224,6 +254,7 @@ getPoint4d_p(const POINTARRAY *pa, int n, POINT4D *op)
 	if ( (n<0) || (n>=pa->npoints))
 	{
 		lwerror("getPoint4d_p: point offset out of range");
+		return 0;
 	}
 #endif
 
@@ -260,6 +291,7 @@ getPoint4d_p(const POINTARRAY *pa, int n, POINT4D *op)
 
 	default:
 		lwerror("Unknown ZM flag ??");
+		return 0;
 	}
 	return 1;
 
@@ -448,9 +480,9 @@ getPoint2d_p(const POINTARRAY *pa, int n, POINT2D *point)
 }
 
 /**
-* Returns a pointer into the POINTARRAY serialized_ptlist, 
+* Returns a pointer into the POINTARRAY serialized_ptlist,
 * suitable for reading from. This is very high performance
-* and declared const because you aren't allowed to muck with the 
+* and declared const because you aren't allowed to muck with the
 * values, only read them.
 */
 const POINT2D*
@@ -471,7 +503,7 @@ const POINT3DZ*
 getPoint3dz_cp(const POINTARRAY *pa, int n)
 {
 	if ( ! pa ) return 0;
-	
+
 	if ( ! FLAGS_GET_Z(pa->flags) )
 	{
 		lwerror("getPoint3dz_cp: no Z coordinates in point array");
@@ -492,7 +524,7 @@ const POINT4D*
 getPoint4d_cp(const POINTARRAY *pa, int n)
 {
 	if ( ! pa ) return 0;
-	
+
 	if ( ! (FLAGS_GET_Z(pa->flags) && FLAGS_GET_Z(pa->flags)) )
 	{
 		lwerror("getPoint3dz_cp: no Z and M coordinates in point array");

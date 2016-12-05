@@ -15,6 +15,7 @@
 #include "CUnit/Basic.h"
 
 #include "liblwgeom_internal.h"
+#include "g_serialized.c" /* for gserialized_peek_gbox_p */
 #include "cu_tester.h"
 
 static void test_typmod_macros(void)
@@ -283,7 +284,7 @@ static void test_lwgeom_from_gserialized(void)
 		geom = lwgeom_from_wkt(in_ewkt, LW_PARSER_CHECK_NONE);
 		lwgeom_add_bbox(geom);
 		if ( geom->bbox ) gbox_float_round(geom->bbox);
-		g = gserialized_from_lwgeom(geom, 0, 0);
+		g = gserialized_from_lwgeom(geom, 0);
 
 		geom2 = lwgeom_from_gserialized(g);
 		out_ewkt = lwgeom_to_ewkt(geom2);
@@ -337,7 +338,7 @@ static void test_gserialized_is_empty(void)
 	{
 		// i = 11;
 		LWGEOM *lw = lwgeom_from_wkt(cases[i].wkt, LW_PARSER_CHECK_NONE);
-		GSERIALIZED *g = gserialized_from_lwgeom(lw, 0, 0);
+		GSERIALIZED *g = gserialized_from_lwgeom(lw, 0);
 		int ie = gserialized_is_empty(g);
 		// printf("%s: we say %d, they say %d\n", cases[i].wkt, cases[i].isempty, ie);
 		CU_ASSERT_EQUAL(ie, cases[i].isempty);
@@ -420,7 +421,7 @@ static void test_on_gser_lwgeom_count_vertices(void)
 
 	lwgeom = lwgeom_from_wkt("MULTIPOINT(-1 -1,-1 2.5,2 2,2 -1,1 1,2 2,4 5)", LW_PARSER_CHECK_NONE);
 	CU_ASSERT_EQUAL(lwgeom_count_vertices(lwgeom),7);
-	g_ser1 = gserialized_from_lwgeom(lwgeom, 1, &ret_size);
+	g_ser1 = gserialized_from_lwgeom(lwgeom, &ret_size);
 	lwgeom_free(lwgeom);
 
 	lwgeom = lwgeom_from_gserialized(g_ser1);
@@ -789,7 +790,7 @@ static void test_lwgeom_force_clockwise(void)
 	geom2 = lwgeom_from_hexwkb(in_ewkt, LW_PARSER_CHECK_NONE);
 	lwgeom_force_clockwise(geom2);
 	
-	/** use same check instead of strcmp to account 
+	/** use same check instead of strcmp to account
 	  for difference in endianness **/
 	CU_ASSERT( lwgeom_same(geom, geom2) );
 	lwgeom_free(geom);
@@ -1051,11 +1052,11 @@ void test_gbox_same_2d(void)
 
     CU_ASSERT_TRUE(gbox_same_2d(g1->bbox, g2->bbox));
     CU_ASSERT_FALSE(gbox_same_2d(g1->bbox, g3->bbox));
-    
+
     /* Serializing a GBOX with precise coordinates renders the boxes not strictly equal,
      * but still equal according to gbox_same_2d_float.
      */
-    GSERIALIZED* s3 = gserialized_from_lwgeom(g3, LW_FALSE, NULL);
+    GSERIALIZED* s3 = gserialized_from_lwgeom(g3, NULL);
     GBOX s3box;
     gserialized_read_gbox_p(s3, &s3box);
 
@@ -1070,6 +1071,121 @@ void test_gbox_same_2d(void)
     lwgeom_free(g2);
     lwgeom_free(g3);
     lwfree(s3);
+}
+
+void test_gserialized_peek_gbox_p_no_box_when_empty(void);
+void test_gserialized_peek_gbox_p_no_box_when_empty(void)
+{
+	uint32_t i;
+
+	char *ewkt[] =
+	{
+		"POINT EMPTY",
+		"LINESTRING EMPTY",
+		"MULTIPOINT EMPTY",
+		"MULTIPOINT (EMPTY)",
+		"MULTILINESTRING EMPTY",
+		"MULTILINESTRING (EMPTY)"
+	};
+
+	for ( i = 0; i < (sizeof ewkt/sizeof(char*)); i++ )
+	{
+		LWGEOM* geom = lwgeom_from_wkt(ewkt[i], LW_PARSER_CHECK_NONE);
+		GBOX box;
+		gbox_init(&box);
+
+		GSERIALIZED* gser = gserialized_from_lwgeom(geom, NULL);
+
+		CU_ASSERT_FALSE(gserialized_has_bbox(gser));
+
+		CU_ASSERT_EQUAL(LW_FAILURE, gserialized_peek_gbox_p(gser, &box));
+
+		lwgeom_free(geom);
+		lwfree(gser);
+	}
+}
+
+void test_gserialized_peek_gbox_p_gets_correct_box(void);
+void test_gserialized_peek_gbox_p_gets_correct_box(void)
+{
+	uint32_t i;
+
+	char *ewkt[] =
+	{
+		"POINT (2.2945672355 48.85822923236)",
+		"POINTZ (2.2945672355 48.85822923236 15)",
+		"POINTM (2.2945672355 48.85822923236 12)",
+		"POINT ZM (2.2945672355 48.85822923236 12 2)",
+		"MULTIPOINT ((-76.45402132523 44.225406213532))",
+		"MULTIPOINT Z ((-76.45402132523 44.225406213532 112))",
+		"MULTIPOINT ZM ((-76.45402132523 44.225406213532 112 44))",
+		"LINESTRING (2.2945672355 48.85822923236, -76.45402132523 44.225406213532)",
+		"LINESTRING Z (2.2945672355 48.85822923236 6, -76.45402132523 44.225406213532 8)",
+		"LINESTRING ZM (2.2945672355 48.85822923236 3 2, -76.45402132523 44.225406213532 9 4)",
+		"MULTILINESTRING ((2.2945672355 48.85822923236, -76.45402132523 44.225406213532))",
+		"MULTILINESTRING Z ((2.2945672355 48.85822923236 4, -76.45402132523 44.225406213532 3))"
+	};
+
+	for ( i = 0; i < (sizeof ewkt/sizeof(char*)); i++ )
+	{
+		LWGEOM* geom = lwgeom_from_wkt(ewkt[i], LW_PARSER_CHECK_NONE);
+		GBOX box_from_peek;
+		GBOX box_from_lwgeom;
+		gbox_init(&box_from_peek);
+		gbox_init(&box_from_lwgeom);
+
+		GSERIALIZED* gser = gserialized_from_lwgeom(geom, NULL);
+
+		CU_ASSERT_FALSE(gserialized_has_bbox(gser));
+
+		lwgeom_calculate_gbox(geom, &box_from_lwgeom);
+		gserialized_peek_gbox_p(gser, &box_from_peek);
+
+		gbox_float_round(&box_from_lwgeom);
+
+		CU_ASSERT_TRUE(gbox_same(&box_from_peek, &box_from_lwgeom));
+
+		lwgeom_free(geom);
+		lwfree(gser);
+	}
+}
+
+void test_gserialized_peek_gbox_p_fails_for_unsupported_cases(void);
+void test_gserialized_peek_gbox_p_fails_for_unsupported_cases(void)
+{
+	uint32_t i;
+
+	char *ewkt[] =
+	{
+		"MULTIPOINT ((-76.45402132523 44.225406213532), (-72 33))",
+		"LINESTRING (2.2945672355 48.85822923236, -76.45402132523 44.225406213532, -72 33)",
+		"MULTILINESTRING ((2.2945672355 48.85822923236, -76.45402132523 44.225406213532, -72 33))",
+		"MULTILINESTRING ((2.2945672355 48.85822923236, -76.45402132523 44.225406213532), (-72 33, -71 32))"
+	};
+
+	for ( i = 0; i < (sizeof ewkt/sizeof(char*)); i++ )
+	{
+		LWGEOM* geom = lwgeom_from_wkt(ewkt[i], LW_PARSER_CHECK_NONE);
+		GBOX box;
+		gbox_init(&box);
+		lwgeom_drop_bbox(geom);
+
+		/* Construct a GSERIALIZED* that doesn't have a box, so that we can test the
+		 * actual logic of the peek function */
+		size_t expected_size = gserialized_from_lwgeom_size(geom);
+		GSERIALIZED* gser = lwalloc(expected_size);
+		uint8_t* ptr = (uint8_t*) gser;
+
+		ptr += 8; // Skip header
+		gserialized_from_lwgeom_any(geom, ptr);
+		gser->flags = geom->flags;
+
+		CU_ASSERT_FALSE(gserialized_has_bbox(gser));
+		CU_ASSERT_EQUAL(LW_FAILURE, gserialized_peek_gbox_p(gser, &box));
+
+		lwgeom_free(geom);
+		lwfree(gser);
+	}
 }
 
 /*
@@ -1101,5 +1217,8 @@ void libgeom_suite_setup(void)
 	PG_ADD_TEST(suite, test_lwgeom_as_curve);
 	PG_ADD_TEST(suite, test_lwgeom_scale);
 	PG_ADD_TEST(suite, test_gserialized_is_empty);
-    PG_ADD_TEST(suite, test_gbox_same_2d);
+	PG_ADD_TEST(suite, test_gserialized_peek_gbox_p_no_box_when_empty);
+	PG_ADD_TEST(suite, test_gserialized_peek_gbox_p_gets_correct_box);
+	PG_ADD_TEST(suite, test_gserialized_peek_gbox_p_fails_for_unsupported_cases);
+	PG_ADD_TEST(suite, test_gbox_same_2d);
 }

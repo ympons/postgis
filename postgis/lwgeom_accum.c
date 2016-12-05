@@ -2,12 +2,26 @@
  *
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2009 Paul Ramsey <pramsey@opengeo.org>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "postgres.h"
 #include "fmgr.h"
@@ -275,7 +289,9 @@ pgis_geometry_polygonize_finalfn(PG_FUNCTION_ARGS)
 	p = (pgis_abs*) PG_GETARG_POINTER(0);
 
 	geometry_array = pgis_accum_finalfn(p, CurrentMemoryContext, fcinfo);
-	result = DirectFunctionCall1( polygonize_garray, geometry_array );
+	result = PGISDirectFunctionCall1( polygonize_garray, geometry_array );
+	if (!result)
+		PG_RETURN_NULL();
 
 	PG_RETURN_DATUM(result);
 }
@@ -402,10 +418,10 @@ PGISDirectFunctionCall2(PGFunction func, Datum arg1, Datum arg2)
 
 #if POSTGIS_PGSQL_VERSION > 90
 
-	InitFunctionCallInfoData(fcinfo, NULL, 1, InvalidOid, NULL, NULL);
+	InitFunctionCallInfoData(fcinfo, NULL, 2, InvalidOid, NULL, NULL);
 #else
 
-	InitFunctionCallInfoData(fcinfo, NULL, 1, NULL, NULL);
+	InitFunctionCallInfoData(fcinfo, NULL, 2, NULL, NULL);
 #endif
 
 	fcinfo.arg[0] = arg1;

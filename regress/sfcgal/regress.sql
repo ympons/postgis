@@ -156,14 +156,14 @@ select '95','MULTIPOINT(0 0, 1 1)'::GEOMETRY && 'MULTIPOINT(1.0001 0, 2 2)'::GEO
 select '96','MULTIPOINT(0 0, 1 1)'::GEOMETRY && 'MULTIPOINT(0 1, 1 2)'::GEOMETRY as bool;
 select '97','MULTIPOINT(0 0, 1 1)'::GEOMETRY && 'MULTIPOINT(0 1.0001, 1 2)'::GEOMETRY as bool;
 
---- contains 
+--- contains
 
 select '98','MULTIPOINT(0 0, 10 10)'::GEOMETRY ~ 'MULTIPOINT(5 5, 7 7)'::GEOMETRY as bool;
 select '99','MULTIPOINT(5 5, 7 7)'::GEOMETRY ~ 'MULTIPOINT(0 0, 10 10)'::GEOMETRY as bool;
 select '100','MULTIPOINT(0 0, 7 7)'::GEOMETRY ~ 'MULTIPOINT(0 0, 10 10)'::GEOMETRY as bool;
 select '101','MULTIPOINT(-0.0001 0, 7 7)'::GEOMETRY ~ 'MULTIPOINT(0 0, 10 10)'::GEOMETRY as bool;
 
---- contained by 
+--- contained by
 
 select '102','MULTIPOINT(0 0, 10 10)'::GEOMETRY @ 'MULTIPOINT(5 5, 7 7)'::GEOMETRY as bool;
 select '103','MULTIPOINT(5 5, 7 7)'::GEOMETRY @ 'MULTIPOINT(0 0, 10 10)'::GEOMETRY as bool;
@@ -178,7 +178,12 @@ select '105','MULTIPOINT(-0.0001 0, 7 7)'::GEOMETRY @ 'MULTIPOINT(0 0, 10 10)'::
 select '106',box3d('MULTIPOINT(0 0, 7 7)'::GEOMETRY) as bvol;
 
 -- box3d only type is only used for indexing -- NEVER use one yourself
-select '107',ST_AsEWKT(geometry('BOX3D(0 0 0, 7 7 7 )'::BOX3D));
+select '107a',ST_AsEWKT(geometry('BOX3D(1 2 3, 1 2 3 )'::BOX3D));
+select '107b',ST_AsEWKT(geometry('BOX3D(2 3 3, 7 3 3 )'::BOX3D));
+select '107c',ST_AsEWKT(geometry('BOX3D(2 3 5, 6 8 5 )'::BOX3D));
+select '107d',ST_AsEWKT(geometry('BOX3D(1 -1 4, 2 -1 9 )'::BOX3D));
+select '107e',ST_AsEWKT(geometry('BOX3D(-1 3 5, -1 6 8 )'::BOX3D));
+select '107f',ST_AsEWKT(geometry('BOX3D(1 2 3, 4 5 6 )'::BOX3D));
 
 --- debug function testing
 
@@ -202,7 +207,7 @@ create table TEST(a GEOMETRY, b GEOMETRY);
 \i regress_biginsert.sql
 
 
----test basic ops on this 
+---test basic ops on this
 
 select '121',box3d(a) as box3d_a, box3d(b) as box3d_b from TEST;
 
@@ -213,7 +218,7 @@ select '125',a &>b from TEST;
 
 select '126',a ~= b from TEST;
 select '127',a @ b from TEST;
-select '128',a ~ b from TEST; 
+select '128',a ~ b from TEST;
 
 select '129', ST_MemSize(PostGIS_DropBBOX(a)), ST_MemSize(PostGIS_DropBBOX(b)) from TEST;
 
@@ -246,7 +251,7 @@ select '149', ST_AsText(ST_segmentize('GEOMETRYCOLLECTION EMPTY'::geometry, 0.5)
 
 select '150', ST_AsEWKT(ST_ForceCollection(ST_setsrid('POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))'::geometry, 6)));
 
-select '151', ST_MakeEnvelope(0, 0, 1, 1, 4326);
+select '151', encode(ST_AsEWKB(ST_MakeEnvelope(0, 0, 1, 1, 4326),'ndr'),'hex');
 select '152', ST_SRID(ST_MakeEnvelope(0, 0, 1, 1, 4326));
 select '152.1', ST_SRID(ST_MakeEnvelope(0, 0, 1, 1)) = ST_SRID('POINT(0 0)'::geometry);
 select '152.2', ST_SRID(ST_SetSRID(ST_MakeEnvelope(0, 0, 1, 1), 4326));
@@ -260,7 +265,7 @@ select '158', ST_AsText(ST_CollectionExtract('GEOMETRYCOLLECTION(GEOMETRYCOLLECT
 select '159', ST_AsText(ST_CollectionExtract('GEOMETRYCOLLECTION(GEOMETRYCOLLECTION(LINESTRING(0 0, 1 1), POINT(1 1)),LINESTRING(2 2, 3 3))',3));
 select '160', ST_AsText(ST_CollectionExtract('GEOMETRYCOLLECTION(GEOMETRYCOLLECTION(LINESTRING(0 0, 1 1), POINT(1 1)),LINESTRING(2 2, 3 3))',1));
 select '161', ST_AsText(ST_CollectionExtract('GEOMETRYCOLLECTION(GEOMETRYCOLLECTION(LINESTRING(0 0, 1 1), GEOMETRYCOLLECTION(POINT(1 1))),LINESTRING(2 2, 3 3))',2));
-select '162', ST_MakeLine(ST_GeomFromText('POINT(-11.1111111 40)'),ST_GeomFromText('LINESTRING(-11.1111111 70,70 -11.1111111)')) As result;
+select '162', encode(ST_AsEWKB(ST_MakeLine(ST_GeomFromText('POINT(-11.1111111 40)'),ST_GeomFromText('LINESTRING(-11.1111111 70,70 -11.1111111)')),'ndr'),'hex') As result;
 select '163', ST_AsEWKT('POLYGON((0 0 0, 1 0 0, 1 1 0, 0 1 0, 0 0 0))');
 select '164', ST_AsEWKT('POLYGON((0 0 0, 1 0 0, 1 1 0, 0 1 0, 0 0 1))');
 select '165', ST_AsEWKT('POLYGON((0 0 0, 1 0 0, 1 1 0, 0 1 0, 0 0.1 1))');

@@ -1,8 +1,8 @@
 set client_min_messages to WARNING;
 
--- 
+--
 -- ST_InitTopoGeo
--- 
+--
 
 SELECT regexp_replace(ST_InitTopoGeo('sqlmm_topology'), 'id:[0-9]*', 'id:x');
 
@@ -33,7 +33,7 @@ SELECT topology.ST_AddIsoNode('sqlmm_topology', NULL, 'POINT(10 0)');
 SELECT topology.ST_AddIsoNode('sqlmm_topology', NULL, 'POINT(10.000000000000001 0)');
 SELECT topology.ST_AddIsoNode('sqlmm_topology', NULL, 'POINT(7 10)');
 
--- non-existent face specification 
+-- non-existent face specification
 SELECT topology.ST_AddIsoNode('sqlmm_topology', 1, 'POINT(20 0)');
 
 -- using other then point
@@ -71,7 +71,7 @@ SELECT topology.ST_AddIsoEdge('sqlmm_topology', 10000, 2, 'LINESTRING(0 0, 1 1)'
 SELECT topology.ST_AddIsoEdge('sqlmm_topology', 1, 2, 'LINESTRING(0 0, 1 1)');
 SELECT topology.ST_AddIsoEdge('sqlmm_topology', 1, 2, 'LINESTRING(0 1, 10 0)');
 
--- Node crossing 
+-- Node crossing
 SELECT topology.ST_AddIsoEdge('sqlmm_topology', 1, 2, 'LINESTRING(0 0, 10 0)');
 
 -- Good ones
@@ -94,7 +94,7 @@ SELECT topology.ST_AddIsoEdge('sqlmm_topology', 1, 2, 'LINESTRING(0 0, 2 20, 10 
 
 SELECT '-- ST_AddIsoNode(2) ------------------------';
 
--- ST_AddIsoNode edge-crossing node 
+-- ST_AddIsoNode edge-crossing node
 SELECT topology.ST_AddIsoNode('sqlmm_topology', NULL, 'POINT(5 9.5)');
 
 -------------------------------------------------------------
@@ -135,7 +135,26 @@ SELECT topology.ST_MoveIsoNode('sqlmm_topology', 8, 'POINT(7 10)');
 -------------------------------------------------------------
 SELECT '-- ST_RemoveIsoEdge ---------------------';
 
+CREATE TEMP TABLE edge1_endnodes AS
+  WITH edge AS (
+    SELECT start_node,end_node
+    FROM sqlmm_topology.edge_data
+    WHERE edge_id = 1
+  )
+  SELECT start_node id FROM edge UNION
+  SELECT end_node FROM edge;
+SELECT '#3351.1', node_id, containing_face
+ FROM sqlmm_topology.node where node_id in (
+    SELECT id FROM edge1_endnodes
+  )
+ ORDER BY node_id;
 SELECT topology.ST_RemoveIsoEdge('sqlmm_topology', 1);
+SELECT '#3351.2', node_id, containing_face
+ FROM sqlmm_topology.node where node_id in (
+    SELECT id FROM edge1_endnodes
+  )
+ ORDER BY node_id;
+DROP TABLE edge1_endnodes;
 
 -------------------------------------------------------------
 -- ST_NewEdgesSplit

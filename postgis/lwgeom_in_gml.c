@@ -2,12 +2,26 @@
  *
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2009 - 2010 Oslandia
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 /**
 * @file GML input routines.
@@ -64,7 +78,7 @@ gmlSrs;
 
 
 
-static void gml_lwpgerror(char *msg, int error_code) 
+static void gml_lwpgerror(char *msg, int error_code)
 {
         POSTGIS_DEBUGF(3, "ST_GeomFromGML ERROR %i", error_code);
         lwpgerror("%s", msg);
@@ -143,7 +157,7 @@ static bool is_gml_namespace(xmlNodePtr xnode, bool is_strict)
                                 return true;
 			} else {
                                 xmlFree(ns);
-                                return false; 
+                                return false;
                         }
 		}
 	}
@@ -915,7 +929,7 @@ static LWGEOM* parse_gml_point(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	if (is_xlink(xnode)) xnode = get_xlink_node(xnode);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return lwpoint_as_lwgeom(lwpoint_construct_empty(*root_srid, 0, 0));
 
 	pa = parse_gml_data(xnode->children, hasz, root_srid);
@@ -950,7 +964,7 @@ static LWGEOM* parse_gml_line(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	if (is_xlink(xnode)) xnode = get_xlink_node(xnode);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return lwline_as_lwgeom(lwline_construct_empty(*root_srid, 0, 0));
 		
 	pa = parse_gml_data(xnode->children, hasz, root_srid);
@@ -1097,10 +1111,10 @@ static LWGEOM* parse_gml_linearring(xmlNodePtr xnode, bool *hasz, int *root_srid
             ||  (*hasz && !ptarray_is_closed_3d(ppa[0])))
 	    gml_lwpgerror("invalid GML representation", 42);
 
-	if (srs.reverse_axis) 
+	if (srs.reverse_axis)
 		ppa[0] = ptarray_flip_coordinates(ppa[0]);
 	
-	if (srs.srid != *root_srid && *root_srid != SRID_UNKNOWN) 
+	if (srs.srid != *root_srid && *root_srid != SRID_UNKNOWN)
 		gml_reproject_pa(ppa[0], srs.srid, *root_srid);
 		
 	geom = (LWGEOM *) lwpoly_construct(*root_srid, NULL, 1, ppa);
@@ -1122,7 +1136,7 @@ static LWGEOM* parse_gml_polygon(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	if (is_xlink(xnode)) xnode = get_xlink_node(xnode);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return lwpoly_as_lwgeom(lwpoly_construct_empty(*root_srid, 0, 0));
 
 	parse_gml_srs(xnode, &srs);
@@ -1214,7 +1228,7 @@ static LWGEOM* parse_gml_triangle(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	if (is_xlink(xnode)) xnode = get_xlink_node(xnode);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return lwtriangle_as_lwgeom(lwtriangle_construct_empty(*root_srid, 0, 0));
 
 	/* GML SF is resticted to planar interpolation
@@ -1438,7 +1452,7 @@ static LWGEOM* parse_gml_tin(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	geom = (LWGEOM *)lwcollection_construct_empty(TINTYPE, *root_srid, 1, 0);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return geom;
 
 	/* Looking for gml:patches or gml:trianglePatches */
@@ -1488,7 +1502,7 @@ static LWGEOM* parse_gml_mpoint(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	geom = (LWGEOM *)lwcollection_construct_empty(MULTIPOINTTYPE, *root_srid, 1, 0);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return geom;
 
 	for (xa = xnode->children ; xa != NULL ; xa = xa->next)
@@ -1534,7 +1548,7 @@ static LWGEOM* parse_gml_mline(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	geom = (LWGEOM *)lwcollection_construct_empty(MULTILINETYPE, *root_srid, 1, 0);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return geom;
 
 	for (xa = xnode->children ; xa != NULL ; xa = xa->next)
@@ -1569,7 +1583,7 @@ static LWGEOM* parse_gml_mcurve(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	geom = (LWGEOM *)lwcollection_construct_empty(MULTILINETYPE, *root_srid, 1, 0);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return geom;
 
 	for (xa = xnode->children ; xa != NULL ; xa = xa->next)
@@ -1616,7 +1630,7 @@ static LWGEOM* parse_gml_mpoly(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	geom = (LWGEOM *)lwcollection_construct_empty(MULTIPOLYGONTYPE, *root_srid, 1, 0);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return geom;
 
 	for (xa = xnode->children ; xa != NULL ; xa = xa->next)
@@ -1651,7 +1665,7 @@ static LWGEOM* parse_gml_msurface(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	geom = (LWGEOM *)lwcollection_construct_empty(MULTIPOLYGONTYPE, *root_srid, 1, 0);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return geom;
 
 	for (xa = xnode->children ; xa != NULL ; xa = xa->next)
@@ -1699,7 +1713,7 @@ static LWGEOM* parse_gml_psurface(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	geom = (LWGEOM *)lwcollection_construct_empty(POLYHEDRALSURFACETYPE, *root_srid, 1, 0);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return geom;
 
 	/* Looking for gml:polygonPatches */
@@ -1747,7 +1761,7 @@ static LWGEOM* parse_gml_coll(xmlNodePtr xnode, bool *hasz, int *root_srid)
 
 	geom = (LWGEOM *)lwcollection_construct_empty(COLLECTIONTYPE, *root_srid, 1, 0);
 
-	if (xnode->children == NULL) 
+	if (xnode->children == NULL)
 		return geom;
 
 	for (xa = xnode->children ; xa != NULL ; xa = xa->next)
@@ -1803,7 +1817,7 @@ static LWGEOM* lwgeom_from_gml(const char* xml)
 	/* shouldn't we be releasing xmldoc too here ? */
 
 
-	if ( root_srid != SRID_UNKNOWN ) 
+	if ( root_srid != SRID_UNKNOWN )
 		lwgeom->srid = root_srid;
 
 	/* Should we really do this here ? */

@@ -2,14 +2,26 @@
  *
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
- * adapted from lwout_asgml.c
- * Copyright 2011-2015 Arrival 3D
- * 				Regina Obe with input from Dave Arendash
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright 2011-2016 Arrival 3D, Regina Obe
  *
  **********************************************************************/
+
 /**
 * @file X3D output routines.
 *
@@ -430,7 +442,7 @@ asx3d3_multi_buf(const LWCOLLECTION *col, char *srs, char *output, int precision
         case MULTIPOINTTYPE:
             x3dtype = "PointSet";
             if ( dimension == 2 ){ /** Use Polypoint2D instead **/
-                x3dtype = "Polypoint2D";   
+                x3dtype = "Polypoint2D";
                 ptr += sprintf(ptr, "<%s %s point='", x3dtype, defid);
             }
             else {
@@ -445,7 +457,7 @@ asx3d3_multi_buf(const LWCOLLECTION *col, char *srs, char *output, int precision
             break;
         case MULTIPOLYGONTYPE:
             x3dtype = "IndexedFaceSet";
-            ptr += sprintf(ptr, "<%s %s coordIndex='", x3dtype, defid);
+            ptr += sprintf(ptr, "<%s %s convex='false' coordIndex='", x3dtype, defid);
             ptr += asx3d3_mpoly_coordindex((const LWMPOLY *)col, ptr);
             ptr += sprintf(ptr, "'>");
             break;
@@ -454,7 +466,7 @@ asx3d3_multi_buf(const LWCOLLECTION *col, char *srs, char *output, int precision
             return 0;
     }
     if (dimension == 3){
-		if ( X3D_USE_GEOCOORDS(opts) ) 
+		if ( X3D_USE_GEOCOORDS(opts) )
 			ptr += sprintf(ptr, "<GeoCoordinate geoSystem='\"GD\" \"WE\" \"%s\"' point='", ((opts & LW_X3D_FLIP_XY) ? "latitude_first" : "longitude_first") );
 		else
         	ptr += sprintf(ptr, "<Coordinate point='");
@@ -484,7 +496,7 @@ asx3d3_multi_buf(const LWCOLLECTION *col, char *srs, char *output, int precision
 	if (dimension == 3){
 	    ptr += sprintf(ptr, "' /></%s>", x3dtype);
 	}
-	else { ptr += sprintf(ptr, "' />"); }    
+	else { ptr += sprintf(ptr, "' />"); }
 	return (ptr-output);
 }
 
@@ -511,8 +523,8 @@ asx3d3_psurface_size(const LWPSURFACE *psur, char *srs, int precision, int opts,
 	size_t size;
 	size_t defidlen = strlen(defid);
 
-	if ( X3D_USE_GEOCOORDS(opts) ) size = sizeof("<IndexedFaceSet coordIndex=''><GeoCoordinate geoSystem='\"GD\" \"WE\" \"longitude_first\"' point='' />") + defidlen;
-	else size = sizeof("<IndexedFaceSet coordIndex=''><Coordinate point='' />") + defidlen;
+	if ( X3D_USE_GEOCOORDS(opts) ) size = sizeof("<IndexedFaceSet convex='false' coordIndex=''><GeoCoordinate geoSystem='\"GD\" \"WE\" \"longitude_first\"' point='' />") + defidlen;
+	else size = sizeof("<IndexedFaceSet convex='false' coordIndex=''><Coordinate point='' />") + defidlen;
 	
 
 	for (i=0; i<psur->ngeoms; i++)
@@ -540,7 +552,7 @@ asx3d3_psurface_buf(const LWPSURFACE *psur, char *srs, char *output, int precisi
 	ptr = output;
 
 	/* Open outmost tag */
-	ptr += sprintf(ptr, "<IndexedFaceSet %s coordIndex='",defid);
+	ptr += sprintf(ptr, "<IndexedFaceSet convex='false' %s coordIndex='",defid);
 
 	j = 0;
 	for (i=0; i<psur->ngeoms; i++)
@@ -562,7 +574,7 @@ asx3d3_psurface_buf(const LWPSURFACE *psur, char *srs, char *output, int precisi
 		j += k;
 	}
 
-	if ( X3D_USE_GEOCOORDS(opts) ) 
+	if ( X3D_USE_GEOCOORDS(opts) )
 		ptr += sprintf(ptr, "'><GeoCoordinate geoSystem='\"GD\" \"WE\" \"%s\"' point='", ( (opts & LW_X3D_FLIP_XY) ? "latitude_first" : "longitude_first") );
 	else ptr += sprintf(ptr, "'><Coordinate point='");
 

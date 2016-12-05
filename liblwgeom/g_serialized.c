@@ -1,13 +1,27 @@
 /**********************************************************************
  *
  * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
  *
  * Copyright 2009 Paul Ramsey <pramsey@cleverelephant.ca>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "liblwgeom_internal.h"
 #include "lwgeom_log.h"
@@ -45,8 +59,8 @@ int gserialized_is_geodetic(const GSERIALIZED *gser)
 {
 	  return FLAGS_GET_GEODETIC(gser->flags);
 }
- 
-uint32_t gserialized_max_header_size(void) 
+
+uint32_t gserialized_max_header_size(void)
 {
 	/* read GSERIALIZED size + max bbox according gbox_serialized_size (2 + Z + M) + 1 int for type */
 	return sizeof(GSERIALIZED) + 8 * sizeof(float) + sizeof(int);
@@ -77,7 +91,7 @@ int32_t gserialized_get_srid(const GSERIALIZED *s)
 	srid = (srid<<11)>>11;
 	
 	/* 0 is our internal unknown value. We'll map back and forth here for now */
-	if ( srid == 0 ) 
+	if ( srid == 0 )
 		return SRID_UNKNOWN;
 	else
 		return clamp_srid(srid);
@@ -227,6 +241,7 @@ static int gserialized_peek_gbox_p(const GSERIALIZED *g, GBOX *gbox)
 
 		gbox->xmin = gbox->xmax = dptr[i++];
 		gbox->ymin = gbox->ymax = dptr[i++];
+		gbox->flags = g->flags;
 		if ( FLAGS_GET_Z(g->flags) )
 		{
 			gbox->zmin = gbox->zmax = dptr[i++];
@@ -262,6 +277,7 @@ static int gserialized_peek_gbox_p(const GSERIALIZED *g, GBOX *gbox)
 		gbox->ymin = FP_MIN(dptr[i], dptr[i+ndims]);
 		gbox->ymax = FP_MAX(dptr[i], dptr[i+ndims]);
 	
+		gbox->flags = g->flags;
 		if ( FLAGS_GET_Z(g->flags) )
 		{
 			/* Advance to Z */
@@ -286,19 +302,29 @@ static int gserialized_peek_gbox_p(const GSERIALIZED *g, GBOX *gbox)
 		double *dptr = (double*)(g->data);
 		int *iptr = (int*)(g->data);
 		int ngeoms = iptr[1]; /* Read the ngeoms */
-	
+		int npoints;
+
 		/* This only works with single-entry multipoints */
 		if ( ngeoms != 1 )
 			return LW_FAILURE;
 
+		/* Npoints is at <multipointtype><ngeoms><pointtype><npoints> */
+		npoints = iptr[3];
+
+		/* The check below is necessary because we can have a MULTIPOINT
+		 * that contains a single, empty POINT (ngeoms = 1, npoints = 0) */
+		if ( npoints != 1 )
+			return LW_FAILURE;
+
 		/* Move forward two doubles (four ints) */
 		/* Past <multipointtype><ngeoms> */
-		/* Past <pointtype><emtpyflat> */
+		/* Past <pointtype><npoints> */
 		i += 2;
 
 		/* Read the doubles from the one point */
 		gbox->xmin = gbox->xmax = dptr[i++];
 		gbox->ymin = gbox->ymax = dptr[i++];
+		gbox->flags = g->flags;
 		if ( FLAGS_GET_Z(g->flags) )
 		{
 			gbox->zmin = gbox->zmax = dptr[i++];
@@ -319,7 +345,7 @@ static int gserialized_peek_gbox_p(const GSERIALIZED *g, GBOX *gbox)
 		int *iptr = (int*)(g->data);
 		int ngeoms = iptr[1]; /* Read the ngeoms */
 		int npoints;
-	
+
 		/* This only works with 1-line multilines */
 		if ( ngeoms != 1 )
 			return LW_FAILURE;
@@ -343,6 +369,7 @@ static int gserialized_peek_gbox_p(const GSERIALIZED *g, GBOX *gbox)
 		gbox->ymin = FP_MIN(dptr[i], dptr[i+ndims]);
 		gbox->ymax = FP_MAX(dptr[i], dptr[i+ndims]);
 	
+		gbox->flags = g->flags;
 		if ( FLAGS_GET_Z(g->flags) )
 		{
 			/* Advance to Z */
@@ -903,7 +930,7 @@ static size_t gserialized_from_gbox(const GBOX *gbox, uint8_t *buf)
 
 /* Public function */
 
-GSERIALIZED* gserialized_from_lwgeom(LWGEOM *geom, int is_geodetic, size_t *size)
+GSERIALIZED* gserialized_from_lwgeom(LWGEOM *geom, size_t *size)
 {
 	size_t expected_size = 0;
 	size_t return_size = 0;
@@ -921,7 +948,7 @@ GSERIALIZED* gserialized_from_lwgeom(LWGEOM *geom, int is_geodetic, size_t *size
 	}
 	
 	/*
-	** Harmonize the flags to the state of the lwgeom 
+	** Harmonize the flags to the state of the lwgeom
 	*/
 	if ( geom->bbox )
 		FLAGS_SET_BBOX(geom->flags, 1);
@@ -1270,7 +1297,7 @@ LWGEOM* lwgeom_from_gserialized(const GSERIALIZED *g)
 
 	lwgeom = lwgeom_from_gserialized_buffer(data_ptr, g_flags, &g_size);
 
-	if ( ! lwgeom ) 
+	if ( ! lwgeom )
 		lwerror("lwgeom_from_gserialized: unable create geometry"); /* Ooops! */
 
 	lwgeom->type = g_type;

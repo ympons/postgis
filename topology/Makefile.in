@@ -3,7 +3,7 @@
 # * PostGIS - Spatial Types for PostgreSQL
 # * http://postgis.net
 # * 
-# * Copyright (C) 2010-2011 Sandro Santilli <strk@keybit.net>
+# * Copyright (C) 2010-2011 Sandro Santilli <strk@kbt.io>
 # * Copyright (C) 2008 Mark Cave-Ayland
 # * Copyright (C) 2005 Refractions Research Inc.
 # *
@@ -19,7 +19,7 @@
 POSTGIS_PGSQL_VERSION=@POSTGIS_PGSQL_VERSION@
 
 MODULE_big=postgis_topology-@POSTGIS_MAJOR_VERSION@.@POSTGIS_MINOR_VERSION@
-MODULEDIR=contrib/$(MODULE_big)
+MODULEDIR=contrib/postgis-@POSTGIS_MAJOR_VERSION@.@POSTGIS_MINOR_VERSION@
 
 # Files to be copied to the contrib/ directory
 DATA_built=topology.sql topology_upgrade.sql uninstall_topology.sql
@@ -100,7 +100,29 @@ topology_upgrade.sql.in:  topology.sql
 topology_upgrade.sql: topology_drop_before.sql topology_upgrade.sql.in topology_drop_after.sql
 	cat $^ > $@
 
-topology.sql: sql/sqlmm.sql.in sql/populate.sql.in sql/polygonize.sql.in sql/export/gml.sql.in sql/export/TopoJSON.sql.in sql/query/getnodebypoint.sql.in sql/query/getedgebypoint.sql.in sql/query/getfacebypoint.sql.in sql/query/GetRingEdges.sql.in sql/query/GetNodeEdges.sql.in sql/manage/TopologySummary.sql.in sql/manage/CopyTopology.sql.in sql/manage/ManageHelper.sql.in sql/topoelement/topoelement_agg.sql.in sql/topogeometry/type.sql.in sql/topogeometry/totopogeom.sql.in sql/topogeometry/cleartopogeom.sql.in sql/topogeometry/simplify.sql.in sql/predicates.sql.in ../postgis/sqldefines.h ../postgis_svn_revision.h
+topology.sql: \
+	sql/sqlmm.sql.in \
+	sql/populate.sql.in \
+	sql/polygonize.sql.in \
+	sql/export/gml.sql.in \
+	sql/export/TopoJSON.sql.in \
+	sql/query/getnodebypoint.sql.in \
+	sql/query/getedgebypoint.sql.in \
+	sql/query/getfacebypoint.sql.in \
+	sql/query/GetRingEdges.sql.in \
+	sql/query/GetNodeEdges.sql.in \
+	sql/manage/TopologySummary.sql.in \
+	sql/manage/CopyTopology.sql.in \
+	sql/manage/ManageHelper.sql.in \
+	sql/topoelement/topoelement_agg.sql.in \
+	sql/topogeometry/type.sql.in \
+	sql/topogeometry/totopogeom.sql.in \
+	sql/topogeometry/cleartopogeom.sql.in \
+	sql/topogeometry/topogeom_edit.sql.in \
+	sql/topogeometry/simplify.sql.in \
+	sql/predicates.sql.in \
+	../postgis/sqldefines.h \
+	../postgis_svn_revision.h
 
 uninstall_topology.sql: topology.sql ../utils/create_undef.pl 
 	$(PERL) ../utils/create_undef.pl $< $(POSTGIS_PGSQL_VERSION) > $@

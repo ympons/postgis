@@ -3,7 +3,7 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright (C) 2011-2015 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011-2015 Sandro Santilli <strk@kbt.io>
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU General Public Licence. See the COPYING file.
@@ -18,7 +18,6 @@
 
 static void test_lwline_split_by_point_to(void)
 {
-#if POSTGIS_GEOS_VERSION >= 33
 	LWLINE *line;
 	LWPOINT *point;
 	LWMLINE *coll;
@@ -76,8 +75,6 @@ static void test_lwline_split_by_point_to(void)
 
 	lwcollection_free((LWCOLLECTION*)coll);
 	lwline_free(line);
-
-#endif /* POSTGIS_GEOS_VERSION >= 33 */
 }
 
 static void test_lwgeom_split(void)
@@ -246,6 +243,32 @@ static void test_lwgeom_split(void)
                 fprintf(stderr, "\nExp:  %s\nObt:  %s\n", in_wkt, wkt);
   CU_ASSERT_STRING_EQUAL(wkt, in_wkt);
   lwfree(wkt);
+	lwgeom_free(ret);
+	lwgeom_free(geom);
+	lwgeom_free(blade);
+
+  /* See #3401 -- robustness issue */
+  geom = lwgeom_from_wkt("LINESTRING(-180 0,0 0)", LW_PARSER_CHECK_NONE);
+  CU_ASSERT(geom != NULL);
+  blade = lwgeom_from_wkt("POINT(-20 0)", LW_PARSER_CHECK_NONE);
+  ret = lwgeom_split(geom, blade);
+  CU_ASSERT(ret != NULL);
+	{
+		LWCOLLECTION *split = lwgeom_as_lwcollection(ret);
+		LWLINE *l1, *l2;
+		POINT2D pt;
+		CU_ASSERT(split != NULL);
+		l1 = lwgeom_as_lwline(split->geoms[0]);
+		CU_ASSERT(l1 != NULL);
+		getPoint2d_p(l1->points, 1, &pt);
+		ASSERT_DOUBLE_EQUAL(pt.x, -20);
+		ASSERT_DOUBLE_EQUAL(pt.y, 0);
+		l2 = lwgeom_as_lwline(split->geoms[1]);
+		CU_ASSERT(l2 != NULL);
+		getPoint2d_p(l2->points, 0, &pt);
+		ASSERT_DOUBLE_EQUAL(pt.x, -20);
+		ASSERT_DOUBLE_EQUAL(pt.y, 0);
+	}
 	lwgeom_free(ret);
 	lwgeom_free(geom);
 	lwgeom_free(blade);

@@ -4,7 +4,7 @@
 # PostGIS - Spatial Types for PostgreSQL
 # http://postgis.net
 #
-# Copyright (C) 2012-2014 Sandro Santilli <strk@keybit.net>
+# Copyright (C) 2012-2014 Sandro Santilli <strk@kbt.io>
 # Copyright (C) 2014-2015 Regina Obe <lr@pcorp.us>
 # Copyright (C) 2012-2013 Paul Ramsey <pramsey@cleverelephant.ca>
 #
@@ -22,11 +22,18 @@ use Cwd 'abs_path';
 use Getopt::Long;
 use strict;
 
+##################################################################
+# Add . to @INC if removed for CVE-2016-1238
+##################################################################
+BEGIN {
+	push @INC, "." if(!grep /^\.$/, @INC);
+}
+
 
 ##################################################################
 # Usage ./run_test.pl <testname> [<testname>]
 #
-#  Create the spatial database 'postgis_reg' (or whatever $DB 
+#  Create the spatial database 'postgis_reg' (or whatever $DB
 #  is set to) if it doesn't already exist.
 #
 #  Run the <testname>.sql script
@@ -52,6 +59,7 @@ my $OPT_CLEAN = 0;
 my $OPT_NODROP = 0;
 my $OPT_NOCREATE = 0;
 my $OPT_UPGRADE = 0;
+my $OPT_DUMPRESTORE = 0;
 my $OPT_WITH_TOPO = 0;
 my $OPT_WITH_RASTER = 0;
 my $OPT_WITH_SFCGAL = 0;
@@ -66,9 +74,10 @@ my $VERBOSE = 0;
 GetOptions (
 	'verbose' => \$VERBOSE,
 	'clean' => \$OPT_CLEAN,
-	'nodrop' => \$OPT_NODROP, 
+	'nodrop' => \$OPT_NODROP,
 	'upgrade' => \$OPT_UPGRADE,
 	'upgrade-path=s' => \$OPT_UPGRADE_PATH,
+	'dumprestore' => \$OPT_DUMPRESTORE,
 	'nocreate' => \$OPT_NOCREATE,
 	'topology' => \$OPT_WITH_TOPO,
 	'raster' => \$OPT_WITH_RASTER,
@@ -86,15 +95,20 @@ if ( $OPT_UPGRADE_PATH )
 {
   if ( ! $OPT_EXTENSIONS )
   {
-    die "--upgrade-path is only supported with --extensions"
+    die "--upgrade-path is only supported with --extension"
   }
-  $OPT_UPGRADE = 1; # implied 
+  $OPT_UPGRADE = 1; # implied
   my @path = split ('--', $OPT_UPGRADE_PATH);
   $OPT_UPGRADE_FROM = $path[0]
     || die "Malformed upgrade path, <from>--<to> expected, $OPT_UPGRADE_PATH given";
   $OPT_UPGRADE_TO = $path[1]
     || die "Malformed upgrade path, <from>--<to> expected, $OPT_UPGRADE_PATH given";
   print "Upgrade path: ${OPT_UPGRADE_FROM} --> ${OPT_UPGRADE_TO}\n";
+}
+
+if ( $OPT_EXTENSIONS )
+{
+	$OPT_WITH_RASTER = 1; # implied
 }
 
 
@@ -156,7 +170,7 @@ foreach my $exec ( ($SHP2PGSQL, $PGSQL2SHP) )
 		print "failed\n";
 		die "Unable to find $exec executable.\n";
 	}
-	
+
 }
 
 if ( $OPT_WITH_RASTER )
@@ -191,7 +205,7 @@ else
 	$TMPDIR = tempdir( CLEANUP => 0 );
 }
 
-mkdir $TMPDIR if ( ! -d $TMPDIR );
+mkpath $TMPDIR; # make sure tmp dir exists
 
 # Set log name
 my $REGRESS_LOG = "${TMPDIR}/regress_log";
@@ -204,7 +218,7 @@ print "TMPDIR is $TMPDIR\n";
 # Prepare the database
 ##################################################################
 
-my @dblist = grep(/$DB/, split(/\n/, `psql -Xl`));
+my @dblist = grep(/\b$DB\b/, split(/\n/, `psql -Xl`));
 my $dbcount = @dblist;
 
 if ( $dbcount == 0 )
@@ -327,6 +341,11 @@ if ( $OPT_UPGRADE )
   $libver = sql("select postgis_lib_version()");
 }
 
+if ( $OPT_DUMPRESTORE )
+{
+  dump_restore();
+}
+
 
 ##################################################################
 # Report PostGIS environment
@@ -374,13 +393,13 @@ foreach $TEST (@ARGV)
 
 	start_test($TEST);
 
-	# Check for a "-pre.pl" file in case there are setup commands 
+	# Check for a "-pre.pl" file in case there are setup commands
     eval_file("${TEST}-pre.pl");
 
 	# Check for a "-pre.sql" file in case there is setup SQL needed before
 	# the test can be run.
 	if ( -r "${TEST}-pre.sql" )
-	{	
+	{
 		run_simple_sql("${TEST}-pre.sql");
 		show_progress();
 	}
@@ -411,7 +430,8 @@ foreach $TEST (@ARGV)
 	{
 		print " skipped (can't read any ${TEST}.{sql,dbf,tif,dmp})\n";
 		$SKIP++;
-		next;
+		# Even though we skipped this test, we will still run the cleanup
+		# scripts
 	}
 
 	if ( -r "${TEST}-post.sql" )
@@ -422,18 +442,18 @@ foreach $TEST (@ARGV)
 			print " ... but cleanup sql failed!";
 		}
 	}
-	
-	# Check for a "-post.pl" file in case there are teardown commands 
+
+	# Check for a "-post.pl" file in case there are teardown commands
     eval_file("${TEST}-post.pl");
-	
+
 }
 
 
-################################################################### 
+###################################################################
 # Uninstall postgis (serves as an uninstall test)
 ##################################################################
 
-# We only test uninstall if we've been asked to drop 
+# We only test uninstall if we've been asked to drop
 # and we did create
 # and nobody requested raster or topology
 # (until they have an uninstall script themself)
@@ -477,7 +497,7 @@ exit($FAIL);
 # Utility functions
 #
 
-sub usage 
+sub usage
 {
 	die qq{
 Usage: $0 [<options>] <testname> [<testname>]
@@ -485,6 +505,8 @@ Options:
   -v, --verbose   be verbose about failures
   --nocreate      do not create the regression database on start
   --upgrade       source the upgrade scripts on start
+  --upgrade-path  upgrade path, format <from>--<to>
+  --dumprestore   dump and restore spatially-enabled db before running tests
   --nodrop        do not drop the regression database on exit
   --raster        load also raster extension
   --topology      load also topology extension
@@ -492,7 +514,6 @@ Options:
   --clean         cleanup test logs on exit
   --expect        save obtained output as expected
   --extension     load using extensions
-  --upgrade-path  upgrade path, format <from>--<to>
 };
 
 }
@@ -519,7 +540,7 @@ sub show_progress
 	print ".";
 }
 
-# pass <msg> 
+# pass <msg>
 sub pass
 {
   my $msg = shift;
@@ -553,10 +574,10 @@ sub fail
 	$FAIL++;
 }
 
-  
+
 
 ##################################################################
-# run_simple_sql 
+# run_simple_sql
 #   Run an sql script and hide results unless it fails.
 #   SQL input file name is $1
 ##################################################################
@@ -564,7 +585,7 @@ sub run_simple_sql
 {
 	my $sql = shift;
 
-	if ( ! -r $sql ) 
+	if ( ! -r $sql )
 	{
 		fail("can't read $sql");
 		return 0;
@@ -576,18 +597,18 @@ sub run_simple_sql
 	#print($cmd);
 	my $rv = system($cmd);
 	# Check if psql errored out.
-	if ( $rv != 0 ) 
+	if ( $rv != 0 )
 	{
 		fail("Unable to run sql script $sql", $tmpfile);
 		return 0;
 	}
-	
+
 	# Check for ERROR lines
 	open FILE, "$tmpfile";
 	my @lines = <FILE>;
 	close FILE;
 	my @errors = grep(/^ERROR/, @lines);
-	
+
 	if ( @errors > 0 )
 	{
 		fail("Errors while running sql script $sql", $tmpfile);
@@ -603,7 +624,7 @@ sub drop_table
 	my $tblname = shift;
 	my $cmd = "psql -tXA -d $DB -c \"DROP TABLE IF EXISTS $tblname\" >> $REGRESS_LOG 2>&1";
 	my $rv = system($cmd);
-	die "Could not run: $cmd\n" if $rv;	
+	die "Could not run: $cmd\n" if $rv;
 }
 
 sub sql
@@ -629,7 +650,7 @@ sub eval_file
 }
 
 ##################################################################
-# run_simple_test 
+# run_simple_test
 #   Run an sql script and compare results with the given expected output
 #   SQL input is ${TEST}.sql, expected output is {$TEST}_expected
 ##################################################################
@@ -644,7 +665,7 @@ sub run_simple_test
 		fail("can't read $sql");
 		return 0;
 	}
-	
+
 	if ( ! $OPT_EXPECT )
 	{
 		if ( ! -r "$expected" )
@@ -692,7 +713,7 @@ sub run_simple_test
 	@lines = grep(!/^(INSERT|DELETE|UPDATE|SELECT|COPY|DO)/, @lines);
 	@lines = grep(!/^(CONTEXT|RESET|ANALYZE)/, @lines);
 	@lines = grep(!/^(DROP|CREATE|ALTER|VACUUM)/, @lines);
-	@lines = grep(!/^(LOG|SET|TRUNCATE)/, @lines);
+	@lines = grep(!/^(LOG|SET|TRUNCATE|DISCARD)/, @lines);
 	@lines = grep(!/^LINE \d/, @lines);
 	@lines = grep(!/^\s+$/, @lines);
 
@@ -707,10 +728,10 @@ sub run_simple_test
 		$lines[$i] =~ s/^ROLLBACK/COMMIT/;
 		$lines[$i] =~ s/^psql.*(NOTICE|WARNING|ERROR):/\1:/g;
 	}
-	
+
 	# Write out output file
 	open(FILE, ">$outfile");
-	foreach my $l (@lines) 
+	foreach my $l (@lines)
 	{
 		print FILE $l;
 	}
@@ -718,7 +739,7 @@ sub run_simple_test
 
 	# Clean up interim stuff
 	#remove_tree($betmpdir);
-	
+
 	if ( $OPT_EXPECT )
 	{
 		print " (expected)";
@@ -741,7 +762,7 @@ sub run_simple_test
 			return 1;
 		}
 	}
-	
+
 	return 1;
 }
 
@@ -774,7 +795,7 @@ sub run_loader_and_check_output
 	my ( $cmd, $rv );
 	my $outfile = "${TMPDIR}/loader.out";
 	my $errfile = "${TMPDIR}/loader.err";
-	
+
 	# ON_ERROR_STOP is used by psql to return non-0 on an error
 	my $psql_opts = " --no-psqlrc --variable ON_ERROR_STOP=true";
 
@@ -802,7 +823,7 @@ sub run_loader_and_check_output
 				return 0;
 			}
 		}
-		
+
 		# Run the loader SQL script.
 		show_progress();
 		$cmd = "psql $psql_opts -f $outfile $DB > $errfile 2>&1";
@@ -844,13 +865,13 @@ sub run_dumper_and_check_output
 
 	my ($cmd, $rv);
 	my $errfile = "${TMPDIR}/dumper.err";
-	
-	if ( $run_always || -r $expected_shp_file ) 
+
+	if ( $run_always || -r $expected_shp_file )
 	{
 		show_progress();
 		$cmd = "${PGSQL2SHP} -f ${TMPDIR}/dumper $DB $tblname > $errfile 2>&1";
 		$rv = system($cmd);
-	
+
 		if ( $rv )
 		{
 			fail("$description: dumping loaded table", $errfile);
@@ -858,11 +879,11 @@ sub run_dumper_and_check_output
 		}
 
 		# Compare with expected output if there is any.
-		
+
 		if ( -r $expected_shp_file )
 		{
 			show_progress();
-			
+
 			my $diff = diff($expected_shp_file,  "$TMPDIR/dumper.shp");
 			if ( $diff )
 			{
@@ -901,7 +922,7 @@ sub run_raster_loader_and_check_output
 	my $expected_select_results_file = shift;
 	my $loader_options = shift;
 	my $run_always = shift;
-	
+
 	# ON_ERROR_STOP is used by psql to return non-0 on an error
 	my $psql_opts="--no-psqlrc --variable ON_ERROR_STOP=true";
 
@@ -909,20 +930,20 @@ sub run_raster_loader_and_check_output
 	my $outfile = "${TMPDIR}/loader.out";
 	my $errfile = "${TMPDIR}/loader.err";
 
-	if ( $run_always || -r $expected_sql_file || -r $expected_select_results_file ) 
+	if ( $run_always || -r $expected_sql_file || -r $expected_select_results_file )
 	{
 		show_progress();
 
 		# Produce the output SQL file.
 		$cmd = "$RASTER2PGSQL $loader_options ${TEST}.tif $tblname > $outfile 2> $errfile";
 		$rv = system($cmd);
-		
+
 		if ( $rv )
 		{
 		    fail("$description: running raster2pgsql", $errfile);
 		    return 0;
 	    }
-	    
+
 	    if ( -r $expected_sql_file )
 	    {
 	        show_progress();
@@ -932,7 +953,7 @@ sub run_raster_loader_and_check_output
 				fail(" $description: actual SQL does not match expected.", "$outfile");
 				return 0;
 			}
-	        
+
         }
 
 		# Run the loader SQL script.
@@ -952,26 +973,26 @@ sub run_raster_loader_and_check_output
     		return 0 if ( ! $rv );
     	}
 	}
-    	
+
     return 1;
 }
 
 
 
 ##################################################################
-#  run_loader_test 
+#  run_loader_test
 #
 #  Load a shapefile with different methods, create a 'select *' SQL
-#  test and run simple test with provided expected output. 
+#  test and run simple test with provided expected output.
 #
 #  SHP input is ${TEST}.shp, expected output is {$TEST}.expected
 ##################################################################
-sub run_loader_test 
+sub run_loader_test
 {
 	# See if there is a custom command-line options file
 	my $opts_file = "${TEST}.opts";
 	my $custom_opts="";
-	
+
 	if ( -r $opts_file )
 	{
 		open(FILE, $opts_file);
@@ -1039,22 +1060,22 @@ sub run_loader_test
 		}
 		drop_table($tblname);
 	}
-	
+
 	return 1;
 }
 
 ##################################################################
-#  run_dumper_test 
+#  run_dumper_test
 #
 #  Run dumper and compare output with various expectances
-#  test and run simple test with provided expected output. 
+#  test and run simple test with provided expected output.
 #
 # input is ${TEST}.dmp, where last line is considered to be the
 # [table|query] argument for pgsql2shp and all the previous lines,
-# if any are 
+# if any are
 #
 ##################################################################
-sub run_dumper_test 
+sub run_dumper_test
 {
   my $dump_file  = "${TEST}.dmp";
 
@@ -1128,14 +1149,14 @@ sub run_dumper_test
 
 
 ##################################################################
-#  run_raster_loader_test 
+#  run_raster_loader_test
 ##################################################################
 sub run_raster_loader_test
 {
 	# See if there is a custom command-line options file
 	my $opts_file = "${TEST}.opts";
 	my $custom_opts="";
-	
+
 	if ( -r $opts_file )
 	{
 		open(FILE, $opts_file);
@@ -1153,9 +1174,9 @@ sub run_raster_loader_test
 	{
 		return 0;
 	}
-	
+
 	drop_table($tblname);
-	
+
 	return 1;
 }
 
@@ -1166,15 +1187,15 @@ sub run_raster_loader_test
 sub count_db_objects
 {
 	my $count = sql("WITH counts as (
-		select count(*) from pg_type union all 
-		select count(*) from pg_proc union all 
+		select count(*) from pg_type union all
+		select count(*) from pg_proc union all
 		select count(*) from pg_cast union all
 		select count(*) from pg_aggregate union all
 		select count(*) from pg_operator union all
 		select count(*) from pg_opclass union all
 		select count(*) from pg_namespace
 			where nspname NOT LIKE 'pg_%' union all
-		select count(*) from pg_opfamily ) 
+		select count(*) from pg_opfamily )
 		select sum(count) from counts");
 
  	return $count;
@@ -1184,20 +1205,26 @@ sub count_db_objects
 ##################################################################
 # Create the spatial database
 ##################################################################
-sub create_spatial 
+sub create_db
+{
+	my $cmd = "createdb --encoding=UTF-8 --template=template0 --lc-collate=C $DB > $REGRESS_LOG";
+	return system($cmd);
+}
+
+sub create_spatial
 {
 	my ($cmd, $rv);
 	print "Creating database '$DB' \n";
 
-	$cmd = "createdb --encoding=UTF-8 --template=template0 --lc-collate=C $DB > $REGRESS_LOG";
-	$rv = system($cmd);
+  $rv = create_db();
+
 	$cmd = "createlang plpgsql $DB >> $REGRESS_LOG 2>&1";
 	$rv = system($cmd);
 
 	# Count database objects before installing anything
 	$OBJ_COUNT_PRE = count_db_objects();
 
-	if ( $OPT_EXTENSIONS ) 
+	if ( $OPT_EXTENSIONS )
 	{
 		prepare_spatial_extensions();
 	}
@@ -1212,12 +1239,12 @@ sub load_sql_file
 {
 	my $file = shift;
 	my $strict = shift;
-	
+
 	if ( $strict && ! -e $file )
 	{
-		die "Unable to find $file\n"; 
+		die "Unable to find $file\n";
 	}
-	
+
 	if ( -e $file )
 	{
 		# ON_ERROR_STOP is used by psql to return non-0 on an error
@@ -1241,10 +1268,14 @@ sub prepare_spatial_extensions
 	my $psql_opts = "--no-psqlrc --variable ON_ERROR_STOP=true";
 	my $sql = "CREATE EXTENSION postgis";
 	if ( $OPT_UPGRADE_FROM ) {
+		if ( $OPT_UPGRADE_FROM eq "unpackaged" ) {
+			prepare_spatial();
+			return;
+		}
 		$sql .= " VERSION '" . $OPT_UPGRADE_FROM . "'";
 	}
 
-	print "Preparing db '${DB}' using: ${sql}\n"; 
+	print "Preparing db '${DB}' using: ${sql}\n";
 
 	my $cmd = "psql $psql_opts -c \"". $sql . "\" $DB >> $REGRESS_LOG 2>&1";
 	my $rv = system($cmd);
@@ -1293,19 +1324,21 @@ sub prepare_spatial
 	# Load postgis.sql into the database
 	load_sql_file("${STAGED_SCRIPTS_DIR}/postgis.sql", 1);
 	load_sql_file("${STAGED_SCRIPTS_DIR}/postgis_comments.sql", 0);
-	
+	load_sql_file("${STAGED_SCRIPTS_DIR}/postgis_proc_set_search_path.sql", 0);
+
 	if ( $OPT_WITH_TOPO )
 	{
 		print "Loading Topology into '${DB}'\n";
 		load_sql_file("${STAGED_SCRIPTS_DIR}/topology.sql", 1);
 		load_sql_file("${STAGED_SCRIPTS_DIR}/topology_comments.sql", 0);
 	}
-	
+
 	if ( $OPT_WITH_RASTER )
 	{
 		print "Loading Raster into '${DB}'\n";
 		load_sql_file("${STAGED_SCRIPTS_DIR}/rtpostgis.sql", 1);
 		load_sql_file("${STAGED_SCRIPTS_DIR}/raster_comments.sql", 0);
+		load_sql_file("${STAGED_SCRIPTS_DIR}/rtpostgis_proc_set_search_path.sql", 0);
 	}
 
 	if ( $OPT_WITH_SFCGAL )
@@ -1335,8 +1368,8 @@ sub upgrade_spatial
     {
         die "$script not found\n";
     }
-    
-    if ( $OPT_WITH_TOPO ) 
+
+    if ( $OPT_WITH_TOPO )
     {
         my $script = `ls ${STAGED_SCRIPTS_DIR}/topology_upgrade.sql`;
         chomp($script);
@@ -1350,8 +1383,8 @@ sub upgrade_spatial
             die "$script not found\n";
         }
     }
-    
-    if ( $OPT_WITH_RASTER ) 
+
+    if ( $OPT_WITH_RASTER )
     {
         my $script = `ls ${STAGED_SCRIPTS_DIR}/rtpostgis_upgrade.sql`;
         chomp($script);
@@ -1376,6 +1409,10 @@ sub upgrade_spatial_extensions
     my $nextver = $OPT_UPGRADE_TO ? "${OPT_UPGRADE_TO}" : "${libver}next";
     my $sql = "ALTER EXTENSION postgis UPDATE TO '${nextver}'";
 
+    if ( $OPT_UPGRADE_FROM eq "unpackaged" ) {
+      $sql = "CREATE EXTENSION postgis VERSION '${nextver}' FROM unpackaged";
+    }
+
     print "Upgrading PostGIS in '${DB}' using: ${sql}\n" ;
 
     my $cmd = "psql $psql_opts -c \"" . $sql . "\" $DB >> $REGRESS_LOG 2>&1";
@@ -1386,7 +1423,7 @@ sub upgrade_spatial_extensions
       die;
     }
 
-    if ( $OPT_WITH_TOPO ) 
+    if ( $OPT_WITH_TOPO )
     {
       my $sql = "ALTER EXTENSION postgis_topology UPDATE TO '${nextver}'";
       my $cmd = "psql $psql_opts -c \"" . $sql . "\" $DB >> $REGRESS_LOG 2>&1";
@@ -1396,7 +1433,7 @@ sub upgrade_spatial_extensions
         die;
       }
     }
-    
+
     return 1;
 }
 
@@ -1425,9 +1462,9 @@ sub drop_spatial_extensions
 {
     # ON_ERROR_STOP is used by psql to return non-0 on an error
     my $psql_opts="--no-psqlrc --variable ON_ERROR_STOP=true";
-    my $ok = 1; 
+    my $ok = 1;
     my ($cmd, $rv);
-    
+
     if ( $OPT_WITH_TOPO )
     {
         # NOTE: "manually" dropping topology schema as EXTENSION does not
@@ -1444,7 +1481,7 @@ sub drop_spatial_extensions
         $rv = system($cmd);
         $ok = 0 if $rv;
     }
-    
+
     $cmd = "psql $psql_opts -c \"DROP EXTENSION postgis\" $DB >> $REGRESS_LOG 2>&1";
     $rv = system($cmd);
   	die "\nError encountered dropping EXTENSION POSTGIS, see $REGRESS_LOG for details\n\n"
@@ -1458,9 +1495,9 @@ sub uninstall_spatial
 {
 	my $ok;
 	start_test("uninstall");
-	
+
 	if ( $OPT_EXTENSIONS )
-	{	
+	{
 		$ok = drop_spatial_extensions();
 	}
 	else
@@ -1468,11 +1505,11 @@ sub uninstall_spatial
 		$ok = drop_spatial();
 	}
 
-	if ( $ok ) 
+	if ( $ok )
 	{
 		show_progress(); # on to objects count
 		$OBJ_COUNT_POST = count_db_objects();
-		
+
 		if ( $OBJ_COUNT_POST != $OBJ_COUNT_PRE )
 		{
 			fail("Object count pre-install ($OBJ_COUNT_PRE) != post-uninstall ($OBJ_COUNT_POST)");
@@ -1484,9 +1521,59 @@ sub uninstall_spatial
 			return 1;
 		}
 	}
-	
+
 	return 0;
-}  
+}
+
+# Dump and restore the database
+sub dump_restore
+{
+  my $DBDUMP = $TMPDIR . '/' . $DB . ".dump";
+  my $rv;
+
+	print "Dumping and restoring database '${DB}'\n";
+
+  $rv = system("pg_dump -Fc ${DB} -f ${DBDUMP} >> $REGRESS_LOG 2>&1");
+  if ( $rv ) {
+    fail("Could not dump ${DB}", $REGRESS_LOG);
+		die;
+  }
+
+  $rv = system("dropdb ${DB} >> $REGRESS_LOG 2>&1");
+  if ( $rv ) {
+    fail("Could not drop ${DB}", $REGRESS_LOG);
+		die;
+  }
+
+  $rv = create_db();
+  if ( $rv ) {
+    fail("Could not create ${DB}", $REGRESS_LOG);
+		die;
+  }
+
+  $rv = system("pg_restore -d ${DB} ${DBDUMP} >> $REGRESS_LOG 2>&1");
+  if ( $rv ) {
+    fail("Could not restore ${DB}", $REGRESS_LOG);
+    die;
+  }
+
+  if ( $OPT_WITH_TOPO )
+  {
+    # We need to re-add "topology" to the search_path as it is lost
+    # on dump/reload, see https://trac.osgeo.org/postgis/ticket/3454
+    my $psql_opts = "--no-psqlrc --variable ON_ERROR_STOP=true";
+    my $cmd = "psql $psql_opts -c \"SELECT topology.AddToSearchPath('topology')\" $DB >> $REGRESS_LOG 2>&1";
+    $rv = system($cmd);
+    if ( $rv ) {
+      fail("Error encountered adding topology to search path after restore", $REGRESS_LOG);
+      die;
+    }
+  }
+
+  unlink($DBDUMP);
+
+  return 1;
+}
 
 sub diff
 {

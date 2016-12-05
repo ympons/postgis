@@ -42,7 +42,7 @@ echo PATH BEFORE: $PATH
 
 export PGPATH=${PROJECTS}/postgresql/rel/pg${PG_VER}w${OS_BUILD}${GCC_TYPE}
 export PGPATHEDB=${PGPATH}edb
-export PROJSO=libproj-0.dll
+export PROJSO=libproj-9.dll
 export POSTGIS_MINOR_VER=${POSTGIS_MAJOR_VERSION}.${POSTGIS_MINOR_VERSION}
 export POSTGIS_MICRO_VER=${POSTGIS_MICRO_VERSION}
 
@@ -55,8 +55,8 @@ else
 	export svnurl="http://svn.osgeo.org/postgis/tags/${POSTGIS_MINOR_VER}.${POSTGIS_MICRO_VERSION}"
 fi;
 
-if [[ "$POSTGIS_MINOR_VER"  == 2.2 ]] ; then
-	export svnurl="http://svn.osgeo.org/postgis/branches/trunk"
+if [[ "$POSTGIS_MINOR_VER"  == 2.3 ]] ; then
+	export svnurl="http://svn.osgeo.org/postgis/trunk"
 fi;
 #export POSTGIS_SRC=${PROJECTS}/postgis/trunk
 #POSTGIS_SVN_REVISION=will_be_passed_in_by_bot
@@ -103,15 +103,21 @@ cp ${PGPATHEDB}/bin/libeay32.dll $outdir/bin/postgisgui
 cp /c/ming${OS_BUILD}${GCC_TYPE}/mingw${OS_BUILD}/bin/libstdc++-6.dll $outdir/bin
 cp /c/ming${OS_BUILD}${GCC_TYPE}/mingw${OS_BUILD}/bin/libgcc*.dll $outdir/bin
 cp -r ${PROJECTS}/gtkw${OS_BUILD}${GCC_TYPE}/bin/*.dll $outdir/bin/postgisgui
+cp /c/ming${OS_BUILD}${GCC_TYPE}/mingw${OS_BUILD}/bin/libstdc++-6.dll $outdir/bin/postgisgui
+cp /c/ming${OS_BUILD}${GCC_TYPE}/mingw${OS_BUILD}/bin/libgcc*.dll $outdir/bin/postgisgui
 cp -r ${PROJECTS}/gtkw${OS_BUILD}${GCC_TYPE}/etc $outdir/bin/postgisgui
 cp -r ${PROJECTS}/gtkw${OS_BUILD}${GCC_TYPE}/share/themes $outdir/bin/postgisgui/share
 cp -r ${PROJECTS}/gtkw${OS_BUILD}${GCC_TYPE}/lib/gtk-2.0 $outdir/bin/postgisgui/lib
 cp -r ${PROJECTS}/gtkw${OS_BUILD}${GCC_TYPE}/lib/*.dll $outdir/bin/postgisgui/lib
 cp -r ${PROJECTS}/gtkw${OS_BUILD}${GCC_TYPE}/lib/gdk-pixbuf-2.0 $outdir/bin/postgisgui/lib
 
+
 cp ${MINGPROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}${GCC_TYPE}/share/proj/* $outdir/share/contrib/postgis-${POSTGIS_MINOR_VER}/proj
 cp ${MINGPROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}${GCC_TYPE}/bin/*.dll $outdir/bin
 cp -p ${PROJECTS}/geos/rel-${GEOS_VER}w${OS_BUILD}${GCC_TYPE}/bin/*.dll $outdir/bin
+
+cp ${MINGPROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}${GCC_TYPE}/bin/*.dll $outdir/bin/postgisgui
+cp -p ${PROJECTS}/geos/rel-${GEOS_VER}w${OS_BUILD}${GCC_TYPE}/bin/*.dll $outdir/bin/postgisgui
 
 echo "POSTGIS: ${POSTGIS_MINOR_VER} r${POSTGIS_SVN_REVISION} http://postgis.net/source" > $verfile
 
@@ -123,7 +129,6 @@ if [ "$POSTGIS_MAJOR_VERSION" == "2" ] ; then
   if [ "$POSTGIS_MINOR_VERSION" > "0" ] ; then
     ## only copy pagc standardizer components for 2.1+
     cp -p ${PROJECTS}/pcre/rel-${PCRE_VER}w${OS_BUILD}${GCC_TYPE}/bin/libpcre-1*.dll $outdir/bin
-    cp -p ${PGPATH}/lib/address*.dll $outdir/lib
     # cp -p ${PGPATH}/share/extension/address*.* $outdir/share/extension
     # cp -p ${PGPATH}/share/extension/us-*.sql $outdir/share/extension
   fi;
@@ -143,6 +148,8 @@ if [ -n "$SFCGAL_VER"  ]; then
 	
 	cp -p ${PROJECTS}/CGAL/rel-cgal-${CGAL_VER}w${OS_BUILD}${GCC_TYPE}/bin/*.dll $outdir/bin
 	cp -p ${PROJECTS}/CGAL/rel-sfcgal-${SFCGAL_VER}w${OS_BUILD}${GCC_TYPE}/lib/*.dll $outdir/bin
+	# cp -p ${PROJECTS}/CGAL/rel-cgal-${CGAL_VER}w${OS_BUILD}${GCC_TYPE}/bin/*.dll $outdir/bin/postgisgui
+	# cp -p ${PROJECTS}/CGAL/rel-sfcgal-${SFCGAL_VER}w${OS_BUILD}${GCC_TYPE}/lib/*.dll $outdir/bin/postgisgui
 fi;
 #cp ${MINGPROJECTS}/libxml/rel-libxml2-2.7.8w${OS_BUILD}/bin/*.dll  $outdir/bin/
 cp ${PGPATHEDB}/bin/libxml2-2.dll   $outdir/bin/
@@ -169,7 +176,7 @@ cp liblwgeom/.libs/*.dll ${RELDIR}/${RELVERDIR}/bin
 cp loader/.libs/shp2pgsql.exe ${RELDIR}/${RELVERDIR}/bin
 cp loader/.libs/pgsql2shp.exe ${RELDIR}/${RELVERDIR}/bin
 cp loader/.libs/shp2pgsql-gui.exe ${RELDIR}/${RELVERDIR}/bin/postgisgui
-cp liblwgeom/.libs/*.dll ${RELDIR}/${RELVERDIR}/bin/postgisgui
+#cp liblwgeom/.libs/*.dll ${RELDIR}/${RELVERDIR}/bin/postgisgui
 
 #shp2pgsql-gui now has dependency on geos (though in theory it shouldn't)
 cp -p ${PROJECTS}/geos/rel-${GEOS_VER}w${OS_BUILD}/bin/*.dll ${RELDIR}/${RELVERDIR}/bin/postgisgui
@@ -181,6 +188,7 @@ cp topology/topology_upgrade_*.sql ${RELDIR}/${RELVERDIR}/share/contrib/postgis-
 #cp extras/* ${RELDIR}/${RELVERDIR}/share/contrib/postgis-${POSTGIS_MINOR_VER}/extras
 cp -r extensions/*/sql/* ${RELDIR}/${RELVERDIR}/share/extension
 cp -r extensions/*/*.control ${RELDIR}/${RELVERDIR}/share/extension
+cp -r extensions/*/*.dll ${RELDIR}/${RELVERDIR}/lib #only address_standardizer in theory has this
 #cp extensions/postgis_topology/sql/* ${RELDIR}/${RELVERDIR}/share/extension
 #cp extensions/postgis_topology/*.control ${RELDIR}/${RELVERDIR}/share/extension
 cp -r ${RELDIR}/packaging_notes/* ${RELDIR}/${RELVERDIR}/

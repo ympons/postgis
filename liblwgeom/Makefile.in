@@ -1,15 +1,29 @@
-# **********************************************************************
+#/**********************************************************************
 # *
 # * PostGIS - Spatial Types for PostgreSQL
 # * http://postgis.net
-# * Copyright 2008 Mark Cave-Ayland
 # *
-# * This is free software; you can redistribute and/or modify it under
-# * the terms of the GNU General Public Licence. See the COPYING file.
+# * PostGIS is free software: you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation, either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * PostGIS is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
 # *
 # **********************************************************************
+# *
+# * Copyright 2008 Mark Cave-Ayland
+# *
+# **********************************************************************/
 
 CC = @CC@
+CPPFLAGS = @CPPFLAGS@
 CFLAGS = @CFLAGS@ @PICFLAGS@ @WARNFLAGS@ @GEOS_CPPFLAGS@ @PROJ_CPPFLAGS@ @JSON_CPPFLAGS@
 LDFLAGS = @LDFLAGS@ @GEOS_LDFLAGS@ -lgeos_c @PROJ_LDFLAGS@ -lproj @JSON_LDFLAGS@
 NUMERICFLAGS = @NUMERICFLAGS@
@@ -22,9 +36,11 @@ SHELL = @SHELL@
 INSTALL = $(SHELL) ../install-sh
 LIBTOOL = @LIBTOOL@
 
-IFACE_CURRENT = $(shell expr @POSTGIS_MAJOR_VERSION@ + @POSTGIS_MINOR_VERSION@ )
-IFACE_AGE = @POSTGIS_MINOR_VERSION@
-IFACE_REV = $(subst dev,,@POSTGIS_MICRO_VERSION@)
+SOVER = @POSTGIS_MAJOR_VERSION@.@POSTGIS_MINOR_VERSION@
+
+IFACE_CURRENT = @LIBLWGEOM_CURRENT@
+IFACE_AGE = @LIBLWGEOM_AGE@
+IFACE_REV = @LIBLWGEOM_REV@
 
 VERSION_INFO = $(IFACE_CURRENT):$(IFACE_REV):$(IFACE_AGE)
 
@@ -49,6 +65,7 @@ SA_OBJS = \
 	lwmpoint.o \
 	lwmline.o \
 	lwmpoly.o \
+	lwboundingcircle.o \
 	lwcollection.o \
 	lwcircstring.o \
 	lwcompound.o \
@@ -61,6 +78,8 @@ SA_OBJS = \
 	lwin_geojson.o \
 	lwin_wkb.o \
 	lwin_twkb.o \
+	lwiterator.o \
+	lwgeom_median.o \
 	lwout_wkt.o \
 	lwout_twkb.o \
 	lwin_wkt_parse.o \
@@ -93,8 +112,11 @@ SA_OBJS = \
 	lwgeom_geos_split.o \
 	lwgeom_topo.o \
 	lwgeom_transform.o \
+	lwgeom_wrapx.o \
 	lwunionfind.o \
 	effectivearea.o \
+	lwkmeans.o \
+	kmeans.o \
 	varint.o
 
 NM_OBJS = \
@@ -161,7 +183,7 @@ $(LT_OBJS): ../postgis_config.h ../postgis_svn_revision.h $(SA_HEADERS)
 
 liblwgeom.la: $(LT_OBJS)
 	$(LIBTOOL) --tag=CC --mode=link $(CC) -rpath $(libdir) $(LT_OBJS) \
-             -version-info $(VERSION_INFO) $(LDFLAGS) -o $@
+             -release $(SOVER) -version-info $(VERSION_INFO) $(LDFLAGS) -o $@
 
 maintainer-clean: clean
 	rm -f lwin_wkt_lex.c
@@ -184,10 +206,10 @@ check: liblwgeom.la
 
 # Command to build each of the .lo files
 $(LT_SA_OBJS): %.lo: %.c
-	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -c -o $@ $<
+	$(LIBTOOL) --mode=compile $(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 
 $(LT_NM_OBJS): %.lo: %.c
-	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(NUMERICFLAGS) -c -o $@ $<
+	$(LIBTOOL) --mode=compile $(CC) $(CPPFLAGS) $(CFLAGS) $(NUMERICFLAGS) -c -o $@ $<
 
 lwin_wkt_parse.c lwin_wkt_parse.h: lwin_wkt_parse.y
 	$(YACC) -o'lwin_wkt_parse.c' -d lwin_wkt_parse.y

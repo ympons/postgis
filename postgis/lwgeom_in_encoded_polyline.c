@@ -1,15 +1,27 @@
 /**********************************************************************
-*
-* PostGIS - Spatial Types for PostgreSQL
-* http://postgis.net
-*
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
 * Copyright 2014 Kashif Rasul <kashif.rasul@gmail.com> and
-*                Shoaib Burq <saburq@gmail.com>
-*
-* This is free software; you can redistribute and/or modify it under
-* the terms of the GNU General Public Licence. See the COPYING file.
-*
-**********************************************************************/
+ *
+ **********************************************************************/
+
 
 #include <assert.h>
 
@@ -35,9 +47,9 @@ Datum line_from_encoded_polyline(PG_FUNCTION_ARGS)
   encodedpolyline_input = PG_GETARG_TEXT_P(0);
   encodedpolyline = text2cstring(encodedpolyline_input);
 
-  if (PG_NARGS() >2 && !PG_ARGISNULL(2))
+  if (PG_NARGS() > 1 && !PG_ARGISNULL(1))
   {
-    precision = PG_GETARG_INT32(2);
+    precision = PG_GETARG_INT32(1);
     if ( precision < 0 ) precision = 5;
   }
 

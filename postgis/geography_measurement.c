@@ -1,13 +1,27 @@
 /**********************************************************************
  *
  * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
  *
  * Copyright (C) 2009 Paul Ramsey <pramsey@cleverelephant.ca>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "postgres.h"
 
@@ -61,7 +75,7 @@ Datum geography_distance_knn(PG_FUNCTION_ARGS)
 	GSERIALIZED *g2 = NULL;
 	double distance;
 	double tolerance = FP_TOLERANCE;
-	bool use_spheroid = false; /* must use sphere, can't get index to harmonize with spheroid */ 
+	bool use_spheroid = false; /* must use sphere, can't get index to harmonize with spheroid */
 	SPHEROID s;
 
 	/* Get our geometry objects loaded into memory. */
@@ -124,7 +138,7 @@ Datum geography_distance_uncached(PG_FUNCTION_ARGS)
 	GSERIALIZED *g2 = NULL;
 	double distance;
 	double tolerance = FP_TOLERANCE;
-	bool use_spheroid = true; 
+	bool use_spheroid = true;
 	SPHEROID s;
 
 	/* Get our geometry objects loaded into memory. */
@@ -134,7 +148,7 @@ Datum geography_distance_uncached(PG_FUNCTION_ARGS)
 	/* Read our tolerance value. */
 	if ( PG_NARGS() > 2 && ! PG_ARGISNULL(2) )
 		tolerance = PG_GETARG_FLOAT8(2);
-    
+
 	/* Read our calculation type. */
 	if ( PG_NARGS() > 3 && ! PG_ARGISNULL(3) )
 		use_spheroid = PG_GETARG_BOOL(3);
@@ -673,7 +687,7 @@ Datum geography_point_outside(PG_FUNCTION_ARGS)
 	GSERIALIZED *g = NULL;
 	GSERIALIZED *g_out = NULL;
 	size_t g_out_size;
-	LWPOINT *lwpoint = NULL;
+	LWGEOM *lwpoint = NULL;
 	POINT2D pt;
 
 	/* Get our geometry object loaded into memory. */
@@ -691,9 +705,12 @@ Datum geography_point_outside(PG_FUNCTION_ARGS)
 	/* Get an exterior point, based on this gbox */
 	gbox_pt_outside(&gbox, &pt);
 
-	lwpoint = lwpoint_make2d(4326, pt.x, pt.y);
-
-	g_out = gserialized_from_lwgeom((LWGEOM*)lwpoint, 1, &g_out_size);
+	lwpoint = (LWGEOM*) lwpoint_make2d(4326, pt.x, pt.y);
+	/* TODO: Investigate where this is used, this was probably not
+	* returning a geography object before. How did this miss checking
+	*/
+	lwgeom_set_geodetic(lwpoint, true);
+	g_out = gserialized_from_lwgeom(lwpoint, &g_out_size);
 	SET_VARSIZE(g_out, g_out_size);
 
 	PG_FREE_IF_COPY(g, 0);
@@ -844,7 +861,7 @@ Datum geography_bestsrid(PG_FUNCTION_ARGS)
 	/* Are these data antarctic? Lambert Azimuthal Equal Area South. */
 	if ( center.y < -70.0 && ywidth < 45.0 )
 	{
-		PG_RETURN_INT32(SRID_SOUTH_LAMBERT); 
+		PG_RETURN_INT32(SRID_SOUTH_LAMBERT);
 	}
 
 	/*
@@ -872,7 +889,7 @@ Datum geography_bestsrid(PG_FUNCTION_ARGS)
 	}
 
 	/*
-	** Can we fit into a custom LAEA area? (30 degrees high, variable width) 
+	** Can we fit into a custom LAEA area? (30 degrees high, variable width)
 	** We will allow overlap into adjoining areas, but use a slightly narrower test (25) to try
 	** and minimize the worst case.
 	** Again, we are hoping the dateline doesn't trip us up much
@@ -915,7 +932,7 @@ Datum geography_bestsrid(PG_FUNCTION_ARGS)
 
 /*
 ** geography_project(GSERIALIZED *g, distance, azimuth)
-** returns point of projection given start point, 
+** returns point of projection given start point,
 ** azimuth in radians (bearing) and distance in meters
 */
 PG_FUNCTION_INFO_V1(geography_project);
@@ -1066,30 +1083,41 @@ Datum geography_segmentize(PG_FUNCTION_ARGS)
 	GSERIALIZED *g2 = NULL;
 	double max_seg_length;
 	uint32_t type1;
-
+	
 	/* Get our geometry object loaded into memory. */
 	g1 = PG_GETARG_GSERIALIZED_P(0);
 	type1 = gserialized_get_type(g1);
-
+	
 	/* Convert max_seg_length from metric units to radians */
 	max_seg_length = PG_GETARG_FLOAT8(1) / WGS84_RADIUS;
-
+	
 	/* We can't densify points or points, reflect them back */
 	if ( type1 == POINTTYPE || type1 == MULTIPOINTTYPE || gserialized_is_empty(g1) )
 		PG_RETURN_POINTER(g1);
-
+	
 	/* Deserialize */
 	lwgeom1 = lwgeom_from_gserialized(g1);
-
+	
 	/* Calculate the densified geometry */
 	lwgeom2 = lwgeom_segmentize_sphere(lwgeom1, max_seg_length);
+	
+	/*
+	** Set the geodetic flag so subsequent
+	** functions do the right thing.
+	*/
+	lwgeom_set_geodetic(lwgeom2, true);
+	
+	/* Recalculate the boxes after re-setting the geodetic bit */
+	lwgeom_drop_bbox(lwgeom2);
+	
+	/* We are trusting geography_serialize will add a box if needed */	
 	g2 = geography_serialize(lwgeom2);
 	
 	/* Clean up */
 	lwgeom_free(lwgeom1);
 	lwgeom_free(lwgeom2);
 	PG_FREE_IF_COPY(g1, 0);
-
+	
 	PG_RETURN_POINTER(g2);
 }
 

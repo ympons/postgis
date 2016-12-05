@@ -1,12 +1,27 @@
 /**********************************************************************
  *
- * PostGIS - Export functions for PostgreSQL/PostGIS
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2009-2011 Olivier Courtin <olivier.courtin@oslandia.com>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 
 /** @file
@@ -63,7 +78,7 @@ char * getSRSbySRID(int srid, bool short_crs)
 		elog(NOTICE, "getSRSbySRID: error executing query %d", err);
 		SPI_finish();
 		return NULL;
-	} 
+	}
 
 	/* no entry in spatial_ref_sys */
 	if (SPI_processed <= 0)
@@ -113,7 +128,7 @@ int getSRIDbySRS(const char* srs)
 		SPI_finish();
 		return 0;
 	}
-	sprintf(query, 
+	sprintf(query,
 		"SELECT srid "
 		"FROM spatial_ref_sys, "
 		"regexp_matches('%s', E'([a-z]+):([0-9]+)', 'gi') AS re "
@@ -130,7 +145,7 @@ int getSRIDbySRS(const char* srs)
 	/* no entry in spatial_ref_sys */
 	if (SPI_processed <= 0)
 	{
-		sprintf(query, 
+		sprintf(query,
 			"SELECT srid "
 			"FROM spatial_ref_sys, "
 			"regexp_matches('%s', E'urn:ogc:def:crs:([a-z]+):.*:([0-9]+)', 'gi') AS re "
@@ -255,7 +270,7 @@ Datum LWGEOM_asGML(PG_FUNCTION_ARGS)
 	else if (option & 1) srs = getSRSbySRID(srid, false);
 	else                 srs = getSRSbySRID(srid, true);
 
-	if (option & 2)  lwopts &= ~LW_GML_IS_DIMS; 
+	if (option & 2)  lwopts &= ~LW_GML_IS_DIMS;
 	if (option & 4)  lwopts |= LW_GML_SHORTLINE;
 	if (option & 16) lwopts |= LW_GML_IS_DEGREE;
         if (option & 32) lwopts |= LW_GML_EXTENT;
@@ -268,7 +283,7 @@ Datum LWGEOM_asGML(PG_FUNCTION_ARGS)
 		gml = lwgeom_to_gml2(lwgeom, srs, precision, prefix);
 	else if (version == 3 && lwopts & LW_GML_EXTENT)
 		gml = lwgeom_extent_to_gml3(lwgeom, srs, precision, lwopts, prefix);
-	else if (version == 3) 
+	else if (version == 3)
 		gml = lwgeom_to_gml3(lwgeom, srs, precision, lwopts, prefix, gml_id);
 
 	lwgeom_free(lwgeom);
@@ -350,7 +365,7 @@ Datum LWGEOM_asKML(PG_FUNCTION_ARGS)
 	lwgeom_free(lwgeom);
 	PG_FREE_IF_COPY(geom, 1);
 	
-	if( ! kml ) 
+	if( ! kml )
 		PG_RETURN_NULL();	
 
 	result = cstring2text(kml);
@@ -363,7 +378,7 @@ Datum LWGEOM_asKML(PG_FUNCTION_ARGS)
 /**
  * Encode Feature in GeoJson (Old C Signature)
  * ST_AsGeoJSON(version, geom, precision, options)
- * why was this written with a version param when there 
+ * why was this written with a version param when there
  * is only one version?
  */
 PG_FUNCTION_INFO_V1(LWGEOM_asGeoJson_old);
@@ -371,7 +386,7 @@ Datum LWGEOM_asGeoJson_old(PG_FUNCTION_ARGS)
 {
 	switch( PG_NARGS() )
 	{
-	case 2: 
+	case 2:
 		return DirectFunctionCall1(LWGEOM_asGeoJson, PG_GETARG_DATUM(1));
 	case 3:
 		return DirectFunctionCall2(LWGEOM_asGeoJson, PG_GETARG_DATUM(1), PG_GETARG_DATUM(2));
@@ -398,7 +413,7 @@ Datum LWGEOM_asGeoJson(PG_FUNCTION_ARGS)
 	char *srs = NULL;
 
 	/* Get the geometry */
-	if ( PG_ARGISNULL(0) ) 
+	if ( PG_ARGISNULL(0) )
 		PG_RETURN_NULL();
 	
 	geom = PG_GETARG_GSERIALIZED_P(0);
@@ -409,7 +424,7 @@ Datum LWGEOM_asGeoJson(PG_FUNCTION_ARGS)
 		precision = PG_GETARG_INT32(1);
 		if ( precision > DBL_DIG )
 			precision = DBL_DIG;
-		else if ( precision < 0 ) 
+		else if ( precision < 0 )
 			precision = 0;
 	}
 
@@ -444,7 +459,7 @@ Datum LWGEOM_asGeoJson(PG_FUNCTION_ARGS)
 			}
 		}
 
-		if (option & 1) 
+		if (option & 1)
 			has_bbox = 1;
 	}
 
@@ -580,7 +595,7 @@ Datum LWGEOM_asX3D(PG_FUNCTION_ARGS)
 	if (option & LW_X3D_USE_GEOCOORDS) {
 		if (srid != 4326) {
 			PG_FREE_IF_COPY(geom, 0);
-			/** TODO: we need to support UTM and other coordinate systems supported by X3D eventually 
+			/** TODO: we need to support UTM and other coordinate systems supported by X3D eventually
 			http://www.web3d.org/documents/specifications/19775-1/V3.2/Part01/components/geodata.html#t-earthgeoids **/
 			elog(ERROR, "Only SRID 4326 is supported for geocoordinates.");
 			PG_RETURN_NULL();
@@ -622,9 +637,9 @@ Datum LWGEOM_asEncodedPolyline(PG_FUNCTION_ARGS)
 	lwgeom = lwgeom_from_gserialized(geom);
 	PG_FREE_IF_COPY(geom, 0);
 	
-	if (PG_NARGS() >2 && !PG_ARGISNULL(2))
+	if (PG_NARGS() > 1 && !PG_ARGISNULL(1))
 	{
-		precision = PG_GETARG_INT32(2);
+		precision = PG_GETARG_INT32(1);
 		if ( precision < 0 ) precision = 5;
 	}
 

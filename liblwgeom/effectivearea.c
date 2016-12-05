@@ -2,13 +2,27 @@
  *
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2014 Nicklas Avén
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
- 
+
+
  #include "effectivearea.h"
 
 
@@ -44,7 +58,7 @@ initiate_minheap(int npoints)
 }
 
 
-static void 
+static void
 destroy_minheap(MINHEAP tree)
 {
 	lwfree(tree.key_array);
@@ -92,7 +106,7 @@ static int cmpfunc (const void * a, const void * b)
 {
 	double v1 =  (*(areanode**)a)->area;
 	double v2 = (*(areanode**)b)->area;
-	/*qsort gives unpredictable results when comaping identical values. 
+	/*qsort gives unpredictable results when comaping identical values.
 	If two values is the same we force returning the last point in hte point array.
 	That way we get the same ordering on diffreent machines and pllatforms*/
 	if (v1==v2)
@@ -521,7 +535,7 @@ static LWCOLLECTION* lwcollection_set_effective_area(const LWCOLLECTION *igeom,i
 
 	return out;
 }
- 
+
 
 LWGEOM* lwgeom_set_effective_area(const LWGEOM *igeom,int set_area, double trshld)
 {

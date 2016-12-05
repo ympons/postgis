@@ -1,39 +1,28 @@
 /**********************************************************************
  *
  * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2002 Thamer Alharbash
  * Copyright 2009 Paul Ramsey <pramsey@cleverelephant.ca>
  *
- * Redistribution and use in source and binary forms, with or
- * without modification, are permitted provided that the following
- * conditions are met:
- *
- * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following
- * disclaimer in the documentation and/or other materials provided
- * with the distribution.
- *
- * The name of the author may not be used to endorse or promote
- * products derived from this software without specific prior
- * written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR
- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
- *
  **********************************************************************/
+
 
 
 #include "liblwgeom_internal.h"
@@ -42,35 +31,53 @@
 /**
 * Allocate a new stringbuffer_t. Use stringbuffer_destroy to free.
 */
-stringbuffer_t* 
+stringbuffer_t*
 stringbuffer_create(void)
 {
 	return stringbuffer_create_with_size(STRINGBUFFER_STARTSIZE);
 }
 
+static void
+stringbuffer_init_with_size(stringbuffer_t *s, size_t size)
+{
+	s->str_start = lwalloc(size);
+	s->str_end = s->str_start;
+	s->capacity = size;
+	memset(s->str_start, 0, size);
+}
+
+void
+stringbuffer_release(stringbuffer_t *s)
+{
+	if ( s->str_start ) lwfree(s->str_start);
+}
+
+void
+stringbuffer_init(stringbuffer_t *s)
+{
+	stringbuffer_init_with_size(s, STRINGBUFFER_STARTSIZE);
+}
+
 /**
 * Allocate a new stringbuffer_t. Use stringbuffer_destroy to free.
 */
-stringbuffer_t* 
+stringbuffer_t*
 stringbuffer_create_with_size(size_t size)
 {
 	stringbuffer_t *s;
 
 	s = lwalloc(sizeof(stringbuffer_t));
-	s->str_start = lwalloc(size);
-	s->str_end = s->str_start;
-	s->capacity = size;
-	memset(s->str_start,0,size);
+	stringbuffer_init_with_size(s, size);
 	return s;
 }
 
 /**
 * Free the stringbuffer_t and all memory managed within it.
 */
-void 
+void
 stringbuffer_destroy(stringbuffer_t *s)
 {
-	if ( s->str_start ) lwfree(s->str_start);
+	stringbuffer_release(s);
 	if ( s ) lwfree(s);
 }
 
@@ -79,7 +86,7 @@ stringbuffer_destroy(stringbuffer_t *s)
 * without the expense of freeing and re-allocating a new
 * stringbuffer_t.
 */
-void 
+void
 stringbuffer_clear(stringbuffer_t *s)
 {
 	s->str_start[0] = '\0';
@@ -90,7 +97,7 @@ stringbuffer_clear(stringbuffer_t *s)
 * If necessary, expand the stringbuffer_t internal buffer to accomodate the
 * specified additional size.
 */
-static inline void 
+static inline void
 stringbuffer_makeroom(stringbuffer_t *s, size_t size_to_add)
 {
 	size_t current_size = (s->str_end - s->str_start);
@@ -111,10 +118,10 @@ stringbuffer_makeroom(stringbuffer_t *s, size_t size_to_add)
 /**
 * Return the last character in the buffer.
 */
-char 
+char
 stringbuffer_lastchar(stringbuffer_t *s)
 {
-	if( s->str_end == s->str_start ) 
+	if( s->str_end == s->str_start )
 		return 0;
 	
 	return *(s->str_end - 1);
@@ -123,7 +130,7 @@ stringbuffer_lastchar(stringbuffer_t *s)
 /**
 * Append the specified string to the stringbuffer_t.
 */
-void 
+void
 stringbuffer_append(stringbuffer_t *s, const char *a)
 {
 	int alen = strlen(a); /* Length of string to append */
@@ -138,7 +145,7 @@ stringbuffer_append(stringbuffer_t *s, const char *a)
 * the stringbuffer. The current string will be null-terminated
 * within the internal string.
 */
-const char* 
+const char*
 stringbuffer_getstring(stringbuffer_t *s)
 {
 	return s->str_start;
@@ -149,7 +156,7 @@ stringbuffer_getstring(stringbuffer_t *s)
 * current state of the string. Caller is responsible for
 * freeing the return value.
 */
-char* 
+char*
 stringbuffer_getstringcopy(stringbuffer_t *s)
 {
 	size_t size = (s->str_end - s->str_start) + 1;
@@ -163,7 +170,7 @@ stringbuffer_getstringcopy(stringbuffer_t *s)
 * Returns the length of the current string, not including the
 * null terminator (same behavior as strlen()).
 */
-int 
+int
 stringbuffer_getlength(stringbuffer_t *s)
 {
 	return (s->str_end - s->str_start);
@@ -172,7 +179,7 @@ stringbuffer_getlength(stringbuffer_t *s)
 /**
 * Clear the stringbuffer_t and re-start it with the specified string.
 */
-void 
+void
 stringbuffer_set(stringbuffer_t *s, const char *str)
 {
 	stringbuffer_clear(s);
@@ -182,7 +189,7 @@ stringbuffer_set(stringbuffer_t *s, const char *str)
 /**
 * Copy the contents of src into dst.
 */
-void 
+void
 stringbuffer_copy(stringbuffer_t *dst, stringbuffer_t *src)
 {
 	stringbuffer_set(dst, stringbuffer_getstring(src));
@@ -193,7 +200,7 @@ stringbuffer_copy(stringbuffer_t *dst, stringbuffer_t *src)
 * using the format and argument list provided. Returns -1 on error,
 * check errno for reasons, documented in the printf man page.
 */
-static int 
+static int
 stringbuffer_avprintf(stringbuffer_t *s, const char *fmt, va_list ap)
 {
 	int maxlen = (s->capacity - (s->str_end - s->str_start));
@@ -207,7 +214,7 @@ stringbuffer_avprintf(stringbuffer_t *s, const char *fmt, va_list ap)
 	va_end(ap2);
 
 	/* Propogate errors up */
-	if ( len < 0 ) 
+	if ( len < 0 )
 		#if defined(__MINGW64_VERSION_MAJOR)
 		len = _vscprintf(fmt, ap2);/**Assume windows flaky vsnprintf that returns -1 if initial buffer to small and add more space **/
 		#else
@@ -242,7 +249,7 @@ stringbuffer_avprintf(stringbuffer_t *s, const char *fmt, va_list ap)
 * Returns -1 on error, check errno for reasons,
 * as documented in the printf man page.
 */
-int 
+int
 stringbuffer_aprintf(stringbuffer_t *s, const char *fmt, ...)
 {
 	int r;
@@ -257,7 +264,7 @@ stringbuffer_aprintf(stringbuffer_t *s, const char *fmt, ...)
 * Trims whitespace off the end of the stringbuffer. Returns
 * the number of characters trimmed.
 */
-int 
+int
 stringbuffer_trim_trailing_white(stringbuffer_t *s)
 {
 	char *ptr = s->str_end;
@@ -288,19 +295,19 @@ stringbuffer_trim_trailing_white(stringbuffer_t *s)
 * The number has to be the very last thing in the buffer. Only the
 * last number will be trimmed. Returns the number of characters
 * trimmed.
-* 
+*
 * eg: 1.22000 -> 1.22
 *     1.0 -> 1
 *     0.0 -> 0
 */
-int 
+int
 stringbuffer_trim_trailing_zeroes(stringbuffer_t *s)
 {
 	char *ptr = s->str_end;
 	char *decimal_ptr = NULL;
 	int dist;
 	
-	if ( s->str_end - s->str_start < 2) 
+	if ( s->str_end - s->str_start < 2)
 		return 0;
 
 	/* Roll backwards to find the decimal for this number */
@@ -338,8 +345,8 @@ stringbuffer_trim_trailing_zeroes(stringbuffer_t *s)
 	if ( ptr == s->str_end )
 		return 0;
 
-	/* If we stopped at the decimal, we want to null that out. 
-	   It we stopped on a numeral, we want to preserve that, so push the 
+	/* If we stopped at the decimal, we want to null that out.
+	   It we stopped on a numeral, we want to preserve that, so push the
 	   pointer forward one space. */
 	if ( *ptr != '.' )
 		ptr++;

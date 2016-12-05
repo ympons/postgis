@@ -2,12 +2,26 @@
  *
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2001-2009 Refractions Research Inc.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include <math.h>
 #include <float.h>
@@ -308,7 +322,7 @@ struct FLATCOLLECTIONDUMPSTATE
 };
 
 /*
-* Break an object up into smaller objects of no more than N vertices 
+* Break an object up into smaller objects of no more than N vertices
 */
 PG_FUNCTION_INFO_V1(ST_Subdivide);
 Datum ST_Subdivide(PG_FUNCTION_ARGS)
@@ -351,13 +365,13 @@ Datum ST_Subdivide(PG_FUNCTION_ARGS)
 		oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
 
 		/*
-		* Get the geometry value 
+		* Get the geometry value
 		*/
 		gser = PG_GETARG_GSERIALIZED_P(0);
 		geom = lwgeom_from_gserialized(gser);
 		
 		/*
-		* Get the max vertices value 
+		* Get the max vertices value
 		*/
 		if ( PG_NARGS() > 1 && ! PG_ARGISNULL(1) )
 			maxvertices = PG_GETARG_INT32(1);
@@ -367,7 +381,7 @@ Datum ST_Subdivide(PG_FUNCTION_ARGS)
 		*/
 		col = lwgeom_subdivide(geom, maxvertices);
 		
-		if ( ! col ) 
+		if ( ! col )
 			SRF_RETURN_DONE(funcctx);
 
 		/* allocate memory for user context */

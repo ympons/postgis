@@ -3,12 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright (C) 2001-2006 Refractions Research Inc.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,7 +58,7 @@ lwcompound_is_closed(const LWCOMPOUND *compound)
 	if ( memcmp(getPoint_internal( (POINTARRAY *)compound->geoms[0]->data, 0),
 	            getPoint_internal( (POINTARRAY *)compound->geoms[compound->ngeoms - 1]->data,
 	                               npoints - 1),
-	            size) ) 
+	            size) )
 	{
 		return LW_FALSE;
 	}
@@ -133,7 +146,7 @@ int lwgeom_contains_point(const LWGEOM *geom, const POINT2D *pt)
 	return LW_FAILURE;
 }
 
-int 
+int
 lwcompound_contains_point(const LWCOMPOUND *comp, const POINT2D *pt)
 {
 	int i;
@@ -151,7 +164,7 @@ lwcompound_contains_point(const LWCOMPOUND *comp, const POINT2D *pt)
 			lwline = lwgeom_as_lwline(lwgeom);
 			if ( comp->ngeoms == 1 )
 			{
-				return ptarray_contains_point(lwline->points, pt); 
+				return ptarray_contains_point(lwline->points, pt);
 			}
 			else
 			{
@@ -178,7 +191,7 @@ lwcompound_contains_point(const LWCOMPOUND *comp, const POINT2D *pt)
 		}
 
 		/* Propogate boundary condition */
-		if ( result == LW_BOUNDARY ) 
+		if ( result == LW_BOUNDARY )
 			return LW_BOUNDARY;
 
 		wn += winding_number;
@@ -201,7 +214,7 @@ lwcompound_construct_from_lwline(const LWLINE *lwline)
   return ogeom;
 }
 
-LWPOINT* 
+LWPOINT*
 lwcompound_get_lwpoint(const LWCOMPOUND *lwcmp, int where)
 {
 	int i;

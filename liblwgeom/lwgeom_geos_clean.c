@@ -3,36 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright 2009-2010 Sandro Santilli <strk@keybit.net>
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
  *
  **********************************************************************
  *
- * ST_MakeValid
- *
- * Attempts to make an invalid geometries valid w/out losing
- * points.
- *
- * Polygons may become lines or points or a collection of
- * polygons lines and points (collapsed ring cases).
- *
- * Author: Sandro Santilli <strk@keybit.net>
- *
- * Work done for Faunalia (http://www.faunalia.it) with fundings
- * from Regione Toscana - Sistema Informativo per il Governo
- * del Territorio e dell'Ambiente (RT-SIGTA).
- *
- * Thanks to Dr. Horst Duester for previous work on a plpgsql version
- * of the cleanup logic [1]
- *
- * Thanks to Andrea Peri for recommandations on constraints.
- *
- * [1] http://www.sogis1.so.ch/sogis/dl/postgis/cleanGeometry.sql
- *
+ * Copyright 2009-2010 Sandro Santilli <strk@kbt.io>
  *
  **********************************************************************/
+
 
 #include "liblwgeom.h"
 #include "lwgeom_geos.h"
@@ -44,6 +33,7 @@
 #include <assert.h>
 
 /* #define POSTGIS_DEBUG_LEVEL 4 */
+/* #define PARANOIA_LEVEL 2 */
 #undef LWGEOM_PROFILE_MAKEVALID
 
 
@@ -205,12 +195,12 @@ POINTARRAY*
 ring_make_geos_friendly(POINTARRAY* ring)
 {
 	POINTARRAY* closedring;
+	POINTARRAY* ring_in = ring;
 
 	/* close the ring if not already closed (2d only) */
 	closedring = ptarray_close2d(ring);
 	if (closedring != ring )
 	{
-		ptarray_free(ring); /* should we do this ? */
 		ring = closedring;
 	}
 
@@ -218,12 +208,14 @@ ring_make_geos_friendly(POINTARRAY* ring)
 
 	while ( ring->npoints < 4 )
 	{
+		POINTARRAY *oring = ring;
 		LWDEBUGF(4, "ring has %d points, adding another", ring->npoints);
 		/* let's add another... */
 		ring = ptarray_addPoint(ring,
 		                        getPoint_internal(ring, 0),
 		                        FLAGS_NDIMS(ring->flags),
 		                        ring->npoints);
+		if ( oring != ring_in ) ptarray_free(oring);
 	}
 
 
@@ -255,10 +247,7 @@ lwpoly_make_geos_friendly(LWPOLY *poly)
 		if ( ring_in != ring_out )
 		{
 			LWDEBUGF(3, "lwpoly_make_geos_friendly: ring %d cleaned, now has %d points", i, ring_out->npoints);
-			/* this may come right from
-			 * the binary representation lands
-			 */
-			/*ptarray_free(ring_in); */
+			ptarray_free(ring_in);
 		}
 		else
 		{
@@ -381,7 +370,6 @@ LWGEOM_GEOS_nodeLines(const GEOSGeometry* lines)
 	return noded;
 }
 
-#if POSTGIS_GEOS_VERSION >= 33
 /*
  * We expect initGEOS being called already.
  * Will return NULL on error (expect error handler being called by then)
@@ -519,7 +507,7 @@ LWGEOM_GEOS_makeValidPolygon(const GEOSGeometry* gin)
 		GEOSGeometry* new_cut_edges=0;
 
 #ifdef LWGEOM_PROFILE_MAKEVALID
-    lwnotice("ST_MakeValid: building area from %d edges", GEOSGetNumGeometries(geos_cut_edges)); 
+    lwnotice("ST_MakeValid: building area from %d edges", GEOSGetNumGeometries(geos_cut_edges));
 #endif
 
 		/*
@@ -548,7 +536,7 @@ LWGEOM_GEOS_makeValidPolygon(const GEOSGeometry* gin)
 		 */
 
 #ifdef LWGEOM_PROFILE_MAKEVALID
-    lwnotice("ST_MakeValid: ring built with %d cut edges, saving boundaries", GEOSGetNumGeometries(geos_cut_edges)); 
+    lwnotice("ST_MakeValid: ring built with %d cut edges, saving boundaries", GEOSGetNumGeometries(geos_cut_edges));
 #endif
 
 		/*
@@ -569,7 +557,7 @@ LWGEOM_GEOS_makeValidPolygon(const GEOSGeometry* gin)
 		}
 
 #ifdef LWGEOM_PROFILE_MAKEVALID
-    lwnotice("ST_MakeValid: running SymDifference with new area"); 
+    lwnotice("ST_MakeValid: running SymDifference with new area");
 #endif
 
 		/*
@@ -599,12 +587,12 @@ LWGEOM_GEOS_makeValidPolygon(const GEOSGeometry* gin)
 		 *             left, so we don't need to reconsider
 		 *             the whole original boundaries
 		 *
-		 * NOTE: this is an expensive operation. 
+		 * NOTE: this is an expensive operation.
 		 *
 		 */
 
 #ifdef LWGEOM_PROFILE_MAKEVALID
-    lwnotice("ST_MakeValid: computing new cut_edges (GEOSDifference)"); 
+    lwnotice("ST_MakeValid: computing new cut_edges (GEOSDifference)");
 #endif
 
 		new_cut_edges = GEOSDifference(geos_cut_edges, new_area_bound);
@@ -952,6 +940,7 @@ LWGEOM_GEOS_makeValid(const GEOSGeometry* gin)
 	}
 	}
 
+#if PARANOIA_LEVEL > 1
 	/*
 	 * Now check if every point of input is also found
 	 * in output, or abort by returning NULL
@@ -959,10 +948,6 @@ LWGEOM_GEOS_makeValid(const GEOSGeometry* gin)
 	 * Input geometry was lwgeom_in
 	 */
 	{
-		const int paranoia = 2;
-		/* TODO: check if the result is valid */
-		if (paranoia)
-		{
 			int loss;
 			GEOSGeometry *pi, *po, *pd;
 
@@ -982,8 +967,8 @@ LWGEOM_GEOS_makeValid(const GEOSGeometry* gin)
 				lwnotice("Vertices lost in LWGEOM_GEOS_makeValid");
 				/* return NULL */
 			}
-		}
 	}
+#endif /* PARANOIA_LEVEL > 1 */
 
 
 	return gout;
@@ -1068,6 +1053,4 @@ lwgeom_make_valid(LWGEOM* lwgeom_in)
 	lwgeom_out->srid = lwgeom_in->srid;
 	return lwgeom_out;
 }
-
-#endif /* POSTGIS_GEOS_VERSION >= 33 */
 

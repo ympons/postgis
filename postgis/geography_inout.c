@@ -1,12 +1,27 @@
 /**********************************************************************
  *
  * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2009-2011 Paul Ramsey <pramsey@cleverelephant.ca>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "postgres.h"
 
@@ -144,7 +159,7 @@ Datum geography_in(PG_FUNCTION_ARGS)
 		/* TODO: 20101206: No parser checks! This is inline with current 1.5 behavior, but needs discussion */
 		lwgeom = lwgeom_from_hexwkb(str, LW_PARSER_CHECK_NONE);
 		/* Error out if something went sideways */
-		if ( ! lwgeom ) 
+		if ( ! lwgeom )
 			ereport(ERROR,(errmsg("parse error - invalid geometry")));
 	}
 	/* WKT then. */
@@ -290,7 +305,7 @@ Datum geography_as_gml(PG_FUNCTION_ARGS)
 
 	/* Revert lat/lon only with long SRS */
 	if (option & 1) lwopts |= LW_GML_IS_DEGREE;
-	if (option & 2) lwopts &= ~LW_GML_IS_DIMS; 
+	if (option & 2) lwopts &= ~LW_GML_IS_DIMS;
 
 	if (version == 2)
 		gml = lwgeom_to_gml2(lwgeom, srs, precision, prefix);
@@ -301,7 +316,7 @@ Datum geography_as_gml(PG_FUNCTION_ARGS)
 	PG_FREE_IF_COPY(g, 1);
 
 	/* Return null on null */
-	if ( ! gml ) 
+	if ( ! gml )
 		PG_RETURN_NULL();
 
 	/* Turn string result into text for return */
@@ -598,26 +613,18 @@ Datum geography_from_geometry(PG_FUNCTION_ARGS)
 		);
 	}
 
-	/*
-	** Serialize our lwgeom and set the geodetic flag so subsequent
-	** functions do the right thing.
-	*/
-	lwgeom_set_geodetic(lwgeom, true);
-	
-	/* Recalculate the boxes after re-setting the geodetic bit */
+	/* force recalculate of box by dropping */
 	lwgeom_drop_bbox(lwgeom);
-	lwgeom_add_bbox(lwgeom);
-	
+
+	lwgeom_set_geodetic(lwgeom, true);	
+	/* We are trusting geography_serialize will add a box if needed */	
 	g_ser = geography_serialize(lwgeom);
 
-	/*
-	** Replace the unaligned lwgeom with a new aligned one based on GSERIALIZED.
-	*/
+
 	lwgeom_free(lwgeom);
 
 	PG_FREE_IF_COPY(geom, 0);
 	PG_RETURN_POINTER(g_ser);
-
 }
 
 PG_FUNCTION_INFO_V1(geometry_from_geography);

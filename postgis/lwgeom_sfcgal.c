@@ -3,14 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Wrapper around SFCGAL for 3D functions
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
  *
  * Copyright 2012-2013 Oslandia <infos@oslandia.com>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "postgres.h"
 #include "fmgr.h"
@@ -686,23 +697,23 @@ Datum sfcgal_extrude(PG_FUNCTION_ARGS)
     srid_t srid;
 
     sfcgal_postgis_init();
-    
+
     input = PG_GETARG_GSERIALIZED_P(0);
     srid = gserialized_get_srid(input);
 
     geom = POSTGIS2SFCGALGeometry(input);
     PG_FREE_IF_COPY(input, 0);
-    
+
     dx = PG_GETARG_FLOAT8(1);
     dy = PG_GETARG_FLOAT8(2);
     dz = PG_GETARG_FLOAT8(3);
-    
+
     result = sfcgal_geometry_extrude(geom, dx, dy, dz);
     sfcgal_geometry_delete(geom);
-    
+
     output = SFCGALGeometry2POSTGIS(result, 0, srid);
     sfcgal_geometry_delete(result);
-    
+
     PG_RETURN_POINTER(output);
 }
 

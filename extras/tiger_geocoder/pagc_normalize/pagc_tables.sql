@@ -1,8 +1,8 @@
---  Lookup tables used by pagc to standardize in format expected by tiger geocoder 
+--  Lookup tables used by pagc to standardize in format expected by tiger geocoder
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT tiger.SetSearchPathForInstall('tiger');
-CREATE OR REPLACE FUNCTION install_pagc_tables() 
+CREATE OR REPLACE FUNCTION install_pagc_tables()
 	RETURNS void AS
 $$
 DECLARE var_temp text;
@@ -3822,7 +3822,7 @@ INSERT INTO pagc_lex (id, seq, word, stdword, token, is_custom) VALUES (2937, 2,
 SELECT pg_catalog.setval('pagc_lex_id_seq', (SELECT greatest((SELECT MAX(id) FROM pagc_lex),50000)), true);
 
 
--- set default to false so all we input will be treated as no custom -- 
+-- set default to false so all we input will be treated as no custom --
 ALTER TABLE tiger.pagc_rules ALTER COLUMN is_custom SET DEFAULT false;
 INSERT INTO pagc_rules (id, rule) VALUES (1, '1 -1 5 -1 2 7');
 INSERT INTO pagc_rules (id, rule) VALUES (2, '1 3 -1 5 3 -1 2 7');
@@ -7252,7 +7252,7 @@ INSERT INTO pagc_rules (id, rule) VALUES (3425, '18 0 -1 1 1 -1 3 12');
 INSERT INTO pagc_rules (id, rule) VALUES (3426, '25 -1 1 -1 3 12');
 INSERT INTO pagc_rules (id, rule) VALUES (3427, '21 0 -1 1 1 -1 3 12');
 INSERT INTO pagc_rules (id, rule) VALUES (3428, '0 21 -1 1 1 -1 3 9');
-INSERT INTO pagc_rules (id, rule) VALUES (3429, '0 0 -1 1 1 -1 3 9');
+INSERT INTO pagc_rules (id, rule) VALUES (3429, '0 0 -1 1 1 -1 3 15');
 INSERT INTO pagc_rules (id, rule) VALUES (3430, '21 0 0 -1 1 1 1 -1 3 9');
 INSERT INTO pagc_rules (id, rule) VALUES (3431, '0 0 21 -1 1 1 1 -1 3 9');
 INSERT INTO pagc_rules (id, rule) VALUES (3432, '0 0 18 -1 1 1 1 -1 3 9');
@@ -8176,11 +8176,12 @@ INSERT INTO pagc_rules (id, rule) VALUES (4349, '1 2 11 28 12 -1 10 10 11 13 12 
 INSERT INTO pagc_rules (id, rule) VALUES (4350, '1 2 11 28 29 -1 10 10 11 13 13 -1 0 16');
 INSERT INTO pagc_rules (id, rule) VALUES (4351, '1 2 11 28 29 12 -1 10 10 11 13 13 12 -1 0 17');
 INSERT INTO pagc_rules (id, rule) values (4352, '16 0 22 -1 16 17 17 -1 4 7');
+INSERT INTO pagc_rules (id, rule) VALUES (4353, '0 1 6 -1 1 5 5 -1 1 9');
 INSERT INTO pagc_rules (id, rule) VALUES (4355, '-1');
 
 -- for some reason all rules are coming in as custom.  just force by id
 UPDATE tiger.pagc_rules SET is_custom = false where id < 10000;
--- after insert we need to set back to true so all 
--- user inputs are treated as custom 
+-- after insert we need to set back to true so all
+-- user inputs are treated as custom
 ALTER TABLE tiger.pagc_rules ALTER COLUMN is_custom SET DEFAULT true;
 SELECT pg_catalog.setval('pagc_rules_id_seq', 10000, true);

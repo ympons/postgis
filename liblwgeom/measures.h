@@ -1,3 +1,27 @@
+/**********************************************************************
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright 2010 Nicklas Avén
+ *
+ **********************************************************************/
+
 
 /**********************************************************************
  *
@@ -16,7 +40,7 @@
 #define DIST_MAX		-1
 #define DIST_MIN		1
 
-/** 
+/**
 * Structure used in distance-calculations
 */
 typedef struct
@@ -79,7 +103,7 @@ int struct_cmp_by_measure(const void *a, const void *b);
 int lw_dist2d_fast_ptarray_ptarray(POINTARRAY *l1,POINTARRAY *l2, DISTPTS *dl,  GBOX *box1, GBOX *box2);
 
 /*
-* Distance calculation primitives. 
+* Distance calculation primitives.
 */
 int lw_dist2d_pt_pt  (const POINT2D *P,  const POINT2D *Q,  DISTPTS *dl);
 int lw_dist2d_pt_seg (const POINT2D *P,  const POINT2D *A1, const POINT2D *A2, DISTPTS *dl);

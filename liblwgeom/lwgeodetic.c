@@ -1,13 +1,28 @@
 /**********************************************************************
  *
  * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2009 Paul Ramsey <pramsey@cleverelephant.ca>
  * Copyright 2009 David Skea <David.Skea@gov.bc.ca>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "liblwgeom_internal.h"
 #include "lwgeodetic.h"
@@ -160,7 +175,7 @@ void geographic_point_init(double lon, double lat, GEOGRAPHIC_POINT *g)
 }
 
 /** Returns the angular height (latitudinal span) of the box in radians */
-double 
+double
 gbox_angular_height(const GBOX* gbox)
 {
 	double d[6];
@@ -187,7 +202,7 @@ gbox_angular_height(const GBOX* gbox)
 }
 
 /** Returns the angular width (longitudinal span) of the box in radians */
-double 
+double
 gbox_angular_width(const GBOX* gbox)
 {
 	double d[6];
@@ -359,7 +374,7 @@ void geog2cart(const GEOGRAPHIC_POINT *g, POINT3D *p)
 }
 
 /**
-* Convert cartesion coordinates on unit sphere to spherical coordinates 
+* Convert cartesion coordinates on unit sphere to spherical coordinates
 */
 void cart2geog(const POINT3D *p, GEOGRAPHIC_POINT *g)
 {
@@ -381,7 +396,7 @@ void ll2cart(const POINT2D *g, POINT3D *p)
 }
 
 /**
-* Convert cartesion coordinates on unit sphere to lon/lat coordinates 
+* Convert cartesion coordinates on unit sphere to lon/lat coordinates
 static void cart2ll(const POINT3D *p, POINT2D *g)
 {
 	g->x = longitude_degrees_normalize(180.0 * atan2(p->y, p->x) / M_PI);
@@ -516,7 +531,7 @@ void unit_normal(const POINT3D *P1, const POINT3D *P2, POINT3D *normal)
 	normalize(normal);
 }
 
-/** 
+/**
 * Rotates v1 through an angle (in radians) within the plane defined by v1/v2, returns
 * the rotated vector in n.
 */
@@ -637,10 +652,10 @@ int crosses_dateline(const GEOGRAPHIC_POINT *s, const GEOGRAPHIC_POINT *e)
 
 /**
 * Returns -1 if the point is to the left of the plane formed
-* by the edge, 1 if the point is to the right, and 0 if the 
+* by the edge, 1 if the point is to the right, and 0 if the
 * point is on the plane.
 */
-static int 
+static int
 edge_point_side(const GEOGRAPHIC_EDGE *e, const GEOGRAPHIC_POINT *p)
 {
 	POINT3D normal, pt;
@@ -660,7 +675,7 @@ edge_point_side(const GEOGRAPHIC_EDGE *e, const GEOGRAPHIC_POINT *p)
 	
 	if ( w < 0 )
 		return -1;
-	else 
+	else
 		return 1;
 }
 
@@ -679,7 +694,7 @@ sphere_angle(const GEOGRAPHIC_POINT *a, const GEOGRAPHIC_POINT *b,  const GEOGRA
 }
 
 /**
-* Computes the spherical area of a triangle. If C is to the left of A/B, 
+* Computes the spherical area of a triangle. If C is to the left of A/B,
 * the area is negative. If C is to the right of A/B, the area is positive.
 *
 * @param a The first triangle vertex.
@@ -687,7 +702,7 @@ sphere_angle(const GEOGRAPHIC_POINT *a, const GEOGRAPHIC_POINT *b,  const GEOGRA
 * @param c The last triangle vertex.
 * @return the signed area in radians.
 */
-static double 
+static double
 sphere_signed_area(const GEOGRAPHIC_POINT *a, const GEOGRAPHIC_POINT *b, const GEOGRAPHIC_POINT *c)
 {
 	double angle_a, angle_b, angle_c;
@@ -707,7 +722,7 @@ sphere_signed_area(const GEOGRAPHIC_POINT *a, const GEOGRAPHIC_POINT *b, const G
 	side = edge_point_side(&e, c);
 	
 	/* Co-linear points implies no area */
-	if ( side == 0 ) 
+	if ( side == 0 )
 		return 0.0;
 
 	/* Add the sign to the area */
@@ -916,7 +931,7 @@ double sphere_distance(const GEOGRAPHIC_POINT *s, const GEOGRAPHIC_POINT *e)
 */
 double sphere_distance_cartesian(const POINT3D *s, const POINT3D *e)
 {
-	return acos(dot_product(s, e));
+	return acos(FP_MIN(1.0, dot_product(s, e)));
 }
 
 /**
@@ -934,6 +949,8 @@ double sphere_direction(const GEOGRAPHIC_POINT *s, const GEOGRAPHIC_POINT *e, do
 	f = (sin(e->lat) - sin(s->lat) * cos(d)) / (sin(d) * cos(s->lat));
 	if ( FP_EQUALS(f, 1.0) )
 		heading = 0.0;
+	else if ( FP_EQUALS(f, -1.0) )
+		heading = M_PI;
 	else if ( fabs(f) > 1.0 )
 	{
 		LWDEBUGF(4, "f = %g", f);
@@ -1211,7 +1228,7 @@ double edge_distance_to_point(const GEOGRAPHIC_EDGE *e, const GEOGRAPHIC_POINT *
 
 /**
 * Calculate the distance between two edges.
-* IMPORTANT: this test does not check for edge intersection!!! (distance == 0) 
+* IMPORTANT: this test does not check for edge intersection!!! (distance == 0)
 * You have to check for intersection before calling this function.
 */
 double edge_distance_to_edge(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e2, GEOGRAPHIC_POINT *closest1, GEOGRAPHIC_POINT *closest2)
@@ -1315,7 +1332,7 @@ int edge_calculate_gbox_slow(const GEOGRAPHIC_EDGE *e, GBOX *gbox)
 		LWDEBUG(4, "edge is antipodal. setting to maximum size box, and returning");
 		gbox->xmin = gbox->ymin = gbox->zmin = -1.0;
 		gbox->xmax = gbox->ymax = gbox->zmax = 1.0;
-		return LW_SUCCESS; 
+		return LW_SUCCESS;
 	}
 
 	/* Walk along the chord between start and end incrementally,
@@ -1344,12 +1361,12 @@ int edge_calculate_gbox_slow(const GEOGRAPHIC_EDGE *e, GBOX *gbox)
 /**
 * The magic function, given an edge in spherical coordinates, calculate a
 * 3D bounding box that fully contains it, taking into account the curvature
-* of the sphere on which it is inscribed. 
+* of the sphere on which it is inscribed.
 *
 * Any arc on the sphere defines a plane that bisects the sphere. In this plane,
 * the arc is a portion of a unit circle.
 * Projecting the end points of the axes (1,0,0), (-1,0,0) etc, into the plane
-* and normalizing yields potential extrema points. Those points on the 
+* and normalizing yields potential extrema points. Those points on the
 * side of the plane-dividing line formed by the end points that is opposite
 * the origin of the plane are extrema and should be added to the bounding box.
 */
@@ -1527,7 +1544,7 @@ void gbox_pt_outside(const GBOX *gbox, POINT2D *pt_outside)
 * @param pa_in - input point array pointer
 * @param max_seg_length - maximum output segment length in radians
 */
-static POINTARRAY* 
+static POINTARRAY*
 ptarray_segmentize_sphere(const POINTARRAY *pa_in, double max_seg_length)
 {
 	POINTARRAY *pa_out;
@@ -1535,7 +1552,6 @@ ptarray_segmentize_sphere(const POINTARRAY *pa_in, double max_seg_length)
 	int hasm = ptarray_has_m(pa_in);
 	int pa_in_offset = 0; /* input point offset */
 	POINT4D p1, p2, p;
-	POINT3D q1, q2, q, qn;
 	GEOGRAPHIC_POINT g1, g2, g;
 	double d;
 	
@@ -1577,32 +1593,26 @@ ptarray_segmentize_sphere(const POINTARRAY *pa_in, double max_seg_length)
 		{
 			int nsegs = 1 + d / max_seg_length;
 			int i;
-			double dx, dy, dz, dzz = 0, dmm = 0;
-			
-			geog2cart(&g1, &q1);
-			geog2cart(&g2, &q2);
-			
-			dx = (q2.x - q1.x) / nsegs;
-			dy = (q2.y - q1.y) / nsegs;
-			dz = (q2.z - q1.z) / nsegs;
-			
+			double dzz = 0, dmm = 0;
+			double delta = d / nsegs;
+
 			/* The independent Z/M values on the ptarray */
 			if ( hasz ) dzz = (p2.z - p1.z) / nsegs;
 			if ( hasm ) dmm = (p2.m - p1.m) / nsegs;
 			
-			q = q1;
+			g = g1;
 			p = p1;
-			
 			for ( i = 0; i < nsegs - 1; i++ )
 			{
+				GEOGRAPHIC_POINT gn;
+				double heading;
+
+				/* Compute the current heading to the destination */
+				heading = sphere_direction(&g, &g2, (nsegs-i) * delta);
 				/* Move one increment forwards */
-				q.x += dx; q.y += dy; q.z += dz;
-				qn = q;
-				normalize(&qn);
-				
-				/* Back to spherical coordinates */
-				cart2geog(&qn, &g);
-				/* Back to lon/lat */
+				sphere_project(&g, delta, heading, &gn);
+				g = gn;
+
 				p.x = rad2deg(g.lon);
 				p.y = rad2deg(g.lat);
 				if ( hasz )
@@ -1635,7 +1645,7 @@ ptarray_segmentize_sphere(const POINTARRAY *pa_in, double max_seg_length)
 * @param lwg_in = input geometry
 * @param max_seg_length = maximum segment length in radians
 */
-LWGEOM* 
+LWGEOM*
 lwgeom_segmentize_sphere(const LWGEOM *lwg_in, double max_seg_length)
 {
 	POINTARRAY *pa_out;
@@ -1699,7 +1709,7 @@ lwgeom_segmentize_sphere(const LWGEOM *lwg_in, double max_seg_length)
 * Returns the area of the ring (ring must be closed) in square radians (surface of
 * the sphere is 4*PI).
 */
-double 
+double
 ptarray_area_sphere(const POINTARRAY *pa)
 {
 	int i;
@@ -1907,6 +1917,7 @@ static double ptarray_distance_spheroid(const POINTARRAY *pa1, const POINTARRAY 
 		/* Copy end to start to allow a new end value in next iteration */
 		e1.start = e1.end;
 		A1 = A2;
+		LW_ON_INTERRUPT(return -1.0);
 	}
 	LWDEBUGF(4,"finished all loops, returning %.8g", distance);
 
@@ -1989,7 +2000,7 @@ double lwgeom_area_sphere(const LWGEOM *lwgeom, const SPHEROID *spheroid)
 * @param distance - distance, in units of the spheroid def'n.
 * @param azimuth - azimuth in radians.
 * @return s - location of projected point.
-* 
+*
 */
 LWPOINT* lwgeom_project_spheroid(const LWPOINT *r, const SPHEROID *spheroid, double distance, double azimuth)
 {
@@ -2000,7 +2011,7 @@ LWPOINT* lwgeom_project_spheroid(const LWPOINT *r, const SPHEROID *spheroid, dou
 	LWPOINT *lwp;
 
 	/* Check the azimuth validity, convert to radians */
-	if ( azimuth < -2.0 * M_PI || azimuth > 2.0 * M_PI ) 
+	if ( azimuth < -2.0 * M_PI || azimuth > 2.0 * M_PI )
 	{
 		lwerror("Azimuth must be between -2PI and 2PI");
 		return NULL;
@@ -2019,7 +2030,7 @@ LWPOINT* lwgeom_project_spheroid(const LWPOINT *r, const SPHEROID *spheroid, dou
 	geographic_point_init(x, y, &geo_source);
 	
 	/* Try the projection */
-	if( spheroid_project(&geo_source, spheroid, distance, azimuth, &geo_dest) == LW_FAILURE ) 
+	if( spheroid_project(&geo_source, spheroid, distance, azimuth, &geo_dest) == LW_FAILURE )
 	{
 		LWDEBUGF(3, "Unable to project from (%g %g) with azimuth %g and distance %g", x, y, azimuth, distance);
 		lwerror("Unable to project from (%g %g) with azimuth %g and distance %g", x, y, azimuth, distance);
@@ -2043,8 +2054,8 @@ LWPOINT* lwgeom_project_spheroid(const LWPOINT *r, const SPHEROID *spheroid, dou
 * @param r - location of first point.
 * @param s - location of second point.
 * @param spheroid - spheroid definition.
-* @return azimuth - azimuth in radians. 
-* 
+* @return azimuth - azimuth in radians.
+*
 */
 double lwgeom_azumith_spheroid(const LWPOINT *r, const LWPOINT *s, const SPHEROID *spheroid)
 {
@@ -2201,7 +2212,7 @@ double lwgeom_distance_spheroid(const LWGEOM *lwgeom1, const LWGEOM *lwgeom2, co
 		LWDEBUG(4, "checking if a point of line is in polygon");
 
 		/* Point in polygon implies zero distance */
-		if ( lwpoly_covers_point2d(lwpoly, p) ) 
+		if ( lwpoly_covers_point2d(lwpoly, p) )
 			return 0.0;
 
 		LWDEBUG(4, "checking ring distances");
@@ -2593,7 +2604,7 @@ static int lwcollection_calculate_gbox_geodetic(const LWCOLLECTION *coll, GBOX *
 		if ( lwgeom_calculate_gbox_geodetic((LWGEOM*)(coll->geoms[i]), &subbox) == LW_SUCCESS )
 		{
 			/* Keep a copy of the sub-bounding box for later */
-			if ( coll->geoms[i]->bbox ) 
+			if ( coll->geoms[i]->bbox )
 				lwfree(coll->geoms[i]->bbox);
 			coll->geoms[i]->bbox = gbox_copy(&subbox);
 			if ( first )
@@ -2716,7 +2727,7 @@ static int lwcollection_check_geodetic(const LWCOLLECTION *col)
 
 int lwgeom_check_geodetic(const LWGEOM *geom)
 {
-	if ( lwgeom_is_empty(geom) ) 
+	if ( lwgeom_is_empty(geom) )
 		return LW_TRUE;
 		
 	switch (geom->type)
@@ -2756,13 +2767,13 @@ static int ptarray_force_geodetic(POINTARRAY *pa)
 		getPoint4d_p(pa, t, &pt);
 		if ( pt.x < -180.0 || pt.x > 180.0 || pt.y < -90.0 || pt.y > 90.0 )
 		{
-			pt.x = longitude_degrees_normalize(pt.x); 
-			pt.y = latitude_degrees_normalize(pt.y); 
+			pt.x = longitude_degrees_normalize(pt.x);
+			pt.y = latitude_degrees_normalize(pt.y);
 			ptarray_set_point4d(pa, t, &pt);
 			changed = LW_TRUE;
 		}
 	}
-	return changed;  
+	return changed;
 }
 
 static int lwpoint_force_geodetic(LWPOINT *point)
@@ -2847,7 +2858,7 @@ double ptarray_length_spheroid(const POINTARRAY *pa, const SPHEROID *s)
 	/* Initialize first point */
 	getPoint4d_p(pa, 0, &p);
 	geographic_point_init(p.x, p.y, &a);
-	if ( hasz ) 
+	if ( hasz )
 		za = p.z;
 
 	/* Loop and sum the length for each segment */
@@ -2856,7 +2867,7 @@ double ptarray_length_spheroid(const POINTARRAY *pa, const SPHEROID *s)
 		seglength = 0.0;
 		getPoint4d_p(pa, i, &p);
 		geographic_point_init(p.x, p.y, &b);
-		if ( hasz ) 
+		if ( hasz )
 			zb = p.z;
 
 		/* Special sphere case */
@@ -2867,7 +2878,7 @@ double ptarray_length_spheroid(const POINTARRAY *pa, const SPHEROID *s)
 			seglength = spheroid_distance(&a, &b, s);
 
 		/* Add in the vertical displacement if we're in 3D */
-		if ( hasz ) 
+		if ( hasz )
 			seglength = sqrt( (zb-za)*(zb-za) + seglength*seglength );
 			
 		/* Add this segment length to the total */
@@ -2929,12 +2940,12 @@ double lwgeom_length_spheroid(const LWGEOM *geom, const SPHEROID *s)
 }
 
 /**
-* When features are snapped or sometimes they are just this way, they are very close to 
+* When features are snapped or sometimes they are just this way, they are very close to
 * the geodetic bounds but slightly over. This routine nudges those points, and only
 * those points, back over to the bounds.
 * http://trac.osgeo.org/postgis/ticket/1292
 */
-static int 
+static int
 ptarray_nudge_geodetic(POINTARRAY *pa)
 {
 
@@ -2981,12 +2992,12 @@ ptarray_nudge_geodetic(POINTARRAY *pa)
 }
 
 /**
-* When features are snapped or sometimes they are just this way, they are very close to 
+* When features are snapped or sometimes they are just this way, they are very close to
 * the geodetic bounds but slightly over. This routine nudges those points, and only
 * those points, back over to the bounds.
 * http://trac.osgeo.org/postgis/ticket/1292
 */
-int 
+int
 lwgeom_nudge_geodetic(LWGEOM *geom)
 {
 	int type;
@@ -3069,7 +3080,7 @@ point_in_cone(const POINT3D *A1, const POINT3D *A2, const POINT3D *P)
 /**
 * Utility function for ptarray_contains_point_sphere()
 */
-static int 
+static int
 point3d_equals(const POINT3D *p1, const POINT3D *p2)
 {
 	return FP_EQUALS(p1->x, p2->x) && FP_EQUALS(p1->y, p2->y) && FP_EQUALS(p1->z, p2->z);
@@ -3091,10 +3102,10 @@ dot_product_side(const POINT3D *p, const POINT3D *q)
 }
 
 /**
-* Returns non-zero if edges A and B interact. The type of interaction is given in the 
+* Returns non-zero if edges A and B interact. The type of interaction is given in the
 * return value with the bitmask elements defined above.
 */
-int 
+int
 edge_intersects(const POINT3D *A1, const POINT3D *A2, const POINT3D *B1, const POINT3D *B2)
 {
 	POINT3D AN, BN, VN;  /* Normals to plane A and plane B */
@@ -3111,7 +3122,7 @@ edge_intersects(const POINT3D *A1, const POINT3D *A2, const POINT3D *B1, const P
 	if ( FP_EQUALS(fabs(ab_dot), 1.0) )
 	{
 		/* Co-linear case */
-		if ( point_in_cone(A1, A2, B1) || point_in_cone(A1, A2, B2) || 
+		if ( point_in_cone(A1, A2, B1) || point_in_cone(A1, A2, B2) ||
 		     point_in_cone(B1, B2, A1) || point_in_cone(B1, B2, A2) )
 		{
 			rv |= PIR_INTERSECTS;

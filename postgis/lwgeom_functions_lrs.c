@@ -3,12 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright (C) 2001-2005 Refractions Research Inc.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include <math.h>
 
@@ -215,12 +228,12 @@ Datum LWGEOM_line_locate_point(PG_FUNCTION_ARGS)
 
 	if ( gserialized_get_type(geom1) != LINETYPE )
 	{
-		elog(ERROR,"line_locate_point: 1st arg isnt a line");
+		elog(ERROR,"line_locate_point: 1st arg isn't a line");
 		PG_RETURN_NULL();
 	}
 	if ( gserialized_get_type(geom2) != POINTTYPE )
 	{
-		elog(ERROR,"line_locate_point: 2st arg isnt a point");
+		elog(ERROR,"line_locate_point: 2st arg isn't a point");
 		PG_RETURN_NULL();
 	}
 
@@ -735,7 +748,7 @@ Datum LWGEOM_locate_between_m(PG_FUNCTION_ARGS)
 
 	if ( lwout == NULL )
 	{
-		lwout = (LWGEOM *)lwcollection_construct_empty(COLLECTIONTYPE, 
+		lwout = (LWGEOM *)lwcollection_construct_empty(COLLECTIONTYPE,
 		            gserialized_get_srid(gin), hasz, hasm);
 	}
 

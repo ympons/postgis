@@ -22,7 +22,6 @@
 #include <sys/stat.h>
 #include <iconv.h>
 
-#include "../postgis_config.h"
 #include "libpq-fe.h"
 #include "shapefil.h"
 #include "shpcommon.h"
@@ -42,7 +41,7 @@
 
 
 /*
- * Structure to hold the dumper configuration options 
+ * Structure to hold the dumper configuration options
  */
 
 typedef struct shp_dumper_config
@@ -68,7 +67,7 @@ typedef struct shp_dumper_config
 	/* TODO: rename? 0=switch not provided, 1=switch provided */
 	int dswitchprovided;
 
-	/* TODO: replace and combine with below 0=do not include gid column in shapefile, 1=include gid column in shapefile */ 
+	/* TODO: replace and combine with below 0=do not include gid column in shapefile, 1=include gid column in shapefile */
 	int includegid;
 
 	/* TODO: 0=escape column names, 1=do not escape column names */
@@ -90,7 +89,7 @@ typedef struct shp_dumper_config
 
 
 /*
- * Structure to holder the current dumper state 
+ * Structure to holder the current dumper state
  */
 
 typedef struct shp_dumper_state

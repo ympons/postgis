@@ -3,12 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright 2011-2014 Sandro Santilli <strk@keybit.net>
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright 2011-2014 Sandro Santilli <strk@kbt.io>
  *
  **********************************************************************/
+
 
 #include "lwgeom_geos.h"
 #include "liblwgeom.h"
@@ -16,6 +29,7 @@
 #include "lwgeom_log.h"
 
 #include <stdlib.h>
+#include <time.h>
 
 LWTIN *lwtin_from_geos(const GEOSGeometry *geom, int want3d);
 
@@ -207,11 +221,14 @@ ptarray_to_GEOSCoordSeq(const POINTARRAY *pa)
 	const POINT2D *p2d;
 	GEOSCoordSeq sq;
 
-	if ( FLAGS_GET_Z(pa->flags) ) 
+	if ( FLAGS_GET_Z(pa->flags) )
 		dims = 3;
 
-	if ( ! (sq = GEOSCoordSeq_create(pa->npoints, dims)) ) 
+	if ( ! (sq = GEOSCoordSeq_create(pa->npoints, dims)) )
+	{
 		lwerror("Error creating GEOS Coordinate Sequence");
+		return NULL;
+	}
 
 	for ( i=0; i < pa->npoints; i++ )
 	{
@@ -227,19 +244,10 @@ ptarray_to_GEOSCoordSeq(const POINTARRAY *pa)
 			LWDEBUGF(4, "Point: %g,%g", p2d->x, p2d->y);
 		}
 
-#if POSTGIS_GEOS_VERSION < 33
-		/* Make sure we don't pass any infinite values down into GEOS */
-		/* GEOS 3.3+ is supposed to  handle this stuff OK */
-		if ( isinf(p2d->x) || isinf(p2d->y) || (dims == 3 && isinf(p3d->z)) )
-			lwerror("Infinite coordinate value found in geometry.");
-		if ( isnan(p2d->x) || isnan(p2d->y) || (dims == 3 && isnan(p3d->z)) )
-			lwerror("NaN coordinate value found in geometry.");
-#endif
-
 		GEOSCoordSeq_setX(sq, i, p2d->x);
 		GEOSCoordSeq_setY(sq, i, p2d->y);
-		
-		if ( dims == 3 ) 
+
+		if ( dims == 3 )
 			GEOSCoordSeq_setZ(sq, i, p3d->z);
 	}
 	return sq;
@@ -255,14 +263,14 @@ ptarray_to_GEOSLinearRing(const POINTARRAY *pa, int autofix)
 	if ( autofix )
 	{
 		/* check ring for being closed and fix if not */
-		if ( ! ptarray_is_closed_2d(pa) ) 
+		if ( ! ptarray_is_closed_2d(pa) )
 		{
 			npa = ptarray_addPoint(pa, getPoint_internal(pa, 0), FLAGS_NDIMS(pa->flags), pa->npoints);
 			pa = npa;
 		}
 		/* TODO: check ring for having at least 4 vertices */
 #if 0
-		while ( pa->npoints < 4 ) 
+		while ( pa->npoints < 4 )
 		{
 			npa = ptarray_addPoint(npa, getPoint_internal(pa, 0), FLAGS_NDIMS(pa->flags), pa->npoints);
 		}
@@ -281,7 +289,7 @@ GBOX2GEOS(const GBOX *box)
 	GEOSGeometry* envelope;
 	GEOSGeometry* ring;
 	GEOSCoordSequence* seq = GEOSCoordSeq_create(5, 2);
-	if (!seq) 
+	if (!seq)
 	{
 		return NULL;
 	}
@@ -302,14 +310,14 @@ GBOX2GEOS(const GBOX *box)
 	GEOSCoordSeq_setY(seq, 4, box->ymin);
 
 	ring = GEOSGeom_createLinearRing(seq);
-	if (!ring) 
+	if (!ring)
 	{
 		GEOSCoordSeq_destroy(seq);
 		return NULL;
 	}
 
 	envelope = GEOSGeom_createPolygon(ring, NULL, 0);
-	if (!envelope) 
+	if (!envelope)
 	{
 		GEOSGeom_destroy(ring);
 		return NULL;
@@ -327,7 +335,7 @@ LWGEOM2GEOS(const LWGEOM *lwgeom, int autofix)
 	/*
 	LWGEOM *tmp;
 	*/
-	uint32_t ngeoms, i;
+	uint32_t ngeoms, i, j;
 	int geostype;
 #if LWDEBUG_LEVEL >= 4
 	char *wkt;
@@ -342,30 +350,20 @@ LWGEOM2GEOS(const LWGEOM *lwgeom, int autofix)
 		lwgeom_free(lwgeom_stroked);
 		return g;
 	}
-	
+
 	switch (lwgeom->type)
 	{
 		LWPOINT *lwp = NULL;
 		LWPOLY *lwpoly = NULL;
 		LWLINE *lwl = NULL;
 		LWCOLLECTION *lwc = NULL;
-#if POSTGIS_GEOS_VERSION < 33
-		POINTARRAY *pa = NULL;
-#endif
-		
+
 	case POINTTYPE:
 		lwp = (LWPOINT *)lwgeom;
-		
+
 		if ( lwgeom_is_empty(lwgeom) )
 		{
-#if POSTGIS_GEOS_VERSION < 33
-			pa = ptarray_construct_empty(lwgeom_has_z(lwgeom), lwgeom_has_m(lwgeom), 2);
-			sq = ptarray_to_GEOSCoordSeq(pa);
-			shell = GEOSGeom_createLinearRing(sq);
-			g = GEOSGeom_createPolygon(shell, NULL, 0);
-#else
 			g = GEOSGeom_createEmptyPolygon();
-#endif
 		}
 		else
 		{
@@ -401,14 +399,7 @@ LWGEOM2GEOS(const LWGEOM *lwgeom, int autofix)
 		lwpoly = (LWPOLY *)lwgeom;
 		if ( lwgeom_is_empty(lwgeom) )
 		{
-#if POSTGIS_GEOS_VERSION < 33
-			POINTARRAY *pa = ptarray_construct_empty(lwgeom_has_z(lwgeom), lwgeom_has_m(lwgeom), 2);
-			sq = ptarray_to_GEOSCoordSeq(pa);
-			shell = GEOSGeom_createLinearRing(sq);
-			g = GEOSGeom_createPolygon(shell, NULL, 0);
-#else
 			g = GEOSGeom_createEmptyPolygon();
-#endif
 		}
 		else
 		{
@@ -456,18 +447,24 @@ LWGEOM2GEOS(const LWGEOM *lwgeom, int autofix)
 		if ( ngeoms > 0 )
 			geoms = malloc(sizeof(GEOSGeom)*ngeoms);
 
+		j = 0;
 		for (i=0; i<ngeoms; ++i)
 		{
-			GEOSGeometry* g = LWGEOM2GEOS(lwc->geoms[i], 0);
+			GEOSGeometry* g;
+
+			if( lwgeom_is_empty(lwc->geoms[i]) )
+				continue;
+
+			g = LWGEOM2GEOS(lwc->geoms[i], 0);
 			if ( ! g )
 			{
 				while (i) GEOSGeom_destroy(geoms[--i]);
 				free(geoms);
 				return NULL;
 			}
-			geoms[i] = g;
+			geoms[j++] = g;
 		}
-		g = GEOSGeom_createCollection(geostype, geoms, ngeoms);
+		g = GEOSGeom_createCollection(geostype, geoms, j);
 		if ( geoms ) free(geoms);
 		if ( ! g ) return NULL;
 		break;
@@ -486,6 +483,44 @@ LWGEOM2GEOS(const LWGEOM *lwgeom, int autofix)
 #endif
 
 	return g;
+}
+
+GEOSGeometry*
+make_geos_point(double x, double y)
+{
+	GEOSCoordSequence* seq = GEOSCoordSeq_create(1, 2);
+	GEOSGeometry* geom = NULL;
+
+	if (!seq)
+		return NULL;
+
+	GEOSCoordSeq_setX(seq, 0, x);
+	GEOSCoordSeq_setY(seq, 0, y);
+
+	geom = GEOSGeom_createPoint(seq);
+	if (!geom)
+		GEOSCoordSeq_destroy(seq);
+	return geom;
+}
+
+GEOSGeometry*
+make_geos_segment(double x1, double y1, double x2, double y2)
+{
+	GEOSCoordSequence* seq = GEOSCoordSeq_create(2, 2);
+	GEOSGeometry* geom = NULL;
+
+	if (!seq)
+		return NULL;
+
+	GEOSCoordSeq_setX(seq, 0, x1);
+	GEOSCoordSeq_setY(seq, 0, y1);
+	GEOSCoordSeq_setX(seq, 1, x2);
+	GEOSCoordSeq_setY(seq, 1, y2);
+
+	geom = GEOSGeom_createLineString(seq);
+	if (!geom)
+		GEOSCoordSeq_destroy(seq);
+	return geom;
 }
 
 const char*
@@ -878,6 +913,60 @@ lwgeom_symdifference(const LWGEOM* geom1, const LWGEOM* geom2)
 	return result;
 }
 
+LWGEOM *
+lwgeom_centroid(const LWGEOM* geom)
+{
+	GEOSGeometry *g, *g_centroid;
+	LWGEOM *centroid;
+	int srid, is3d;
+
+	if (lwgeom_is_empty(geom))
+	{
+		LWPOINT *lwp = lwpoint_construct_empty(
+		                   lwgeom_get_srid(geom),
+		                   lwgeom_has_z(geom),
+		                   lwgeom_has_m(geom));
+		return lwpoint_as_lwgeom(lwp);
+	}
+
+	srid = lwgeom_get_srid(geom);
+	is3d = lwgeom_has_z(geom);
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	g = LWGEOM2GEOS(geom, 0);
+
+	if (0 == g)   /* exception thrown at construction */
+	{
+		lwerror("Geometry could not be converted to GEOS: %s", lwgeom_geos_errmsg);
+		return NULL;
+	}
+
+	g_centroid = GEOSGetCentroid(g);
+	GEOSGeom_destroy(g);
+
+	if (g_centroid == NULL)
+	{
+		lwerror("GEOSGetCentroid: %s", lwgeom_geos_errmsg);
+		return NULL; /*never get here */
+	}
+
+	LWDEBUGF(3, "result: %s", GEOSGeomToWKT(g_centroid));
+
+	GEOSSetSRID(g_centroid, srid);
+
+	centroid = GEOS2LWGEOM(g_centroid, is3d);
+	GEOSGeom_destroy(g_centroid);
+
+	if (centroid == NULL)
+	{
+		lwerror("GEOS GEOSGetCentroid() threw an error (result postgis geometry formation)!");
+		return NULL ; /*never get here */
+	}
+
+	return centroid;
+}
+
 LWGEOM*
 lwgeom_union(const LWGEOM *geom1, const LWGEOM *geom2)
 {
@@ -961,7 +1050,7 @@ lwgeom_clip_by_rect(const LWGEOM *geom1, double x0, double y0, double x1, double
 #if POSTGIS_GEOS_VERSION < 35
 	lwerror("The GEOS version this postgis binary "
 	        "was compiled against (%d) doesn't support "
-	        "'GEOSClipByRect' function (3.3.5+ required)",
+	        "'GEOSClipByRect' function (3.5.0+ required)",
 	        POSTGIS_GEOS_VERSION);
 	return NULL;
 #else /* POSTGIS_GEOS_VERSION >= 35 */
@@ -1098,7 +1187,7 @@ findFaceHoles(Face** faces, int nfaces)
 		const GEOSGeometry *f2er;
         Face* f2 = faces[j];
         if ( f2->parent ) continue; /* hole already assigned */
-        f2er = GEOSGetExteriorRing(f2->geom); 
+        f2er = GEOSGetExteriorRing(f2->geom);
         /* TODO: can be optimized as the ring would have the
          *       same vertices, possibly in different order.
          *       maybe comparing number of points could already be
@@ -1218,7 +1307,7 @@ LWGEOM_GEOS_buildArea(const GEOSGeometry* geom_in)
    * Example:
    *
    *   +---------------+
-   *   |     L0        |  L0 has no parents 
+   *   |     L0        |  L0 has no parents
    *   |  +---------+  |
    *   |  |   L1    |  |  L1 is an hole of L0
    *   |  |  +---+  |  |
@@ -1228,7 +1317,7 @@ LWGEOM_GEOS_buildArea(const GEOSGeometry* geom_in)
    *   |  +---------+  |
    *   |               |
    *   +---------------+
-   * 
+   *
    * See http://trac.osgeo.org/postgis/ticket/1806
    *
    */
@@ -1314,7 +1403,7 @@ lwgeom_buildarea(const LWGEOM *geom)
 	initGEOS(lwnotice, lwgeom_geos_error);
 
 	geos_in = LWGEOM2GEOS(geom, 0);
-	
+
 	if ( 0 == geos_in )   /* exception thrown at construction */
 	{
 		lwerror("First argument geometry could not be converted to GEOS: %s", lwgeom_geos_errmsg);
@@ -1407,20 +1496,12 @@ lwgeom_geos_noop(const LWGEOM* geom_in)
 			lwgeom_geos_errmsg);
 	}
 	return geom_out;
-	
+
 }
 
 LWGEOM*
 lwgeom_snap(const LWGEOM* geom1, const LWGEOM* geom2, double tolerance)
 {
-#if POSTGIS_GEOS_VERSION < 33
-	lwerror("The GEOS version this lwgeom library "
-	        "was compiled against (%d) doesn't support "
-	        "'Snap' function (3.3.0+ required)",
-	        POSTGIS_GEOS_VERSION);
-	return NULL;
-#else /* POSTGIS_GEOS_VERSION >= 33 */
-
 	int srid, is3d;
 	GEOSGeometry *g1, *g2, *g3;
 	LWGEOM* out;
@@ -1470,20 +1551,11 @@ lwgeom_snap(const LWGEOM* geom1, const LWGEOM* geom2, double tolerance)
 	GEOSGeom_destroy(g3);
 
 	return out;
-
-#endif /* POSTGIS_GEOS_VERSION >= 33 */
 }
 
 LWGEOM*
 lwgeom_sharedpaths(const LWGEOM* geom1, const LWGEOM* geom2)
 {
-#if POSTGIS_GEOS_VERSION < 33
-	lwerror("The GEOS version this postgis binary "
-	        "was compiled against (%d) doesn't support "
-	        "'SharedPaths' function (3.3.0+ required)",
-	        POSTGIS_GEOS_VERSION);
-	return NULL;
-#else /* POSTGIS_GEOS_VERSION >= 33 */
 	GEOSGeometry *g1, *g2, *g3;
 	LWGEOM *out;
 	int is3d, srid;
@@ -1532,15 +1604,11 @@ lwgeom_sharedpaths(const LWGEOM* geom1, const LWGEOM* geom2)
 	}
 
 	return out;
-#endif /* POSTGIS_GEOS_VERSION >= 33 */
 }
 
 LWGEOM*
 lwgeom_offsetcurve(const LWLINE *lwline, double size, int quadsegs, int joinStyle, double mitreLimit)
 {
-#if POSTGIS_GEOS_VERSION < 32
-	lwerror("lwgeom_offsetcurve: GEOS 3.2 or higher required");
-#else
 	GEOSGeometry *g1, *g3;
 	LWGEOM *lwgeom_result;
 	LWGEOM *lwgeom_in = lwline_as_lwgeom(lwline);
@@ -1548,20 +1616,14 @@ lwgeom_offsetcurve(const LWLINE *lwline, double size, int quadsegs, int joinStyl
 	initGEOS(lwnotice, lwgeom_geos_error);
 
 	g1 = (GEOSGeometry *)LWGEOM2GEOS(lwgeom_in, 0);
-	if ( ! g1 ) 
+	if ( ! g1 )
 	{
 		lwerror("lwgeom_offsetcurve: Geometry could not be converted to GEOS: %s", lwgeom_geos_errmsg);
 		return NULL;
 	}
 
-#if POSTGIS_GEOS_VERSION < 33
-	/* Size is always positive for GEOSSingleSidedBuffer, and a flag determines left/right */
-	g3 = GEOSSingleSidedBuffer(g1, size < 0 ? -size : size,
-	                           quadsegs, joinStyle, mitreLimit,
-	                           size < 0 ? 0 : 1);
-#else
 	g3 = GEOSOffsetCurve(g1, size, quadsegs, joinStyle, mitreLimit);
-#endif
+
 	/* Don't need input geometry anymore */
 	GEOSGeom_destroy(g1);
 
@@ -1584,9 +1646,266 @@ lwgeom_offsetcurve(const LWLINE *lwline, double size, int quadsegs, int joinStyl
 	}
 
 	return lwgeom_result;
-	
-#endif /* POSTGIS_GEOS_VERSION < 32 */
 }
+
+
+static void shuffle(void *array, size_t n, size_t size) {
+    char tmp[size];
+    char *arr = array;
+    size_t stride = size;
+
+    if (n > 1) {
+        size_t i;
+        for (i = 0; i < n - 1; ++i) {
+            size_t rnd = (size_t) rand();
+            size_t j = i + rnd / (RAND_MAX / (n - i) + 1);
+
+            memcpy(tmp, arr + j * stride, size);
+            memcpy(arr + j * stride, arr + i * stride, size);
+            memcpy(arr + i * stride, tmp, size);
+        }
+    }
+}
+
+LWMPOINT*
+lwpoly_to_points(const LWPOLY *lwpoly, int npoints)
+{
+	double area, bbox_area, bbox_width, bbox_height;
+	GBOX bbox;
+	const LWGEOM *lwgeom = (LWGEOM*)lwpoly;
+	int sample_npoints, sample_sqrt, sample_width, sample_height;
+	double sample_cell_size;
+	int i, j;
+	int iterations = 0;
+	int npoints_generated = 0;
+	int npoints_tested = 0;
+	GEOSGeometry *g;
+	const GEOSPreparedGeometry *gprep;
+	GEOSGeometry *gpt;
+	GEOSCoordSequence *gseq;
+	LWMPOINT *mpt;
+	int srid = lwgeom_get_srid(lwgeom);
+	int done = 0;
+	int *cells;
+
+	if (lwgeom_get_type(lwgeom) != POLYGONTYPE)
+	{
+		lwerror("%s: only polygons supported", __func__);
+		return NULL;
+	}
+
+	if (npoints == 0 || lwgeom_is_empty(lwgeom))
+	{
+		return NULL;
+		// return lwmpoint_construct_empty(lwgeom_get_srid(poly), lwgeom_has_z(poly), lwgeom_has_m(poly));
+	}
+
+	if (!lwpoly->bbox)
+	{
+		lwgeom_calculate_gbox(lwgeom, &bbox);
+	}
+	else
+	{
+		bbox = *(lwpoly->bbox);
+	}
+	area = lwpoly_area(lwpoly);
+	bbox_width = bbox.xmax - bbox.xmin;
+	bbox_height = bbox.ymax - bbox.ymin;
+	bbox_area = bbox_width * bbox_height;
+
+	if (area == 0.0 || bbox_area == 0.0)
+	{
+		lwerror("%s: zero area input polygon, TBD", __func__);
+		return NULL;
+	}
+
+	/* Gross up our test set a bit to increase odds of getting */
+	/* coverage in one pass */
+	sample_npoints = npoints * bbox_area / area;
+
+	/* We're going to generate points using a sample grid */
+	/* as described http://lin-ear-th-inking.blogspot.ca/2010/05/more-random-points-in-jts.html */
+	/* to try and get a more uniform "random" set of points */
+	/* So we have to figure out how to stick a grid into our box */
+	sample_sqrt = lround(sqrt(sample_npoints));
+	if (sample_sqrt == 0)
+		sample_sqrt = 1;
+
+	/* Calculate the grids we're going to randomize within */
+	if (bbox_width > bbox_height)
+	{
+		sample_width = sample_sqrt;
+		sample_height = ceil((double)sample_npoints / (double)sample_width);
+		sample_cell_size = bbox_width / sample_width;
+	}
+	else
+	{
+		sample_height = sample_sqrt;
+		sample_width = ceil((double)sample_npoints / (double)sample_height);
+		sample_cell_size = bbox_height / sample_height;
+	}
+
+	/* Prepare the polygon for fast true/false testing */
+	initGEOS(lwnotice, lwgeom_geos_error);
+	g = (GEOSGeometry *)LWGEOM2GEOS(lwgeom, 0);
+	if (!g)
+	{
+		lwerror("%s: Geometry could not be converted to GEOS: %s", __func__, lwgeom_geos_errmsg);
+		return NULL;
+	}
+	gprep = GEOSPrepare(g);
+
+	/* Get an empty multi-point ready to return */
+	mpt = lwmpoint_construct_empty(srid, 0, 0);
+
+	/* Init random number generator */
+	srand(time(NULL));
+
+	/* Now we fill in an array of cells, and then shuffle that array, */
+	/* so we can visit the cells in random order to avoid visual ugliness */
+	/* caused by visiting them sequentially */
+	cells = lwalloc(2*sizeof(int)*sample_height*sample_width);
+	for (i = 0; i < sample_width; i++)
+	{
+		for (j = 0; j < sample_height; j++)
+		{
+			cells[2*(i*sample_height+j)] = i;
+			cells[2*(i*sample_height+j)+1] = j;
+		}
+	}
+	shuffle(cells, sample_height*sample_width, 2*sizeof(int));
+
+	/* Start testing points */
+	while (npoints_generated < npoints)
+	{
+		iterations++;
+		for (i = 0; i < sample_width*sample_height; i++)
+		{
+			int contains = 0;
+			double y = bbox.ymin + cells[2*i] * sample_cell_size;
+			double x = bbox.xmin + cells[2*i+1] * sample_cell_size;
+			x += rand() * sample_cell_size / RAND_MAX;
+			y += rand() * sample_cell_size / RAND_MAX;
+			if (x >= bbox.xmax || y >= bbox.ymax)
+				continue;
+
+			gseq = GEOSCoordSeq_create(1, 2);
+			GEOSCoordSeq_setX(gseq, 0, x);
+			GEOSCoordSeq_setY(gseq, 0, y);
+			gpt = GEOSGeom_createPoint(gseq);
+
+			contains = GEOSPreparedIntersects(gprep, gpt);
+
+	        GEOSGeom_destroy(gpt);
+
+			if (contains == 2)
+			{
+		        GEOSPreparedGeom_destroy(gprep);
+		        GEOSGeom_destroy(g);
+		        lwerror("%s: GEOS exception on PreparedContains: %s", __func__, lwgeom_geos_errmsg);
+		        return NULL;
+			}
+			if (contains)
+			{
+				npoints_generated++;
+				mpt = lwmpoint_add_lwpoint(mpt, lwpoint_make2d(srid, x, y));
+				if (npoints_generated == npoints)
+				{
+					done = 1;
+					break;
+				}
+			}
+
+			/* Short-circuit check for ctrl-c occasionally */
+			npoints_tested++;
+			if (npoints_tested % 10000 == 0)
+			{
+				LW_ON_INTERRUPT(GEOSPreparedGeom_destroy(gprep); GEOSGeom_destroy(g); return NULL);
+			}
+
+			if (done) break;
+		}
+		if (done || iterations > 100) break;
+	}
+
+	GEOSPreparedGeom_destroy(gprep);
+	GEOSGeom_destroy(g);
+	lwfree(cells);
+
+	return mpt;
+}
+
+
+/*
+* Allocate points to sub-geometries by area, then call lwgeom_poly_to_points
+* and bundle up final result in a single multipoint.
+*/
+LWMPOINT*
+lwmpoly_to_points(const LWMPOLY *lwmpoly, int npoints)
+{
+	const LWGEOM *lwgeom = (LWGEOM*)lwmpoly;
+	double area;
+	int i;
+	LWMPOINT *mpt = NULL;
+
+	if (lwgeom_get_type(lwgeom) != MULTIPOLYGONTYPE)
+	{
+		lwerror("%s: only multipolygons supported", __func__);
+		return NULL;
+	}
+	if (npoints == 0 || lwgeom_is_empty(lwgeom))
+	{
+		return NULL;
+	}
+
+	area = lwgeom_area(lwgeom);
+
+	for (i = 0; i < lwmpoly->ngeoms; i++)
+	{
+		double sub_area = lwpoly_area(lwmpoly->geoms[i]);
+		int sub_npoints = lround(npoints * sub_area / area);
+		if(sub_npoints > 0)
+		{
+			LWMPOINT *sub_mpt = lwpoly_to_points(lwmpoly->geoms[i], sub_npoints);
+			if (!mpt)
+			{
+				mpt = sub_mpt;
+			}
+			else
+			{
+				int j;
+				for (j = 0; j < sub_mpt->ngeoms; j++)
+				{
+					mpt = lwmpoint_add_lwpoint(mpt, sub_mpt->geoms[j]);
+				}
+				/* Just free the shell, leave the underlying lwpoints alone, as they
+				   are now owed by the returning multipoint */
+				lwgeom_release((LWGEOM*)sub_mpt);
+			}
+		}
+	}
+
+	return mpt;
+}
+
+
+LWMPOINT*
+lwgeom_to_points(const LWGEOM *lwgeom, int npoints)
+{
+	switch(lwgeom_get_type(lwgeom))
+	{
+		case MULTIPOLYGONTYPE:
+			return lwmpoly_to_points((LWMPOLY*)lwgeom, npoints);
+		case POLYGONTYPE:
+			return lwpoly_to_points((LWPOLY*)lwgeom, npoints);
+		default:
+			lwerror("%s: unsupported geometry type '%s'", __func__, lwtype_name(lwgeom_get_type(lwgeom)));
+			return NULL;
+	}
+}
+
+
+
 
 LWTIN *lwtin_from_geos(const GEOSGeometry *geom, int want3d) {
 	int type = GEOSGeomTypeId(geom);
@@ -1669,7 +1988,7 @@ LWGEOM* lwgeom_delaunay_triangulation(const LWGEOM *lwgeom_in, double tolerance,
 	initGEOS(lwnotice, lwgeom_geos_error);
 
 	g1 = (GEOSGeometry *)LWGEOM2GEOS(lwgeom_in, 0);
-	if ( ! g1 ) 
+	if ( ! g1 )
 	{
 		lwerror("lwgeom_delaunay_triangulation: Geometry could not be converted to GEOS: %s", lwgeom_geos_errmsg);
 		return NULL;
@@ -1709,6 +2028,107 @@ LWGEOM* lwgeom_delaunay_triangulation(const LWGEOM *lwgeom_in, double tolerance,
 	}
 
 	return lwgeom_result;
-	
+
 #endif /* POSTGIS_GEOS_VERSION < 34 */
 }
+
+static
+GEOSCoordSequence* lwgeom_get_geos_coordseq_2d(const LWGEOM* g, uint32_t num_points)
+{
+	uint32_t i = 0;
+	uint8_t num_dims = 2;
+	LWPOINTITERATOR* it;
+	GEOSCoordSequence* coords;
+	POINT4D tmp;
+
+	coords = GEOSCoordSeq_create(num_points, num_dims);
+	if (!coords)
+		return NULL;
+
+	it = lwpointiterator_create(g);
+	while(lwpointiterator_next(it, &tmp))
+	{
+		if(i >= num_points)
+		{
+			lwerror("Incorrect num_points provided to lwgeom_get_geos_coordseq_2d");
+			GEOSCoordSeq_destroy(coords);
+			lwpointiterator_destroy(it);
+			return NULL;
+		}
+
+		if(!GEOSCoordSeq_setX(coords, i, tmp.x) || !GEOSCoordSeq_setY(coords, i, tmp.y))
+		{
+			GEOSCoordSeq_destroy(coords);
+			lwpointiterator_destroy(it);
+			return NULL;
+		}
+		i++;
+	}
+	lwpointiterator_destroy(it);
+
+	return coords;
+}
+
+LWGEOM* lwgeom_voronoi_diagram(const LWGEOM* g, const GBOX* env, double tolerance, int output_edges) {
+#if POSTGIS_GEOS_VERSION < 35
+	lwerror("lwgeom_voronoi_diagram: GEOS 3.5 or higher required");
+	return NULL;
+#else
+	uint32_t num_points = lwgeom_count_vertices(g);
+	LWGEOM *lwgeom_result;
+	char is_3d = LW_FALSE;
+	int srid = lwgeom_get_srid(g);
+	GEOSCoordSequence* coords;
+	GEOSGeometry* geos_geom;
+	GEOSGeometry* geos_env = NULL;
+	GEOSGeometry* geos_result;
+
+	if (num_points < 2)
+	{
+		LWCOLLECTION* empty = lwcollection_construct_empty(COLLECTIONTYPE, lwgeom_get_srid(g), 0, 0);
+		return lwcollection_as_lwgeom(empty);
+	}
+
+	initGEOS(lwnotice, lwgeom_geos_error);
+
+	/* Instead of using the standard LWGEOM2GEOS transformer, we read the vertices of the
+	 * LWGEOM directly and put them into a single GEOS CoordinateSeq that can be used to
+	 * define a LineString.  This allows us to process geometry types that may not be
+	 * supported by GEOS, and reduces the memory requirements in cases of many geometries
+	 * with few points (such as LWMPOINT).
+	 */
+	coords = lwgeom_get_geos_coordseq_2d(g, num_points);
+	if (!coords)
+		return NULL;
+
+	geos_geom = GEOSGeom_createLineString(coords);
+	if (!geos_geom)
+	{
+		GEOSCoordSeq_destroy(coords);
+		return NULL;
+	}
+
+	if (env)
+		geos_env = GBOX2GEOS(env);
+
+	geos_result = GEOSVoronoiDiagram(geos_geom, geos_env, tolerance, output_edges);
+
+	GEOSGeom_destroy(geos_geom);
+	if (env)
+		GEOSGeom_destroy(geos_env);
+
+	if (!geos_result)
+	{
+		lwerror("GEOSVoronoiDiagram: %s", lwgeom_geos_errmsg);
+		return NULL;
+	}
+
+	lwgeom_result = GEOS2LWGEOM(geos_result, is_3d);
+	GEOSGeom_destroy(geos_result);
+
+	lwgeom_set_srid(lwgeom_result, srid);
+
+	return lwgeom_result;
+#endif /* POSTGIS_GEOS_VERSION < 35 */
+}
+

@@ -2,13 +2,26 @@
  *
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
- * 
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright (C) 2001-2006 Refractions Research Inc.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,7 +89,7 @@ void lwmpoint_free(LWMPOINT *mpt)
 }
 
 LWGEOM*
-lwmpoint_remove_repeated_points(LWMPOINT *mpoint, double tolerance)
+lwmpoint_remove_repeated_points(const LWMPOINT *mpoint, double tolerance)
 {
 	uint32_t nnewgeoms;
 	uint32_t i, j;
@@ -107,3 +120,20 @@ lwmpoint_remove_repeated_points(LWMPOINT *mpoint, double tolerance)
 
 }
 
+LWMPOINT*
+lwmpoint_from_lwgeom(const LWGEOM *g)
+{
+	LWPOINTITERATOR* it = lwpointiterator_create(g);
+	int has_z = lwgeom_has_z(g);
+	int has_m = lwgeom_has_m(g);
+	LWMPOINT* result = lwmpoint_construct_empty(g->srid, has_z, has_m);
+	POINT4D p;
+
+	while(lwpointiterator_next(it, &p)) {
+		LWPOINT* lwp = lwpoint_make(g->srid, has_z, has_m, &p);
+		lwmpoint_add_lwpoint(result, lwp);
+	}
+
+	lwpointiterator_destroy(it);
+	return result;
+}

@@ -1,11 +1,24 @@
 /**********************************************************************
  *
  * PostGIS - Spatial Types for PostgreSQL
-
- * Copyright 2009 Oslandia
+ * http://postgis.net
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright 2009 Oslandia
  *
  **********************************************************************/
 
@@ -388,6 +401,7 @@ static LWGEOM* parse_kml_polygon(xmlNodePtr xnode, bool *hasz)
 	int ring;
 	xmlNodePtr xa, xb;
 	POINTARRAY **ppa = NULL;
+	int outer_rings = 0;
 
 	for (xa = xnode->children ; xa != NULL ; xa = xa->next)
 	{
@@ -410,7 +424,7 @@ static LWGEOM* parse_kml_polygon(xmlNodePtr xnode, bool *hasz)
 			if (ppa[0]->npoints < 4)
 				lwpgerror("invalid KML representation");
 
-			if ((!*hasz && !ptarray_is_closed_2d(ppa[0])) || 
+			if ((!*hasz && !ptarray_is_closed_2d(ppa[0])) ||
 			    ( *hasz && !ptarray_is_closed_3d(ppa[0])))
 			{
 				POINT4D pt;
@@ -418,9 +432,13 @@ static LWGEOM* parse_kml_polygon(xmlNodePtr xnode, bool *hasz)
 				ptarray_append_point(ppa[0], &pt, LW_TRUE);
 				lwpgnotice("forced closure on an un-closed KML polygon");
 			}
+			outer_rings++;
 		}
 	}
-
+	
+	if (outer_rings != 1)
+		lwpgerror("invalid KML representation");
+		
 	for (ring=1, xa = xnode->children ; xa != NULL ; xa = xa->next)
 	{
 
@@ -436,14 +454,13 @@ static LWGEOM* parse_kml_polygon(xmlNodePtr xnode, bool *hasz)
 			if (!is_kml_namespace(xb, false)) continue;
 			if (strcmp((char *) xb->name, "LinearRing")) continue;
 
-			ppa = (POINTARRAY**) lwrealloc((POINTARRAY *) ppa,
-			                               sizeof(POINTARRAY*) * (ring + 1));
+			ppa = (POINTARRAY**) lwrealloc(ppa, sizeof(POINTARRAY*) * (ring + 1));
 			ppa[ring] = parse_kml_coordinates(xb->children, hasz);
 
 			if (ppa[ring]->npoints < 4)
 				lwpgerror("invalid KML representation");
 
-			if ((!*hasz && !ptarray_is_closed_2d(ppa[ring])) || 
+			if ((!*hasz && !ptarray_is_closed_2d(ppa[ring])) ||
 			    ( *hasz && !ptarray_is_closed_3d(ppa[ring])))
 			{
 				POINT4D pt;

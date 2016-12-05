@@ -9,7 +9,7 @@
  * Copyright (C) 2010-2011 David Zwarg <dzwarg@azavea.com>
  * Copyright (C) 2009-2011 Pierre Racine <pierre.racine@sbf.ulaval.ca>
  * Copyright (C) 2009-2011 Mateusz Loskot <mateusz@loskot.net>
- * Copyright (C) 2008-2009 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2008-2009 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2013  Nathaniel Hunter Clay <clay.nathaniel@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
@@ -310,18 +310,19 @@ rt_errorstate rt_pixel_set_to_array(
 	RASTER_DEBUGF(4, "dimensions = %d x %d", dim[0], dim[1]);
 
 	/* make sure that the dimx and dimy match mask */
-	if( mask != NULL) {
-	  if ( dim[0] != mask-> dimx || dim[1] != mask->dimy ){
-	    rterror("rt_pixel_set_array: mask dimentions do not match given dims");
+	if (mask != NULL) {
+	  if (dim[0] != mask->dimx || dim[1] != mask->dimy) {
+	    rterror("rt_pixel_set_array: mask dimensions %d x %d do not match given dims %d x %d", mask->dimx, mask->dimy,  dim[0],  dim[1]);
 	    return ES_ERROR;
 	  }
-	  
-	  if ( mask->values == NULL || mask->nodata == NULL ) {
-	    rterror("rt_pixel_set_array: was not properly setup");
+	
+	  if (mask->values == NULL || mask->nodata == NULL) {
+	    rterror("rt_pixel_set_array: Invalid mask");
 	    return ES_ERROR;
 	  }
 
 	}
+
 	/* establish 2D arrays (Y axis) */
 	values = rtalloc(sizeof(double *) * dim[1]);
 	nodatas = rtalloc(sizeof(int *) * dim[1]);
@@ -382,27 +383,39 @@ rt_errorstate rt_pixel_set_to_array(
 		RASTER_DEBUGF(4, "absolute x,y: %d x %d", npixel[i].x, npixel[i].y);
 		RASTER_DEBUGF(4, "relative x,y: %d x %d", _x, _y);
 
-		if ( mask == NULL ) {
-		  values[_y][_x] = npixel[i].value;
-		  nodatas[_y][_x] = 0;
-		}else{ 
-		  if( mask->weighted == 0 ){
-		    if( FLT_EQ( mask->values[_y][_x],0) || mask->nodata[_y][_x] == 1 ){
-		      values[_y][_x] = 0;
-		      nodatas[_y][_x] = 1;
-		    }else{
-		      values[_y][_x] = npixel[i].value;
-		      nodatas[_y][_x] = 0;
-		    }
-		  }else{
-		    if( mask->nodata[_y][_x] == 1 ){
-		      values[_y][_x] = 0;
-		      nodatas[_y][_x] = 1;
-		    }else{
-		      values[_y][_x] = npixel[i].value * mask->values[_y][_x];
-		      nodatas[_y][_x] = 0;
-		    }
-		  }
+		/* no mask */
+		if (mask == NULL) {
+			values[_y][_x] = npixel[i].value;
+			nodatas[_y][_x] = 0;
+		}
+		/* mask */
+		else {
+			/* unweighted (boolean) mask */
+			if (mask->weighted == 0) {
+				/* pixel is set to zero or nodata */
+				if (FLT_EQ(mask->values[_y][_x],0) || mask->nodata[_y][_x] == 1) {
+					values[_y][_x] = 0;
+					nodatas[_y][_x] = 1;
+				}
+				/* use pixel */
+				else {
+					values[_y][_x] = npixel[i].value;
+					nodatas[_y][_x] = 0;
+				}
+			}
+			/* weighted mask */
+			else {
+				/* nodata */
+				if(mask->nodata[_y][_x] == 1) {
+					values[_y][_x] = 0;
+					nodatas[_y][_x] = 1;
+				}
+				/* apply weight to pixel value */
+				else {
+					values[_y][_x] = npixel[i].value * mask->values[_y][_x];
+					nodatas[_y][_x] = 0;
+				}
+			}
 		}
 
 		RASTER_DEBUGF(4, "(x, y, nodata, value) = (%d, %d, %d, %f)", _x, _y, nodatas[_y][_x], values[_y][_x]);

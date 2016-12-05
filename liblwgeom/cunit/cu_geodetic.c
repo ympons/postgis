@@ -124,8 +124,8 @@ static void test_sphere_project(void)
 	CU_ASSERT_DOUBLE_EQUAL(s.lon, 0.0, 1e-14);
 	CU_ASSERT_DOUBLE_EQUAL(s.lat, 0.0, 1e-14);
 
-	geographic_point_init(0, 0.2, &e);  
-	geographic_point_init(0, 0.4, &s);  
+	geographic_point_init(0, 0.2, &e);
+	geographic_point_init(0, 0.4, &s);
 	dist1 = sphere_distance(&s, &e);
 	dir1 = sphere_direction(&e, &s, dist1);
 	/* GeodSolve -i -E -p 16 -e 1 0 --input-string "0.2 0 0.4 0" */
@@ -133,42 +133,42 @@ static void test_sphere_project(void)
 	CU_ASSERT_DOUBLE_EQUAL(dist1, 0.0034906585039887, 1e-14);
 
 	geographic_point_init(0, 1, &s); /* same start point for remainder of tests */
-	geographic_point_init(0, 2, &e);  
+	geographic_point_init(0, 2, &e);
 	dist2 = sphere_distance(&s, &e);
 	dir2 = sphere_direction(&s, &e, dist2);
 	/* GeodSolve -i -E -p 16 -e 1 0 --input-string "1 0 2 0" */
 	CU_ASSERT_DOUBLE_EQUAL(dir2, 0.0, 1e-14);
 	CU_ASSERT_DOUBLE_EQUAL(dist2, 0.0174532925199433, 1e-14);
 	
-	geographic_point_init(1, 1, &e);  
+	geographic_point_init(1, 1, &e);
 	dist2 = sphere_distance(&s, &e);
 	dir2 = sphere_direction(&s, &e, dist2);
 	/* GeodSolve -i -E -p 16 -e 1 0 --input-string "1 0 1 1" */
 	CU_ASSERT_DOUBLE_EQUAL(dir2, 89.991273575329292895136 * M_PI / 180.0, 1e-14);
 	CU_ASSERT_DOUBLE_EQUAL(dist2, 0.0174506342314906, 1e-14);
 
-	geographic_point_init(0, 0, &e);  
+	geographic_point_init(0, 0, &e);
 	dist2 = sphere_distance(&s, &e);
 	dir2 = sphere_direction(&s, &e, dist2);
 	/* GeodSolve -i -E -p 16 -e 1 0 --input-string "1 0 0 0" */
 	CU_ASSERT_DOUBLE_EQUAL(dir2, M_PI, 1e-14);
 	CU_ASSERT_DOUBLE_EQUAL(dist2, 0.0174532925199433, 1e-14);
 
-	geographic_point_init(-1, 1, &e);  
+	geographic_point_init(-1, 1, &e);
 	dist2 = sphere_distance(&s, &e);
 	dir2 = sphere_direction(&s, &e, dist2);
 	/* GeodSolve -i -E -p 16 -e 1 0 --input-string "1 0 1 -1" */
 	CU_ASSERT_DOUBLE_EQUAL(dir2, -89.991273575329292895136 * M_PI / 180.0, 1e-14);
 	CU_ASSERT_DOUBLE_EQUAL(dist2, 0.0174506342314906, 1e-14);
 
-	geographic_point_init(1, 2, &e);  
+	geographic_point_init(1, 2, &e);
 	dist2 = sphere_distance(&s, &e);
 	dir2 = sphere_direction(&s, &e, dist2);
 	/* GeodSolve -i -E -p 16 -e 1 0 --input-string "1 0 2 1" */
 	CU_ASSERT_DOUBLE_EQUAL(dir2, 44.978182941465044354783 * M_PI / 180.0, 1e-14);
 	CU_ASSERT_DOUBLE_EQUAL(dist2, 0.0246782972905467, 1e-14);
 
-	geographic_point_init(-1, 0, &e);  
+	geographic_point_init(-1, 0, &e);
 	dist2 = sphere_distance(&s, &e);
 	dir2 = sphere_direction(&s, &e, dist2);
 	/* GeodSolve -i -E -p 16 -e 1 0 --input-string "1 0 0 -1" */
@@ -210,7 +210,7 @@ static void cross_product_stability(void)
 		/* Ramsey */
 		unit_normal(&A1, &A2, &Nc);
 
-		if ( i > 0 ) 
+		if ( i > 0 )
 		{
 			printf("\n- %d -------------------- %.24g ------------------------\n", i, p2.y);
 			printf("Skea:         %.24g,%.24g,%.24g\n", Nr.x, Nr.y, Nr.z);
@@ -345,7 +345,7 @@ static LWGEOM* lwgeom_over_gserialized(char *wkt)
 	GSERIALIZED *g;
 
 	lwg = lwgeom_from_wkt(wkt, LW_PARSER_CHECK_NONE);
-	g = gserialized_from_lwgeom(lwg, 1, 0);
+	g = gserialized_from_lwgeom(lwg, 0);
 	lwgeom_free(lwg);
 	return lwgeom_from_gserialized(g);
 }
@@ -571,7 +571,7 @@ static void line2pts(const char *wkt, POINT3D *A1, POINT3D *A2)
 	POINTARRAY *pa;
 	POINT2D p1, p2;
 	GEOGRAPHIC_POINT g1, g2;
-	if ( ! l ) 
+	if ( ! l )
 	{
 		printf("BAD WKT FOUND in test_edge_intersects:\n  %s\n\n", wkt);
 		exit(0);
@@ -762,7 +762,7 @@ static void test_edge_distance_to_point(void)
 	// printf("CLOSE POINT(%g %g)\n", closest.lon,  closest.lat);
 	// printf(" ORIG POINT(%g %g)\n", g.lon, g.lat);
 	CU_ASSERT_DOUBLE_EQUAL(g.lat, closest.lat, 0.00001);
-	CU_ASSERT_DOUBLE_EQUAL(g.lon, closest.lon, 0.00001);		 
+	CU_ASSERT_DOUBLE_EQUAL(g.lon, closest.lon, 0.00001);		
 }
 
 static void test_edge_distance_to_edge(void)
@@ -799,7 +799,7 @@ static LWGEOM* lwgeom_over_gserialized(char *wkt, GSERIALIZED **g)
 
 	lwg = lwgeom_from_wkt(wkt, LW_PARSER_CHECK_NONE);
 	FLAGS_SET_GEODETIC(lwg->flags, 1);
-	*g = gserialized_from_lwgeom(lwg, 1, 0);
+	*g = gserialized_from_lwgeom(lwg, 0);
 	lwgeom_free(lwg);
 	return lwgeom_from_gserialized(*g);
 }
@@ -901,7 +901,7 @@ static void test_gserialized_from_lwgeom(void)
 
 	geom = lwgeom_from_wkt("POINT(0 0.2)", LW_PARSER_CHECK_NONE);
 	FLAGS_SET_GEODETIC(geom->flags, 1);
-	g = gserialized_from_lwgeom(geom, 1, 0);
+	g = gserialized_from_lwgeom(geom,  0);
 	type = gserialized_get_type(g);
 	CU_ASSERT_EQUAL( type, POINTTYPE );
 	inspect = (double*)g;
@@ -911,7 +911,7 @@ static void test_gserialized_from_lwgeom(void)
 
 	geom = lwgeom_from_wkt("POLYGON((-1 -1, -1 2.5, 2 2, 2 -1, -1 -1), (0 0, 0 1, 1 1, 1 0, 0 0))", LW_PARSER_CHECK_NONE);
 	FLAGS_SET_GEODETIC(geom->flags, 1);
-	g = gserialized_from_lwgeom(geom, 1, 0);
+	g = gserialized_from_lwgeom(geom, 0);
 	type = gserialized_get_type(g);
 	CU_ASSERT_EQUAL( type, POLYGONTYPE );
 	inspect = (double*)g;
@@ -921,7 +921,7 @@ static void test_gserialized_from_lwgeom(void)
 
 	geom = lwgeom_from_wkt("MULTILINESTRING((0 0, 1 1),(0 0.1, 1 1))", LW_PARSER_CHECK_NONE);
 	FLAGS_SET_GEODETIC(geom->flags, 1);
-	g = gserialized_from_lwgeom(geom, 1, 0);
+	g = gserialized_from_lwgeom(geom, 0);
 	type = gserialized_get_type(g);
 	CU_ASSERT_EQUAL( type, MULTILINETYPE );
 	inspect = (double*)g;
@@ -1556,8 +1556,24 @@ static void test_lwgeom_area_sphere(void)
 	area = lwgeom_area_sphere(lwg, &s);
 	
 	CU_ASSERT_DOUBLE_EQUAL(area, 12360265021.3561, 1.0);
-	lwgeom_free(lwg);	
-	return;
+	lwgeom_free(lwg);
+
+	/* Robustness tests, from ticket #3393 */
+	lwg = lwgeom_from_wkt("POLYGON((0 78.703946026663,0 0,179.999997913235 0,179.999997913235 -33.0888306884702,0 78.703946026663))", LW_PARSER_CHECK_NONE);
+	area = lwgeom_area_sphere(lwg, &s);
+	CU_ASSERT_DOUBLE_EQUAL(area, 127516467322130, 1.0);
+	lwgeom_free(lwg);
+
+	lwg = lwgeom_from_wkt("POLYGON((0 78.703946026662,0 0,179.999997913235 0,179.999997913235 -33.0888306884702,0 78.703946026662))", LW_PARSER_CHECK_NONE);
+	area = lwgeom_area_sphere(lwg, &s);
+	CU_ASSERT_DOUBLE_EQUAL(area, 127516467322130, 1.0);
+	lwgeom_free(lwg);
+
+	lwg = lwgeom_from_wkt("POLYGON((0 78.703946026664,0 0,179.999997913235 0,179.999997913235 -33.0888306884702,0 78.703946026664))", LW_PARSER_CHECK_NONE);
+	area = lwgeom_area_sphere(lwg, &s);
+	CU_ASSERT_DOUBLE_EQUAL(area, 127516467322130, 1.0);
+	lwgeom_free(lwg);
+	/* end #3393 */
 }
 
 /*

@@ -3,7 +3,7 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright (C) 2015 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2015 Sandro Santilli <strk@kbt.io>
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU General Public Licence. See the COPYING file.
@@ -14,7 +14,10 @@
 #include "fmgr.h"
 #include "utils/elog.h"
 #include "utils/memutils.h" /* for TopMemoryContext */
+#include "utils/array.h" /* for ArrayType */
+#include "catalog/pg_type.h" /* for INT4OID */
 #include "lib/stringinfo.h"
+#include "access/xact.h" /* for RegisterXactCallback */
 #include "funcapi.h" /* for FuncCallContext */
 #include "executor/spi.h" /* this is what you need to work with SPI */
 #include "inttypes.h" /* for PRId64 */
@@ -30,10 +33,8 @@
 
 #include <stdarg.h>
 
-#ifdef __GNUC__
-# define GNU_PRINTF23 __attribute__ (( format(printf, 2, 3) ))
-#else
-# define GNU_PRINTF23
+#ifndef __GNUC__
+# define __attribute__ (x)
 #endif
 
 #define ABS(x) (x<0?-x:x)
@@ -78,13 +79,15 @@ struct LWT_BE_TOPOLOGY_T {
   char *name;
   int id;
   int srid;
-  int precision;
+  double precision;
   int hasZ;
+  Oid geometryOID;
 };
 
 /* utility funx */
 
-static void cberror(const LWT_BE_DATA* be, const char *fmt, ...) GNU_PRINTF23;
+static void cberror(const LWT_BE_DATA* be, const char *fmt, ...)
+  __attribute__ (( format(printf, 2, 3) ));
 
 static void
 cberror(const LWT_BE_DATA* be_in, const char *fmt, ...)
@@ -113,15 +116,13 @@ _lwtype_upper_name(int type, char *buf, size_t buflen)
   }
 }
 
-/* Return lwalloc'ed hexwkb representation for a GBOX */
-static char *
-_box2d_to_hexwkb(const GBOX *bbox, int srid)
+/* Return an lwalloc'ed geometrical representation of the box */
+static LWGEOM *
+_box2d_to_lwgeom(const GBOX *bbox, int srid)
 {
   POINTARRAY *pa = ptarray_construct(0, 0, 2);
   POINT4D p;
   LWLINE *line;
-  char *hex;
-  size_t sz;
 
   p.x = bbox->xmin;
   p.y = bbox->ymin;
@@ -130,7 +131,18 @@ _box2d_to_hexwkb(const GBOX *bbox, int srid)
   p.y = bbox->ymax;
   ptarray_set_point4d(pa, 1, &p);
   line = lwline_construct(srid, NULL, pa);
-  hex = lwgeom_to_hexwkb( lwline_as_lwgeom(line), WKT_EXTENDED, &sz);
+  return lwline_as_lwgeom(line);
+}
+
+/* Return lwalloc'ed hexwkb representation for a GBOX */
+static char *
+_box2d_to_hexwkb(const GBOX *bbox, int srid)
+{
+  char *hex;
+  size_t sz;
+  LWGEOM *geom = _box2d_to_lwgeom(bbox, srid);
+  hex = lwgeom_to_hexwkb(geom, WKT_EXTENDED, &sz);
+  lwgeom_free(geom);
   assert(hex[sz-1] == '\0');
   return hex;
 }
@@ -155,13 +167,14 @@ cb_loadTopologyByName(const LWT_BE_DATA* be, const char *name)
   MemoryContext oldcontext = CurrentMemoryContext;
 
   initStringInfo(sql);
-  appendStringInfo(sql, "SELECT id,srid FROM topology.topology "
+  appendStringInfo(sql, "SELECT id,srid,precision,null::geometry"
+                        " FROM topology.topology "
                         "WHERE name = '%s'", name);
   spi_result = SPI_execute(sql->data, !be->data_changed, 0);
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
-    pfree(sqldata.data);
 		cberror(be, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  return NULL;
   }
   if ( ! SPI_processed )
@@ -190,6 +203,7 @@ cb_loadTopologyByName(const LWT_BE_DATA* be, const char *name)
   dat = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
   if ( isnull ) {
 		cberror(be, "Topology '%s' has null identifier", name);
+    SPI_freetuptable(SPI_tuptable);
     return NULL;
   }
   topo->id = DatumGetInt32(dat);
@@ -197,20 +211,33 @@ cb_loadTopologyByName(const LWT_BE_DATA* be, const char *name)
   dat = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 2, &isnull);
   if ( isnull ) {
 		cberror(be, "Topology '%s' has null SRID", name);
+    SPI_freetuptable(SPI_tuptable);
     return NULL;
   }
   topo->srid = DatumGetInt32(dat);
   if ( topo->srid < 0 )
   {
     lwnotice("Topology SRID value %d converted to "
-             "the officially unknown SRID value %d", SRID_UNKNOWN);
+             "the officially unknown SRID value %d", topo->srid, SRID_UNKNOWN);
     topo->srid = SRID_UNKNOWN;
   }
 
-  topo->precision = 0; /* needed ? */
+  dat = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 3, &isnull);
+  if ( isnull ) {
+		lwnotice("Topology '%s' has null precision, taking as 0", name);
+    topo->precision = 0; /* TODO: should this be -1 instead ? */
+  } else {
+    topo->precision = DatumGetFloat8(dat);
+  }
 
-  POSTGIS_DEBUGF(1, "cb_loadTopologyByName: topo '%s' has id %d, srid %d",
-             name, topo->id, topo->srid);
+  /* we're dynamically querying geometry type here */
+  topo->geometryOID = SPI_tuptable->tupdesc->attrs[3]->atttypid;
+
+  POSTGIS_DEBUGF(1, "cb_loadTopologyByName: topo '%s' has "
+                    "id %d, srid %d, precision %g",
+             name, topo->id, topo->srid, topo->precision);
+
+  SPI_freetuptable(SPI_tuptable);
 
   return topo;
 }
@@ -554,11 +581,12 @@ addFaceValues(StringInfo str, LWT_ISO_FACE *face, int srid)
   else
     appendStringInfoString(str, "(DEFAULT");
 
-  if ( face->mbr ) {
-    appendStringInfo(str, ",ST_SetSRID(ST_MakeEnvelope(%g,%g,%g,%g),%d))",
-              face->mbr->xmin, face->mbr->ymin,
-              face->mbr->xmax, face->mbr->ymax, srid);
-  } else {
+  if ( face->mbr ) {{
+    char *hexbox;
+    hexbox = _box2d_to_hexwkb(face->mbr, srid);
+    appendStringInfo(str, ",ST_Envelope('%s'::geometry))", hexbox);
+    lwfree(hexbox);
+  }} else {
     appendStringInfoString(str, ",null::geometry)");
   }
 }
@@ -570,6 +598,7 @@ fillEdgeFields(LWT_ISO_EDGE* edge, HeapTuple row, TupleDesc rowdesc, int fields)
   Datum dat;
   int val;
   GSERIALIZED *geom;
+  LWGEOM *lwg;
   int colno = 0;
 
   POSTGIS_DEBUGF(2, "fillEdgeFields: got %d atts and fields %x",
@@ -580,12 +609,13 @@ fillEdgeFields(LWT_ISO_EDGE* edge, HeapTuple row, TupleDesc rowdesc, int fields)
     if ( isnull ) {
       lwpgwarning("Found edge with NULL edge_id");
       edge->edge_id = -1;
+    } else {
+      val = DatumGetInt32(dat);
+      POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (edge_id)"
+                        " has int32 val of %d",
+                        colno, val);
+      edge->edge_id = val;
     }
-    val = DatumGetInt32(dat);
-    POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (edge_id)"
-                      " has int32 val of %d",
-                      colno, val);
-    edge->edge_id = val;
 
   }
   if ( fields & LWT_COL_EDGE_START_NODE ) {
@@ -593,92 +623,89 @@ fillEdgeFields(LWT_ISO_EDGE* edge, HeapTuple row, TupleDesc rowdesc, int fields)
     if ( isnull ) {
       lwpgwarning("Found edge with NULL start_node");
       edge->start_node = -1;
+    } else {
+      val = DatumGetInt32(dat);
+      POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (start_node)"
+                        " has int32 val of %d", colno, val);
+      edge->start_node = val;
     }
-    val = DatumGetInt32(dat);
-    edge->start_node = val;
-    POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (start_node)"
-                      " has int32 val of %d", colno, val);
   }
   if ( fields & LWT_COL_EDGE_END_NODE ) {
     dat = SPI_getbinval(row, rowdesc, ++colno, &isnull);
     if ( isnull ) {
       lwpgwarning("Found edge with NULL end_node");
-      edge->start_node = -1;
+      edge->end_node = -1;
+    } else {
+      val = DatumGetInt32(dat);
+      POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (end_node)"
+                        " has int32 val of %d", colno, val);
+      edge->end_node = val;
     }
-    val = DatumGetInt32(dat);
-    edge->end_node = val;
-    POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (end_node)"
-                      " has int32 val of %d", colno, val);
   }
   if ( fields & LWT_COL_EDGE_FACE_LEFT ) {
     dat = SPI_getbinval(row, rowdesc, ++colno, &isnull);
     if ( isnull ) {
       lwpgwarning("Found edge with NULL face_left");
-      edge->start_node = -1;
+      edge->face_left = -1;
+    } else {
+      val = DatumGetInt32(dat);
+      POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (face_left)"
+                        " has int32 val of %d", colno, val);
+      edge->face_left = val;
     }
-    val = DatumGetInt32(dat);
-    edge->face_left = val;
-    POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (face_left)"
-                      " has int32 val of %d", colno, val);
   }
-#if POSTGIS_DEBUG_LEVEL > 1
-  else {
-    edge->face_left = 6767; /* debugging */
-  }
-#endif
   if ( fields & LWT_COL_EDGE_FACE_RIGHT ) {
     dat = SPI_getbinval(row, rowdesc, ++colno, &isnull);
     if ( isnull ) {
       lwpgwarning("Found edge with NULL face_right");
-      edge->start_node = -1;
+      edge->face_right = -1;
+    } else {
+      val = DatumGetInt32(dat);
+      POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (face_right)"
+                        " has int32 val of %d", colno, val);
+      edge->face_right = val;
     }
-    val = DatumGetInt32(dat);
-    edge->face_right = val;
-    POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (face_right)"
-                      " has int32 val of %d", colno, val);
   }
-#if POSTGIS_DEBUG_LEVEL > 1
-  else {
-    edge->face_right = 6767; /* debugging */
-  }
-#endif
   if ( fields & LWT_COL_EDGE_NEXT_LEFT ) {
     dat = SPI_getbinval(row, rowdesc, ++colno, &isnull);
     if ( isnull ) {
       lwpgwarning("Found edge with NULL next_left");
-      edge->start_node = -1;
+      edge->next_left = -1;
+    } else {
+      val = DatumGetInt32(dat);
+      POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (next_left)"
+                        " has int32 val of %d", colno, val);
+      edge->next_left = val;
     }
-    val = DatumGetInt32(dat);
-    edge->next_left = val;
-    POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (next_left)"
-                      " has int32 val of %d", colno, val);
   }
   if ( fields & LWT_COL_EDGE_NEXT_RIGHT ) {
     dat = SPI_getbinval(row, rowdesc, ++colno, &isnull);
     if ( isnull ) {
       lwpgwarning("Found edge with NULL next_right");
-      edge->start_node = -1;
+      edge->next_right = -1;
+    } else {
+      val = DatumGetInt32(dat);
+      POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (next_right)"
+                        " has int32 val of %d", colno, val);
+      edge->next_right = val;
     }
-    val = DatumGetInt32(dat);
-    edge->next_right = val;
-    POSTGIS_DEBUGF(2, "fillEdgeFields: colno%d (next_right)"
-                      " has int32 val of %d", colno, val);
   }
   if ( fields & LWT_COL_EDGE_GEOM ) {
     dat = SPI_getbinval(row, rowdesc, ++colno, &isnull);
-    if ( ! isnull ) {
-      geom = (GSERIALIZED *)PG_DETOAST_DATUM_COPY(dat);
-      edge->geom = lwgeom_as_lwline(lwgeom_from_gserialized(geom));
-    } else {
+    if ( ! isnull ) {{
+      MemoryContext oldcontext = CurrentMemoryContext;
+      geom = (GSERIALIZED *)PG_DETOAST_DATUM(dat);
+      lwg = lwgeom_from_gserialized(geom);
+      MemoryContextSwitchTo( TopMemoryContext );
+      edge->geom = lwgeom_as_lwline(lwgeom_clone_deep(lwg));
+      MemoryContextSwitchTo( oldcontext ); /* switch back */
+      lwgeom_free(lwg);
+      if ( DatumGetPointer(dat) != (Pointer)geom ) pfree(geom); /* IF_COPY */
+    }} else {
       lwpgwarning("Found edge with NULL geometry !");
       edge->geom = NULL;
     }
   }
-#if POSTGIS_DEBUG_LEVEL > 1
-  else {
-    edge->geom = (void*)0x67676767; /* debugging */
-  }
-#endif
 }
 
 static void
@@ -687,6 +714,7 @@ fillNodeFields(LWT_ISO_NODE* node, HeapTuple row, TupleDesc rowdesc, int fields)
   bool isnull;
   Datum dat;
   GSERIALIZED *geom;
+  LWGEOM *lwg;
   int colno = 0;
 
   if ( fields & LWT_COL_NODE_NODE_ID ) {
@@ -701,18 +729,16 @@ fillNodeFields(LWT_ISO_NODE* node, HeapTuple row, TupleDesc rowdesc, int fields)
   if ( fields & LWT_COL_NODE_GEOM ) {
     dat = SPI_getbinval(row, rowdesc, ++colno, &isnull);
     if ( ! isnull ) {
-      geom = (GSERIALIZED *)PG_DETOAST_DATUM_COPY(dat);
-      node->geom = lwgeom_as_lwpoint(lwgeom_from_gserialized(geom));
+      geom = (GSERIALIZED *)PG_DETOAST_DATUM(dat);
+      lwg = lwgeom_from_gserialized(geom);
+      node->geom = lwgeom_as_lwpoint(lwgeom_clone_deep(lwg));
+      lwgeom_free(lwg);
+      if ( DatumGetPointer(dat) != (Pointer)geom ) pfree(geom); /* IF_COPY */
     } else {
       lwpgnotice("Found node with NULL geometry !");
       node->geom = NULL;
     }
   }
-#if POSTGIS_DEBUG_LEVEL > 1
-  else {
-    node->geom = (void*)0x67676767; /* debugging */
-  }
-#endif
 }
 
 static void
@@ -733,7 +759,7 @@ fillFaceFields(LWT_ISO_FACE* face, HeapTuple row, TupleDesc rowdesc, int fields)
     dat = SPI_getbinval(row, rowdesc, ++colno, &isnull);
     if ( ! isnull ) {
       /* NOTE: this is a geometry of which we want to take (and clone) the BBOX */
-      geom = (GSERIALIZED *)PG_DETOAST_DATUM_COPY(dat);
+      geom = (GSERIALIZED *)PG_DETOAST_DATUM(dat);
       g = lwgeom_from_gserialized(geom);
       box = lwgeom_get_bbox(g);
       if ( box ) {
@@ -742,17 +768,14 @@ fillFaceFields(LWT_ISO_FACE* face, HeapTuple row, TupleDesc rowdesc, int fields)
         lwpgnotice("Found face with EMPTY MBR !");
         face->mbr = NULL;
       }
+      lwgeom_free(g);
+      if ( DatumGetPointer(dat) != (Pointer)geom ) pfree(geom);
     } else {
       /* NOTE: perfectly fine for universe face */
       POSTGIS_DEBUG(1, "Found face with NULL MBR");
       face->mbr = NULL;
     }
   }
-#if POSTGIS_DEBUG_LEVEL > 1
-  else {
-    face->mbr = (void*)0x67676767; /* debugging */
-  }
-#endif
 }
 
 /* return 0 on failure (null) 1 otherwise */
@@ -795,6 +818,7 @@ cb_getEdgeById(const LWT_BE_TOPOLOGY* topo,
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -811,6 +835,8 @@ cb_getEdgeById(const LWT_BE_TOPOLOGY* topo,
     HeapTuple row = SPI_tuptable->vals[i];
     fillEdgeFields(&edges[i], row, SPI_tuptable->tupdesc, fields);
   }
+
+  SPI_freetuptable(SPI_tuptable);
 
   return edges;
 }
@@ -850,6 +876,7 @@ cb_getEdgeByNode(const LWT_BE_TOPOLOGY* topo,
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -867,44 +894,67 @@ cb_getEdgeByNode(const LWT_BE_TOPOLOGY* topo,
     fillEdgeFields(&edges[i], row, SPI_tuptable->tupdesc, fields);
   }
 
+  SPI_freetuptable(SPI_tuptable);
+
   return edges;
 }
 
 static LWT_ISO_EDGE*
 cb_getEdgeByFace(const LWT_BE_TOPOLOGY* topo,
-      const LWT_ELEMID* ids, int* numelems, int fields)
+      const LWT_ELEMID* ids, int* numelems, int fields,
+      const GBOX *box)
 {
   LWT_ISO_EDGE *edges;
 	int spi_result;
   MemoryContext oldcontext = CurrentMemoryContext;
-
   StringInfoData sqldata;
   StringInfo sql = &sqldata;
   int i;
+  ArrayType *array_ids;
+  Datum *datum_ids;
+  Datum values[2];
+  Oid argtypes[2];
+  int nargs = 1;
+  GSERIALIZED *gser = NULL;
+
+  datum_ids = palloc(sizeof(Datum)*(*numelems));
+  for (i=0; i<*numelems; ++i) datum_ids[i] = Int32GetDatum(ids[i]);
+  array_ids = construct_array(datum_ids, *numelems, INT4OID, 4, true, 's');
 
   initStringInfo(sql);
   appendStringInfoString(sql, "SELECT ");
   addEdgeFields(sql, fields, 0);
-  appendStringInfo(sql, " FROM \"%s\".edge_data", topo->name);
-  appendStringInfoString(sql, " WHERE left_face IN (");
-  // add all identifiers here
-  for (i=0; i<*numelems; ++i) {
-    appendStringInfo(sql, "%s%" LWTFMT_ELEMID, (i?",":""), ids[i]);
+  appendStringInfo(sql, " FROM \"%s\".edge_data"
+                        " WHERE ( left_face = ANY($1) "
+                        " OR right_face = ANY ($1) )",
+                   topo->name);
+
+  values[0] = PointerGetDatum(array_ids);
+  argtypes[0] = INT4ARRAYOID;
+
+  if ( box )
+  {
+    LWGEOM *g = _box2d_to_lwgeom(box, topo->srid);
+    gser = geometry_serialize(g);
+    lwgeom_free(g);
+    appendStringInfo(sql, " AND geom && $2");
+
+    values[1] = PointerGetDatum(gser);
+    argtypes[1] = topo->geometryOID;
+    ++nargs;
   }
-  appendStringInfoString(sql, ") OR right_face IN (");
-  // add all identifiers here
-  for (i=0; i<*numelems; ++i) {
-    appendStringInfo(sql, "%s%" LWTFMT_ELEMID, (i?",":""), ids[i]);
-  }
-  appendStringInfoString(sql, ")");
 
   POSTGIS_DEBUGF(1, "cb_getEdgeByFace query: %s", sql->data);
   POSTGIS_DEBUGF(1, "data_changed is %d", topo->be_data->data_changed);
 
-  spi_result = SPI_execute(sql->data, !topo->be_data->data_changed, 0);
+  spi_result = SPI_execute_with_args(sql->data, nargs, argtypes, values, NULL,
+                                     !topo->be_data->data_changed, 0);
+  pfree(array_ids); /* not needed anymore */
+  if ( gser ) pfree(gser); /* not needed anymore */
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -921,6 +971,8 @@ cb_getEdgeByFace(const LWT_BE_TOPOLOGY* topo,
     HeapTuple row = SPI_tuptable->vals[i];
     fillEdgeFields(&edges[i], row, SPI_tuptable->tupdesc, fields);
   }
+
+  SPI_freetuptable(SPI_tuptable);
 
   return edges;
 }
@@ -954,6 +1006,7 @@ cb_getFacesById(const LWT_BE_TOPOLOGY* topo,
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -970,6 +1023,8 @@ cb_getFacesById(const LWT_BE_TOPOLOGY* topo,
     HeapTuple row = SPI_tuptable->vals[i];
     fillFaceFields(&faces[i], row, SPI_tuptable->tupdesc, fields);
   }
+
+  SPI_freetuptable(SPI_tuptable);
 
   return faces;
 }
@@ -1009,6 +1064,7 @@ cb_getRingEdges(const LWT_BE_TOPOLOGY* topo,
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -1044,6 +1100,8 @@ cb_getRingEdges(const LWT_BE_TOPOLOGY* topo,
                       " is edge %d", i, edge, val);
   }
 
+  SPI_freetuptable(SPI_tuptable);
+
   return edges;
 }
 
@@ -1074,6 +1132,7 @@ cb_getNodeById(const LWT_BE_TOPOLOGY* topo,
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -1091,12 +1150,15 @@ cb_getNodeById(const LWT_BE_TOPOLOGY* topo,
     fillNodeFields(&nodes[i], row, SPI_tuptable->tupdesc, fields);
   }
 
+  SPI_freetuptable(SPI_tuptable);
+
   return nodes;
 }
 
 static LWT_ISO_NODE*
 cb_getNodeByFace(const LWT_BE_TOPOLOGY* topo,
-      const LWT_ELEMID* ids, int* numelems, int fields)
+      const LWT_ELEMID* ids, int* numelems, int fields,
+      const GBOX *box)
 {
   LWT_ISO_NODE *nodes;
 	int spi_result;
@@ -1104,6 +1166,7 @@ cb_getNodeByFace(const LWT_BE_TOPOLOGY* topo,
   StringInfoData sqldata;
   StringInfo sql = &sqldata;
   int i;
+  char *hexbox;
 
   initStringInfo(sql);
   appendStringInfoString(sql, "SELECT ");
@@ -1115,12 +1178,19 @@ cb_getNodeByFace(const LWT_BE_TOPOLOGY* topo,
     appendStringInfo(sql, "%s%" LWTFMT_ELEMID, (i?",":""), ids[i]);
   }
   appendStringInfoString(sql, ")");
+  if ( box )
+  {
+    hexbox = _box2d_to_hexwkb(box, topo->srid);
+    appendStringInfo(sql, " AND geom && '%s'::geometry", hexbox);
+    lwfree(hexbox);
+  }
   POSTGIS_DEBUGF(1, "cb_getNodeByFace query: %s", sql->data);
   POSTGIS_DEBUGF(1, "data_changed is %d", topo->be_data->data_changed);
   spi_result = SPI_execute(sql->data, !topo->be_data->data_changed, 0);
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -1137,6 +1207,8 @@ cb_getNodeByFace(const LWT_BE_TOPOLOGY* topo,
     HeapTuple row = SPI_tuptable->vals[i];
     fillNodeFields(&nodes[i], row, SPI_tuptable->tupdesc, fields);
   }
+
+  SPI_freetuptable(SPI_tuptable);
 
   return nodes;
 }
@@ -1182,6 +1254,7 @@ cb_getEdgeWithinDistance2D(const LWT_BE_TOPOLOGY* topo,
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -1205,6 +1278,9 @@ cb_getEdgeWithinDistance2D(const LWT_BE_TOPOLOGY* topo,
       *numelems = exists ? 1 : 0;
       POSTGIS_DEBUGF(1, "cb_getEdgeWithinDistance2D: exists ? %d", *numelems);
     }
+
+    SPI_freetuptable(SPI_tuptable);
+
     return NULL;
   }
 
@@ -1214,6 +1290,8 @@ cb_getEdgeWithinDistance2D(const LWT_BE_TOPOLOGY* topo,
     HeapTuple row = SPI_tuptable->vals[i];
     fillEdgeFields(&edges[i], row, SPI_tuptable->tupdesc, fields);
   }
+
+  SPI_freetuptable(SPI_tuptable);
 
   return edges;
 }
@@ -1266,6 +1344,7 @@ cb_getNodeWithinDistance2D(const LWT_BE_TOPOLOGY* topo,
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -1287,6 +1366,9 @@ cb_getNodeWithinDistance2D(const LWT_BE_TOPOLOGY* topo,
       exists = DatumGetBool(dat);
       *numelems = exists ? 1 : 0;
     }
+
+    SPI_freetuptable(SPI_tuptable);
+
     return NULL;
   }
   else
@@ -1298,6 +1380,9 @@ cb_getNodeWithinDistance2D(const LWT_BE_TOPOLOGY* topo,
       fillNodeFields(&nodes[i], row, SPI_tuptable->tupdesc, fields);
     }
     *numelems = SPI_processed;
+
+    SPI_freetuptable(SPI_tuptable);
+
     return nodes;
   }
 }
@@ -1330,6 +1415,7 @@ cb_insertNodes( const LWT_BE_TOPOLOGY* topo,
   if ( spi_result != SPI_OK_INSERT_RETURNING ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return 0;
   }
   pfree(sqldata.data);
@@ -1337,7 +1423,7 @@ cb_insertNodes( const LWT_BE_TOPOLOGY* topo,
   if ( SPI_processed ) topo->be_data->data_changed = true;
 
   if ( SPI_processed != numelems ) {
-		cberror(topo->be_data, "processed %d rows, expected %d",
+		cberror(topo->be_data, "processed %u rows, expected %d",
             SPI_processed, numelems);
 	  return 0;
   }
@@ -1350,6 +1436,8 @@ cb_insertNodes( const LWT_BE_TOPOLOGY* topo,
     fillNodeFields(&nodes[i], SPI_tuptable->vals[i],
       SPI_tuptable->tupdesc, LWT_COL_NODE_NODE_ID);
   }
+
+  SPI_freetuptable(SPI_tuptable);
 
   return 1;
 }
@@ -1385,13 +1473,14 @@ cb_insertEdges( const LWT_BE_TOPOLOGY* topo,
   {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -1;
   }
   pfree(sqldata.data);
   if ( SPI_processed ) topo->be_data->data_changed = true;
   POSTGIS_DEBUGF(1, "cb_insertEdges query processed %d rows", SPI_processed);
   if ( SPI_processed != numelems ) {
-		cberror(topo->be_data, "processed %d rows, expected %d",
+		cberror(topo->be_data, "processed %u rows, expected %d",
             SPI_processed, numelems);
 	  return -1;
   }
@@ -1406,6 +1495,8 @@ cb_insertEdges( const LWT_BE_TOPOLOGY* topo,
         SPI_tuptable->tupdesc, LWT_COL_EDGE_EDGE_ID);
     }
   }
+
+  SPI_freetuptable(SPI_tuptable);
 
   return SPI_processed;
 }
@@ -1440,13 +1531,14 @@ cb_insertFaces( const LWT_BE_TOPOLOGY* topo,
   {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -1;
   }
   pfree(sqldata.data);
   if ( SPI_processed ) topo->be_data->data_changed = true;
   POSTGIS_DEBUGF(1, "cb_insertFaces query processed %d rows", SPI_processed);
   if ( SPI_processed != numelems ) {
-		cberror(topo->be_data, "processed %d rows, expected %d",
+		cberror(topo->be_data, "processed %u rows, expected %d",
             SPI_processed, numelems);
 	  return -1;
   }
@@ -1461,6 +1553,8 @@ cb_insertFaces( const LWT_BE_TOPOLOGY* topo,
         SPI_tuptable->tupdesc, LWT_COL_FACE_FACE_ID);
     }
   }
+
+  SPI_freetuptable(SPI_tuptable);
 
   return SPI_processed;
 }
@@ -1496,6 +1590,7 @@ cb_updateEdges( const LWT_BE_TOPOLOGY* topo,
   {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -1;
   }
   pfree(sqldata.data);
@@ -1538,6 +1633,7 @@ cb_updateNodes( const LWT_BE_TOPOLOGY* topo,
   {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -1;
   }
   pfree(sqldata.data);
@@ -1605,6 +1701,7 @@ cb_updateNodesById( const LWT_BE_TOPOLOGY* topo,
   {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -1;
   }
   pfree(sqldata.data);
@@ -1630,11 +1727,14 @@ cb_updateFacesById( const LWT_BE_TOPOLOGY* topo,
   appendStringInfoString(sql, "WITH newfaces(id,mbr) AS ( VALUES ");
   for (i=0; i<numfaces; ++i) {
     const LWT_ISO_FACE* face = &(faces[i]);
+    char *hexbox = _box2d_to_hexwkb(face->mbr, topo->srid);
+
     if ( i ) appendStringInfoChar(sql, ',');
+
     appendStringInfo(sql, "(%" LWTFMT_ELEMID
-      ", ST_SetSRID(ST_MakeEnvelope(%g,%g,%g,%g),%d))",
-      face->face_id, face->mbr->xmin, face->mbr->ymin,
-      face->mbr->xmax, face->mbr->ymax, topo->srid);
+      ", ST_Envelope('%s'::geometry))",
+      face->face_id, hexbox);
+    lwfree(hexbox);
   }
   appendStringInfo(sql, ") UPDATE \"%s\".face o SET mbr = i.mbr "
                         "FROM newfaces i WHERE o.face_id = i.id",
@@ -1648,6 +1748,7 @@ cb_updateFacesById( const LWT_BE_TOPOLOGY* topo,
   {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -1;
   }
   pfree(sqldata.data);
@@ -1731,6 +1832,7 @@ cb_updateEdgesById( const LWT_BE_TOPOLOGY* topo,
   {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -1;
   }
   pfree(sqldata.data);
@@ -1763,6 +1865,7 @@ cb_deleteEdges( const LWT_BE_TOPOLOGY* topo,
   {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -1;
   }
   pfree(sqldata.data);
@@ -1793,6 +1896,7 @@ cb_getNextEdgeId( const LWT_BE_TOPOLOGY* topo )
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -1;
   }
   pfree(sqldata.data);
@@ -1811,6 +1915,9 @@ cb_getNextEdgeId( const LWT_BE_TOPOLOGY* topo )
 	  return -1;
   }
   edge_id = DatumGetInt64(dat); /* sequences return 64bit integers */
+
+  SPI_freetuptable(SPI_tuptable);
+
   return edge_id;
 }
 
@@ -1846,6 +1953,7 @@ cb_updateTopoGeomEdgeSplit ( const LWT_BE_TOPOLOGY* topo,
   if ( spi_result != ( new_edge2 == -1 ? SPI_OK_SELECT : SPI_OK_DELETE_RETURNING ) ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return 0;
   }
 
@@ -1856,79 +1964,77 @@ cb_updateTopoGeomEdgeSplit ( const LWT_BE_TOPOLOGY* topo,
   }
 
   ntopogeoms = SPI_processed;
-  for ( i=0; i<ntopogeoms; ++i )
+  if ( ntopogeoms )
   {
-    HeapTuple row = SPI_tuptable->vals[i];
-    TupleDesc tdesc = SPI_tuptable->tupdesc;
-    int negate;
-    int element_id;
-    int topogeo_id;
-    int layer_id;
-    int element_type;
-
-    if ( ! getNotNullInt32( row, tdesc, 1, &element_id ) ) {
-		  cberror(topo->be_data,
-        "unexpected null element_id in \"%s\".relation",
-        topo->name);
-	    return 0;
-    }
-    negate = ( element_id < 0 );
-
-    if ( ! getNotNullInt32( row, tdesc, 2, &topogeo_id ) ) {
-		  cberror(topo->be_data,
-        "unexpected null topogeo_id in \"%s\".relation",
-        topo->name);
-	    return 0;
-    }
-
-    if ( ! getNotNullInt32( row, tdesc, 3, &layer_id ) ) {
-		  cberror(topo->be_data,
-        "unexpected null layer_id in \"%s\".relation",
-        topo->name);
-	    return 0;
-    }
-
-    if ( ! getNotNullInt32( row, tdesc, 4, &element_type ) ) {
-		  cberror(topo->be_data,
-        "unexpected null element_type in \"%s\".relation",
-        topo->name);
-	    return 0;
-    }
-
     resetStringInfo(sql);
-    appendStringInfo(sql,
-      "INSERT INTO \"%s\".relation VALUES ("
-      "%d,%d,%" LWTFMT_ELEMID ",%d)", topo->name,
-      topogeo_id, layer_id, negate ? -new_edge1 : new_edge1, element_type);
+    appendStringInfo(sql, "INSERT INTO \"%s\".relation VALUES ", topo->name);
+    for ( i=0; i<ntopogeoms; ++i )
+    {
+      HeapTuple row = SPI_tuptable->vals[i];
+      TupleDesc tdesc = SPI_tuptable->tupdesc;
+      int negate;
+      int element_id;
+      int topogeo_id;
+      int layer_id;
+      int element_type;
+
+      if ( ! getNotNullInt32( row, tdesc, 1, &element_id ) ) {
+        cberror(topo->be_data,
+          "unexpected null element_id in \"%s\".relation",
+          topo->name);
+        return 0;
+      }
+      negate = ( element_id < 0 );
+
+      if ( ! getNotNullInt32( row, tdesc, 2, &topogeo_id ) ) {
+        cberror(topo->be_data,
+          "unexpected null topogeo_id in \"%s\".relation",
+          topo->name);
+        return 0;
+      }
+
+      if ( ! getNotNullInt32( row, tdesc, 3, &layer_id ) ) {
+        cberror(topo->be_data,
+          "unexpected null layer_id in \"%s\".relation",
+          topo->name);
+        return 0;
+      }
+
+      if ( ! getNotNullInt32( row, tdesc, 4, &element_type ) ) {
+        cberror(topo->be_data,
+          "unexpected null element_type in \"%s\".relation",
+          topo->name);
+        return 0;
+      }
+
+      if ( i ) appendStringInfoChar(sql, ',');
+      appendStringInfo(sql, "(%d,%d,%" LWTFMT_ELEMID ",%d)",
+        topogeo_id, layer_id, negate ? -new_edge1 : new_edge1, element_type);
+      if ( new_edge2 != -1 ) {
+        resetStringInfo(sql);
+        appendStringInfo(sql,
+          ",VALUES (%d,%d,%" LWTFMT_ELEMID ",%d",
+          topogeo_id, layer_id, negate ? -new_edge2 : new_edge2, element_type);
+      }
+    }
+
+    SPI_freetuptable(SPI_tuptable);
+
+    POSTGIS_DEBUGF(1, "cb_updateTopoGeomEdgeSplit query: %s", sql->data);
     spi_result = SPI_execute(sql->data, false, 0);
     MemoryContextSwitchTo( oldcontext ); /* switch back */
     if ( spi_result != SPI_OK_INSERT ) {
       cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
               spi_result, sql->data);
+      pfree(sqldata.data);
       return 0;
     }
     if ( SPI_processed ) topo->be_data->data_changed = true;
-    if ( new_edge2 != -1 ) {
-      resetStringInfo(sql);
-      appendStringInfo(sql,
-        "INSERT INTO FROM \"%s\".relation VALUES ("
-        "%d,%d,%" LWTFMT_ELEMID ",%d", topo->name,
-        topogeo_id, layer_id, negate ? -new_edge2 : new_edge2, element_type);
-      spi_result = SPI_execute(sql->data, false, 0);
-      MemoryContextSwitchTo( oldcontext ); /* switch back */
-      if ( spi_result != SPI_OK_INSERT ) {
-        cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
-                spi_result, sql->data);
-        return 0;
-      }
-      if ( SPI_processed ) topo->be_data->data_changed = true;
-    }
   }
-
-  /* TODO: release string info ! */
 
   POSTGIS_DEBUGF(1, "cb_updateTopoGeomEdgeSplit: updated %d topogeoms", ntopogeoms);
 
+  pfree(sqldata.data);
   return 1;
 }
 
@@ -1969,6 +2075,7 @@ cb_updateTopoGeomFaceSplit ( const LWT_BE_TOPOLOGY* topo,
   if ( spi_result != ( new_face2 == -1 ? SPI_OK_SELECT : SPI_OK_DELETE_RETURNING ) ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return 0;
   }
 
@@ -1978,85 +2085,79 @@ cb_updateTopoGeomFaceSplit ( const LWT_BE_TOPOLOGY* topo,
   }
 
   ntopogeoms = SPI_processed;
-  for ( i=0; i<ntopogeoms; ++i )
+  if ( ntopogeoms )
   {
-    HeapTuple row = SPI_tuptable->vals[i];
-    TupleDesc tdesc = SPI_tuptable->tupdesc;
-    int negate;
-    int element_id;
-    int topogeo_id;
-    int layer_id;
-    int element_type;
-
-    if ( ! getNotNullInt32( row, tdesc, 1, &element_id ) ) {
-		  cberror(topo->be_data,
-        "unexpected null element_id in \"%s\".relation",
-        topo->name);
-	    return 0;
-    }
-    negate = ( element_id < 0 );
-
-    if ( ! getNotNullInt32( row, tdesc, 2, &topogeo_id ) ) {
-		  cberror(topo->be_data,
-        "unexpected null topogeo_id in \"%s\".relation",
-        topo->name);
-	    return 0;
-    }
-
-    if ( ! getNotNullInt32( row, tdesc, 3, &layer_id ) ) {
-		  cberror(topo->be_data,
-        "unexpected null layer_id in \"%s\".relation",
-        topo->name);
-	    return 0;
-    }
-
-    if ( ! getNotNullInt32( row, tdesc, 4, &element_type ) ) {
-		  cberror(topo->be_data,
-        "unexpected null element_type in \"%s\".relation",
-        topo->name);
-	    return 0;
-    }
-
     resetStringInfo(sql);
-    appendStringInfo(sql,
-      "INSERT INTO \"%s\".relation VALUES ("
-      "%d,%d,%" LWTFMT_ELEMID ",%d)", topo->name,
-      topogeo_id, layer_id, negate ? -new_face1 : new_face1, element_type);
+    appendStringInfo(sql, "INSERT INTO \"%s\".relation VALUES ", topo->name);
+    for ( i=0; i<ntopogeoms; ++i )
+    {
+      HeapTuple row = SPI_tuptable->vals[i];
+      TupleDesc tdesc = SPI_tuptable->tupdesc;
+      int negate;
+      int element_id;
+      int topogeo_id;
+      int layer_id;
+      int element_type;
+
+      if ( ! getNotNullInt32( row, tdesc, 1, &element_id ) ) {
+        cberror(topo->be_data,
+          "unexpected null element_id in \"%s\".relation",
+          topo->name);
+        return 0;
+      }
+      negate = ( element_id < 0 );
+
+      if ( ! getNotNullInt32( row, tdesc, 2, &topogeo_id ) ) {
+        cberror(topo->be_data,
+          "unexpected null topogeo_id in \"%s\".relation",
+          topo->name);
+        return 0;
+      }
+
+      if ( ! getNotNullInt32( row, tdesc, 3, &layer_id ) ) {
+        cberror(topo->be_data,
+          "unexpected null layer_id in \"%s\".relation",
+          topo->name);
+        return 0;
+      }
+
+      if ( ! getNotNullInt32( row, tdesc, 4, &element_type ) ) {
+        cberror(topo->be_data,
+          "unexpected null element_type in \"%s\".relation",
+          topo->name);
+        return 0;
+      }
+
+      if ( i ) appendStringInfoChar(sql, ',');
+      appendStringInfo(sql,
+        "(%d,%d,%" LWTFMT_ELEMID ",%d)",
+        topogeo_id, layer_id, negate ? -new_face1 : new_face1, element_type);
+
+      if ( new_face2 != -1 ) {
+        appendStringInfo(sql,
+          ",(%d,%d,%" LWTFMT_ELEMID ",%d)",
+          topogeo_id, layer_id, negate ? -new_face2 : new_face2, element_type);
+      }
+    }
+
+    SPI_freetuptable(SPI_tuptable);
 
     POSTGIS_DEBUGF(1, "cb_updateTopoGeomFaceSplit query: %s", sql->data);
-
     spi_result = SPI_execute(sql->data, false, 0);
     MemoryContextSwitchTo( oldcontext ); /* switch back */
     if ( spi_result != SPI_OK_INSERT ) {
       cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
               spi_result, sql->data);
+      pfree(sqldata.data);
       return 0;
     }
+
     if ( SPI_processed ) topo->be_data->data_changed = true;
-    if ( new_face2 != -1 ) {
-      resetStringInfo(sql);
-      appendStringInfo(sql,
-        "INSERT INTO \"%s\".relation VALUES ("
-        "%d,%d,%" LWTFMT_ELEMID ",%d)", topo->name,
-        topogeo_id, layer_id, negate ? -new_face2 : new_face2, element_type);
-
-      POSTGIS_DEBUGF(1, "cb_updateTopoGeomFaceSplit query: %s", sql->data);
-
-      spi_result = SPI_execute(sql->data, false, 0);
-      MemoryContextSwitchTo( oldcontext ); /* switch back */
-      if ( spi_result != SPI_OK_INSERT ) {
-        cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
-                spi_result, sql->data);
-        return 0;
-      }
-      if ( SPI_processed ) topo->be_data->data_changed = true;
-    }
   }
-
-  /* TODO: release string info */
 
   POSTGIS_DEBUGF(1, "cb_updateTopoGeomFaceSplit: updated %d topogeoms", ntopogeoms);
 
+  pfree(sqldata.data);
   return 1;
 }
 
@@ -2091,6 +2192,7 @@ cb_checkTopoGeomRemEdge ( const LWT_BE_TOPOLOGY* topo,
   if ( spi_result != SPI_OK_SELECT ) {
     cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
     return 0;
   }
 
@@ -2105,6 +2207,8 @@ cb_checkTopoGeomRemEdge ( const LWT_BE_TOPOLOGY* topo,
     table_name = SPI_getvalue(row, tdesc, 4);
     col_name = SPI_getvalue(row, tdesc, 5);
 
+    SPI_freetuptable(SPI_tuptable);
+
     cberror(topo->be_data, "TopoGeom %s in layer %s "
                            "(%s.%s.%s) cannot be represented "
                            "dropping edge %" LWTFMT_ELEMID,
@@ -2113,7 +2217,7 @@ cb_checkTopoGeomRemEdge ( const LWT_BE_TOPOLOGY* topo,
     return 0;
   }
 
-  
+
   if ( face_left != face_right )
   {
     POSTGIS_DEBUGF(1, "Deletion of edge %" LWTFMT_ELEMID " joins faces %"
@@ -2146,6 +2250,7 @@ cb_checkTopoGeomRemEdge ( const LWT_BE_TOPOLOGY* topo,
     if ( spi_result != SPI_OK_SELECT ) {
       cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
               spi_result, sql->data);
+      pfree(sqldata.data);
       return 0;
     }
 
@@ -2159,6 +2264,8 @@ cb_checkTopoGeomRemEdge ( const LWT_BE_TOPOLOGY* topo,
       schema_name = SPI_getvalue(row, tdesc, 3);
       table_name = SPI_getvalue(row, tdesc, 4);
       col_name = SPI_getvalue(row, tdesc, 5);
+
+      SPI_freetuptable(SPI_tuptable);
 
       cberror(topo->be_data, "TopoGeom %s in layer %s "
                              "(%s.%s.%s) cannot be represented "
@@ -2207,6 +2314,7 @@ cb_checkTopoGeomRemNode ( const LWT_BE_TOPOLOGY* topo,
   if ( spi_result != SPI_OK_SELECT ) {
     cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
     return 0;
   }
 
@@ -2220,6 +2328,8 @@ cb_checkTopoGeomRemNode ( const LWT_BE_TOPOLOGY* topo,
     schema_name = SPI_getvalue(row, tdesc, 3);
     table_name = SPI_getvalue(row, tdesc, 4);
     col_name = SPI_getvalue(row, tdesc, 5);
+
+    SPI_freetuptable(SPI_tuptable);
 
     cberror(topo->be_data, "TopoGeom %s in layer %s "
                            "(%s.%s.%s) cannot be represented "
@@ -2267,6 +2377,7 @@ cb_updateTopoGeomFaceHeal ( const LWT_BE_TOPOLOGY* topo,
     if ( spi_result != SPI_OK_DELETE ) {
       cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
               spi_result, sql->data);
+      pfree(sqldata.data);
       return 0;
     }
     if ( SPI_processed ) topo->be_data->data_changed = true;
@@ -2287,6 +2398,7 @@ cb_updateTopoGeomFaceHeal ( const LWT_BE_TOPOLOGY* topo,
     if ( spi_result != SPI_OK_DELETE ) {
       cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
               spi_result, sql->data);
+      pfree(sqldata.data);
       return 0;
     }
     if ( SPI_processed ) topo->be_data->data_changed = true;
@@ -2305,6 +2417,7 @@ cb_updateTopoGeomFaceHeal ( const LWT_BE_TOPOLOGY* topo,
     if ( spi_result != SPI_OK_UPDATE ) {
       cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
               spi_result, sql->data);
+      pfree(sqldata.data);
       return 0;
     }
     if ( SPI_processed ) topo->be_data->data_changed = true;
@@ -2342,6 +2455,7 @@ cb_updateTopoGeomEdgeHeal ( const LWT_BE_TOPOLOGY* topo,
     if ( spi_result != SPI_OK_DELETE ) {
       cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
               spi_result, sql->data);
+      pfree(sqldata.data);
       return 0;
     }
     if ( SPI_processed ) topo->be_data->data_changed = true;
@@ -2362,6 +2476,7 @@ cb_updateTopoGeomEdgeHeal ( const LWT_BE_TOPOLOGY* topo,
     if ( spi_result != SPI_OK_DELETE ) {
       cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
               spi_result, sql->data);
+      pfree(sqldata.data);
       return 0;
     }
     if ( SPI_processed ) topo->be_data->data_changed = true;
@@ -2381,6 +2496,7 @@ cb_updateTopoGeomEdgeHeal ( const LWT_BE_TOPOLOGY* topo,
     if ( spi_result != SPI_OK_UPDATE ) {
       cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
               spi_result, sql->data);
+      pfree(sqldata.data);
       return 0;
     }
     if ( SPI_processed ) topo->be_data->data_changed = true;
@@ -2399,25 +2515,37 @@ cb_getFaceContainingPoint( const LWT_BE_TOPOLOGY* topo, const LWPOINT* pt )
   bool isnull;
   Datum dat;
   LWT_ELEMID face_id;
-  size_t hexewkb_size;
-  char *hexewkb;
+  GSERIALIZED *pts;
+  Datum values[1];
+  Oid argtypes[1];
 
   initStringInfo(sql);
 
-  hexewkb = lwgeom_to_hexwkb(lwpoint_as_lwgeom(pt), WKB_EXTENDED, &hexewkb_size);
+  pts = geometry_serialize(lwpoint_as_lwgeom(pt));
+  if ( ! pts ) {
+    cberror(topo->be_data, "%s:%d: could not serialize query point",
+            __FILE__, __LINE__);
+    return -2;
+  }
   /* TODO: call GetFaceGeometry internally, avoiding the round-trip to sql */
-  appendStringInfo(sql, "SELECT face_id FROM \"%s\".face "
-                        "WHERE mbr && '%s'::geometry AND ST_Contains("
-     "topology.ST_GetFaceGeometry('%s', face_id), "
-     "'%s'::geometry) LIMIT 1",
-      topo->name, hexewkb, topo->name, hexewkb);
-  lwfree(hexewkb);
+  appendStringInfo(sql,
+                   "WITH faces AS ( SELECT face_id FROM \"%s\".face "
+                   "WHERE mbr && $1 ORDER BY ST_Area(mbr) ASC ) "
+                   "SELECT face_id FROM faces WHERE _ST_Contains("
+                   "topology.ST_GetFaceGeometry('%s', face_id), $1)"
+                   " LIMIT 1",
+                   topo->name, topo->name);
 
-  spi_result = SPI_execute(sql->data, !topo->be_data->data_changed, 1);
+  values[0] = PointerGetDatum(pts);
+  argtypes[0] = topo->geometryOID;
+  spi_result = SPI_execute_with_args(sql->data, 1, argtypes, values, NULL,
+                                     !topo->be_data->data_changed, 1);
   MemoryContextSwitchTo( oldcontext ); /* switch back */
+  pfree(pts); /* not needed anymore */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -2;
   }
   pfree(sqldata.data);
@@ -2429,10 +2557,12 @@ cb_getFaceContainingPoint( const LWT_BE_TOPOLOGY* topo, const LWPOINT* pt )
   dat = SPI_getbinval( SPI_tuptable->vals[0],
                        SPI_tuptable->tupdesc, 1, &isnull );
   if ( isnull ) {
+    SPI_freetuptable(SPI_tuptable);
 		cberror(topo->be_data, "corrupted topology: face with NULL face_id");
 	  return -2;
   }
   face_id = DatumGetInt32(dat);
+  SPI_freetuptable(SPI_tuptable);
   return face_id;
 }
 
@@ -2460,6 +2590,7 @@ cb_deleteFacesById( const LWT_BE_TOPOLOGY* topo,
   {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -1;
   }
   pfree(sqldata.data);
@@ -2497,6 +2628,7 @@ cb_deleteNodesById( const LWT_BE_TOPOLOGY* topo,
   {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s",
             spi_result, sql->data);
+    pfree(sqldata.data);
 	  return -1;
   }
   pfree(sqldata.data);
@@ -2509,7 +2641,7 @@ cb_deleteNodesById( const LWT_BE_TOPOLOGY* topo,
   return SPI_processed;
 }
 
-static LWT_ISO_NODE* 
+static LWT_ISO_NODE*
 cb_getNodeWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
                      int* numelems, int fields, int limit )
 {
@@ -2544,6 +2676,7 @@ cb_getNodeWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -2564,6 +2697,7 @@ cb_getNodeWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
       bool isnull, exists;
       dat = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
       exists = DatumGetBool(dat);
+      SPI_freetuptable(SPI_tuptable);
       *numelems = exists ? 1 : 0;
       POSTGIS_DEBUGF(1, "cb_getNodeWithinBox2D: exists ? %d", *numelems);
     }
@@ -2577,10 +2711,12 @@ cb_getNodeWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
     fillNodeFields(&nodes[i], row, SPI_tuptable->tupdesc, fields);
   }
 
+  SPI_freetuptable(SPI_tuptable);
+
   return nodes;
 }
 
-static LWT_ISO_EDGE* 
+static LWT_ISO_EDGE*
 cb_getEdgeWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
                      int* numelems, int fields, int limit )
 {
@@ -2601,10 +2737,14 @@ cb_getEdgeWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
     appendStringInfoString(sql, "SELECT ");
     addEdgeFields(sql, fields, 0);
   }
-  hexbox = _box2d_to_hexwkb(box, topo->srid);
-  appendStringInfo(sql, " FROM \"%s\".edge WHERE geom && '%s'::geometry",
-                        topo->name, hexbox);
-  lwfree(hexbox);
+  appendStringInfo(sql, " FROM \"%s\".edge", topo->name);
+
+  if ( box ) {
+    hexbox = _box2d_to_hexwkb(box, topo->srid);
+    appendStringInfo(sql, " WHERE geom && '%s'::geometry", hexbox);
+    lwfree(hexbox);
+  }
+
   if ( elems_requested == -1 ) {
     appendStringInfoString(sql, ")");
   } else if ( elems_requested > 0 ) {
@@ -2615,6 +2755,7 @@ cb_getEdgeWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -2636,6 +2777,7 @@ cb_getEdgeWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
       dat = SPI_getbinval(SPI_tuptable->vals[0], SPI_tuptable->tupdesc, 1, &isnull);
       exists = DatumGetBool(dat);
       *numelems = exists ? 1 : 0;
+      SPI_freetuptable(SPI_tuptable);
       POSTGIS_DEBUGF(1, "cb_getEdgeWithinBox2D: exists ? %d", *numelems);
     }
     return NULL;
@@ -2648,10 +2790,12 @@ cb_getEdgeWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
     fillEdgeFields(&edges[i], row, SPI_tuptable->tupdesc, fields);
   }
 
+  SPI_freetuptable(SPI_tuptable);
+
   return edges;
 }
 
-static LWT_ISO_FACE* 
+static LWT_ISO_FACE*
 cb_getFaceWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
                      int* numelems, int fields, int limit )
 {
@@ -2686,6 +2830,7 @@ cb_getFaceWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT ) {
 		cberror(topo->be_data, "unexpected return (%d) from query execution: %s", spi_result, sql->data);
+    pfree(sqldata.data);
 	  *numelems = -1; return NULL;
   }
   pfree(sqldata.data);
@@ -2709,6 +2854,9 @@ cb_getFaceWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
       *numelems = exists ? 1 : 0;
       POSTGIS_DEBUGF(1, "cb_getFaceWithinBox2D: exists ? %d", *numelems);
     }
+
+    SPI_freetuptable(SPI_tuptable);
+
     return NULL;
   }
 
@@ -2718,6 +2866,8 @@ cb_getFaceWithinBox2D ( const LWT_BE_TOPOLOGY* topo, const GBOX* box,
     HeapTuple row = SPI_tuptable->vals[i];
     fillFaceFields(&faces[i], row, SPI_tuptable->tupdesc, fields);
   }
+
+  SPI_freetuptable(SPI_tuptable);
 
   return faces;
 }
@@ -2764,6 +2914,14 @@ static LWT_BE_CALLBACKS be_callbacks = {
     cb_getFaceWithinBox2D
 };
 
+static void
+xact_callback(XactEvent event, void *arg)
+{
+  LWT_BE_DATA* data = (LWT_BE_DATA *)arg;
+  POSTGIS_DEBUGF(1, "xact_callback called with event %d", event);
+  data->data_changed = false;
+}
+
 
 /*
  * Module load callback
@@ -2788,6 +2946,9 @@ _PG_init(void)
   be_data.data_changed = false;
   be_data.topoLoadFailMessageFlavor = 0;
 
+  /* hook on transaction end to reset data_changed */
+  RegisterXactCallback(xact_callback, &be_data);
+
   /* register callbacks against liblwgeom-topo */
   be_iface = lwt_CreateBackendIface(&be_data);
   lwt_BackendIfaceRegisterCallbacks(be_iface, &be_callbacks);
@@ -2807,6 +2968,8 @@ void
 _PG_fini(void)
 {
   elog(NOTICE, "Goodbye from PostGIS Topology %s", POSTGIS_VERSION);
+
+  UnregisterXactCallback(xact_callback, &be_data);
   lwt_FreeBackendIface(be_iface);
 }
 
@@ -2849,7 +3012,6 @@ Datum ST_ModEdgeSplit(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -2915,7 +3077,6 @@ Datum ST_NewEdgesSplit(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -2992,7 +3153,6 @@ Datum ST_AddIsoNode(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3066,7 +3226,6 @@ Datum ST_AddIsoEdge(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3133,7 +3292,6 @@ Datum ST_AddEdgeModFace(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3200,7 +3358,6 @@ Datum ST_AddEdgeNewFaces(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3255,7 +3412,6 @@ Datum ST_GetFaceGeometry(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3341,7 +3497,6 @@ Datum ST_GetFaceEdges(PG_FUNCTION_ARGS)
       lwpgerror("Could not connect to SPI");
       PG_RETURN_NULL();
     }
-    be_data.data_changed = false;
 
     topo = lwt_LoadTopology(be_iface, toponame);
     oldcontext = MemoryContextSwitchTo( newcontext );
@@ -3462,7 +3617,6 @@ Datum ST_ChangeEdgeGeom(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3521,7 +3675,6 @@ Datum ST_RemoveIsoNode(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3582,7 +3735,6 @@ Datum ST_RemIsoEdge(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3667,7 +3819,6 @@ Datum ST_MoveIsoNode(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3727,7 +3878,6 @@ Datum ST_RemEdgeModFace(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3779,7 +3929,6 @@ Datum ST_RemEdgeNewFace(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3830,7 +3979,6 @@ Datum ST_ModEdgeHeal(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3881,7 +4029,6 @@ Datum ST_NewEdgeHeal(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -3945,7 +4092,6 @@ Datum GetNodeByPoint(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -4012,7 +4158,6 @@ Datum GetEdgeByPoint(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -4079,7 +4224,6 @@ Datum GetFaceByPoint(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   topo = lwt_LoadTopology(be_iface, toponame);
   pfree(toponame);
@@ -4149,7 +4293,6 @@ Datum TopoGeo_AddPoint(PG_FUNCTION_ARGS)
     lwpgerror("Could not connect to SPI");
     PG_RETURN_NULL();
   }
-  be_data.data_changed = false;
 
   {
     int pre = be_data.topoLoadFailMessageFlavor;
@@ -4241,7 +4384,6 @@ Datum TopoGeo_AddLinestring(PG_FUNCTION_ARGS)
       lwpgerror("Could not connect to SPI");
       PG_RETURN_NULL();
     }
-    be_data.data_changed = false;
 
     {
       int pre = be_data.topoLoadFailMessageFlavor;
@@ -4366,7 +4508,6 @@ Datum TopoGeo_AddPolygon(PG_FUNCTION_ARGS)
       lwpgerror("Could not connect to SPI");
       PG_RETURN_NULL();
     }
-    be_data.data_changed = false;
 
     {
       int pre = be_data.topoLoadFailMessageFlavor;

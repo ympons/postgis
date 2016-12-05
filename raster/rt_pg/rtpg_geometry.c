@@ -9,7 +9,7 @@
  * Copyright (C) 2010-2011 David Zwarg <dzwarg@azavea.com>
  * Copyright (C) 2009-2011 Pierre Racine <pierre.racine@sbf.ulaval.ca>
  * Copyright (C) 2009-2011 Mateusz Loskot <mateusz@loskot.net>
- * Copyright (C) 2008-2009 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2008-2009 Sandro Santilli <strk@kbt.io>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -102,7 +102,7 @@ Datum RASTER_envelope(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	}
 
-	gser = gserialized_from_lwgeom(geom, 0, &gser_size);
+	gser = gserialized_from_lwgeom(geom, &gser_size);
 	lwgeom_free(geom);
 
 	SET_VARSIZE(gser, gser_size);
@@ -181,7 +181,7 @@ Datum RASTER_convex_hull(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	}
 
-	gser = gserialized_from_lwgeom(geom, 0, &gser_size);
+	gser = gserialized_from_lwgeom(geom, &gser_size);
 	lwgeom_free(geom);
 
 	SET_VARSIZE(gser, gser_size);
@@ -323,7 +323,7 @@ Datum RASTER_dumpAsPolygons(PG_FUNCTION_ARGS) {
 		memset(nulls, FALSE, sizeof(bool) * values_length);
 
 		/* convert LWGEOM to GSERIALIZED */
-		gser = gserialized_from_lwgeom(lwpoly_as_lwgeom(geomval2[call_cntr].geom), 0, &gser_size);
+		gser = gserialized_from_lwgeom(lwpoly_as_lwgeom(geomval2[call_cntr].geom), &gser_size);
 		lwgeom_free(lwpoly_as_lwgeom(geomval2[call_cntr].geom));
 
 		values[0] = PointerGetDatum(gser);
@@ -477,7 +477,7 @@ Datum RASTER_getPixelPolygons(PG_FUNCTION_ARGS)
 			bounds[2] = 1;
 			bounds[3] = rt_raster_get_height(raster);
 		}
-		POSTGIS_RT_DEBUGF(3, "bounds (min x, max x, min y, max y) = (%d, %d, %d, %d)", 
+		POSTGIS_RT_DEBUGF(3, "bounds (min x, max x, min y, max y) = (%d, %d, %d, %d)",
 			bounds[0], bounds[1], bounds[2], bounds[3]);
 
 		/* rowy */
@@ -625,7 +625,7 @@ Datum RASTER_getPixelPolygons(PG_FUNCTION_ARGS)
 		memset(nulls, FALSE, sizeof(bool) * values_length);
 
 		/* convert LWGEOM to GSERIALIZED */
-		gser = gserialized_from_lwgeom(pix2[call_cntr].geom, 0, &gser_size);
+		gser = gserialized_from_lwgeom(pix2[call_cntr].geom, &gser_size);
 		lwgeom_free(pix2[call_cntr].geom);
 
 		values[0] = PointerGetDatum(gser);
@@ -790,7 +790,7 @@ Datum RASTER_asRaster(PG_FUNCTION_ARGS)
 	/* based upon LWGEOM_asBinary function in postgis/lwgeom_ogc.c */
 
 	/* Get the geometry */
-	if (PG_ARGISNULL(0)) 
+	if (PG_ARGISNULL(0))
 		PG_RETURN_NULL();
 
 	gser = PG_GETARG_GSERIALIZED_P(0);

@@ -3,13 +3,26 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright (C) 2015 Sandro Santilli <strk@keybit.net>
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright (C) 2015 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2011 Paul Ramsey
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "liblwgeom_internal.h"
 #include "lwgeom_log.h"
@@ -522,11 +535,6 @@ lwmline_clip_to_ordinate_range(const LWMLINE *mline, char ordinate, double from,
 		{
 			lwgeom_out->type = COLLECTIONTYPE;
 		}
-	}
-
-	if ( ! lwgeom_out || lwgeom_out->ngeoms == 0 ) /* Nothing left after clip. */
-	{
-		return NULL;
 	}
 
 	return lwgeom_out;
@@ -1302,26 +1310,24 @@ lwgeom_cpa_within(const LWGEOM *g1, const LWGEOM *g2, double maxdist)
 
 	if ( nmvals < 2 )
 	{
+		/* there's a single time, must be that one... */
+		double t0 = mvals[0];
+		POINT4D p0, p1;
+		LWDEBUGF(1, "Inputs only exist both at a single time (%g)", t0);
+		if ( -1 == ptarray_locate_along_linear(l1->points, t0, &p0, 0) )
 		{
-			/* there's a single time, must be that one... */
-			double t0 = mvals[0];
-			POINT4D p0, p1;
-			LWDEBUGF(1, "Inputs only exist both at a single time (%g)", t0);
-			if ( -1 == ptarray_locate_along_linear(l1->points, t0, &p0, 0) )
-			{
-				lwerror("Could not find point with M=%g on first geom", t0);
-				return -1;
-			}
-			if ( -1 == ptarray_locate_along_linear(l2->points, t0, &p1, 0) )
-			{
-				lwerror("Could not find point with M=%g on second geom", t0);
-				return -1;
-			}
-			if ( distance3d_pt_pt((POINT3D*)&p0, (POINT3D*)&p1) <= maxdist )
-				within = LW_TRUE;
-			lwfree(mvals);
-			return within;
+			lwnotice("Could not find point with M=%g on first geom", t0);
+			return LW_FALSE;
 		}
+		if ( -1 == ptarray_locate_along_linear(l2->points, t0, &p1, 0) )
+		{
+			lwnotice("Could not find point with M=%g on second geom", t0);
+			return LW_FALSE;
+		}
+		if ( distance3d_pt_pt((POINT3D*)&p0, (POINT3D*)&p1) <= maxdist )
+			within = LW_TRUE;
+		lwfree(mvals);
+		return within;
 	}
 
 	/*

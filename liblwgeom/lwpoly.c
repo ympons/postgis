@@ -3,19 +3,33 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright (C) 2012 Sandro Santilli <strk@keybit.net>
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright (C) 2012 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2001-2006 Refractions Research Inc.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 /* basic LWPOLY manipulation */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "liblwgeom_internal.h"
 #include "lwgeom_log.h"
 
@@ -60,6 +74,85 @@ lwpoly_construct(int srid, GBOX *bbox, uint32_t nrings, POINTARRAY **points)
 	result->bbox = bbox;
 
 	return result;
+}
+
+LWPOLY*
+lwpoly_construct_rectangle(char hasz, char hasm, POINT4D *p1, POINT4D *p2,
+		POINT4D *p3, POINT4D *p4)
+{
+	POINTARRAY *pa = ptarray_construct_empty(hasz, hasm, 5);
+	LWPOLY *lwpoly = lwpoly_construct_empty(SRID_UNKNOWN, hasz, hasm);
+
+	ptarray_append_point(pa, p1, LW_TRUE);
+	ptarray_append_point(pa, p2, LW_TRUE);
+	ptarray_append_point(pa, p3, LW_TRUE);
+	ptarray_append_point(pa, p4, LW_TRUE);
+	ptarray_append_point(pa, p1, LW_TRUE);
+
+	lwpoly_add_ring(lwpoly, pa);
+
+	return lwpoly;
+}
+
+LWPOLY *
+lwpoly_construct_envelope(int srid, double x1, double y1, double x2, double y2)
+{
+	POINT4D p1, p2, p3, p4;
+	LWPOLY *poly;
+
+	p1.x = x1;
+	p1.y = y1;
+	p2.x = x1;
+	p2.y = y2;
+	p3.x = x2;
+	p3.y = y2;
+	p4.x = x2;
+	p4.y = y1;
+
+	poly = lwpoly_construct_rectangle(0, 0, &p1, &p2, &p3, &p4);
+	lwgeom_set_srid(lwpoly_as_lwgeom(poly), srid);
+	lwgeom_add_bbox(lwpoly_as_lwgeom(poly));
+
+	return poly;
+}
+
+LWPOLY*
+lwpoly_construct_circle(int srid, double x, double y, double radius, uint32_t segments_per_quarter, char exterior)
+{
+	const int segments = 4*segments_per_quarter;
+	const double theta = 2*M_PI / segments;
+	LWPOLY *lwpoly;
+	POINTARRAY *pa;
+	POINT4D pt;
+	uint32_t i;
+
+	if (segments_per_quarter < 1)
+	{
+		lwerror("Need at least one segment per quarter-circle.");
+		return NULL;
+	}
+
+	if (radius < 0)
+	{
+		lwerror("Radius must be positive.");
+		return NULL;
+	}
+
+	lwpoly = lwpoly_construct_empty(srid, LW_FALSE, LW_FALSE);
+	pa = ptarray_construct_empty(LW_FALSE, LW_FALSE, segments + 1);
+
+	if (exterior)
+		radius *= sqrt(1 + pow(tan(theta/2), 2));
+
+	for (i = 0; i <= segments; i++)
+	{
+		pt.x = x + radius*sin(i * theta);
+		pt.y = y + radius*cos(i * theta);
+		ptarray_append_point(pa, &pt, LW_TRUE);
+	}
+
+	lwpoly_add_ring(lwpoly, pa);
+	return lwpoly;
 }
 
 LWPOLY*
@@ -114,7 +207,7 @@ void printLWPOLY(LWPOLY *poly)
 
 /* @brief Clone LWLINE object. Serialized point lists are not copied.
  *
- * @see ptarray_clone 
+ * @see ptarray_clone
  */
 LWPOLY *
 lwpoly_clone(const LWPOLY *g)
@@ -151,13 +244,13 @@ lwpoly_clone_deep(const LWPOLY *g)
 * Add a ring to a polygon. Point array will be referenced, not copied.
 */
 int
-lwpoly_add_ring(LWPOLY *poly, POINTARRAY *pa) 
+lwpoly_add_ring(LWPOLY *poly, POINTARRAY *pa)
 {
-	if( ! poly || ! pa ) 
+	if( ! poly || ! pa )
 		return LW_FAILURE;
 		
 	/* We have used up our storage, add some more. */
-	if( poly->nrings >= poly->maxrings ) 
+	if( poly->nrings >= poly->maxrings )
 	{
 		int new_maxrings = 2 * (poly->nrings + 1);
 		poly->rings = lwrealloc(poly->rings, new_maxrings * sizeof(POINTARRAY*));
@@ -286,7 +379,7 @@ lwpoly_from_lwlines(const LWLINE *shell,
 }
 
 LWGEOM*
-lwpoly_remove_repeated_points(LWPOLY *poly, double tolerance)
+lwpoly_remove_repeated_points(const LWPOLY *poly, double tolerance)
 {
 	uint32_t i;
 	POINTARRAY **newrings;
@@ -294,7 +387,7 @@ lwpoly_remove_repeated_points(LWPOLY *poly, double tolerance)
 	newrings = lwalloc(sizeof(POINTARRAY *)*poly->nrings);
 	for (i=0; i<poly->nrings; i++)
 	{
-		newrings[i] = ptarray_remove_repeated_points(poly->rings[i], tolerance);
+		newrings[i] = ptarray_remove_repeated_points_minpoints(poly->rings[i], tolerance, 4);
 	}
 
 	return (LWGEOM*)lwpoly_construct(poly->srid,
@@ -369,7 +462,7 @@ LWPOLY* lwpoly_simplify(const LWPOLY *ipoly, double dist, int preserve_collapsed
 		/* We'll still let holes collapse, but if we're preserving */
 		/* and this is a shell, we ensure it is kept */
 		if ( preserve_collapsed && i == 0 )
-			minvertices = 4; 
+			minvertices = 4;
 			
 		opts = ptarray_simplify(ipoly->rings[i], dist, minvertices);
 
@@ -413,7 +506,7 @@ lwpoly_area(const LWPOLY *poly)
 	double poly_area = 0.0;
 	int i;
 	
-	if ( ! poly ) 
+	if ( ! poly )
 		lwerror("lwpoly_area called with null polygon pointer!");
 
 	for ( i=0; i < poly->nrings; i++ )
@@ -422,14 +515,14 @@ lwpoly_area(const LWPOLY *poly)
 		double ringarea = 0.0;
 
 		/* Empty or messed-up ring. */
-		if ( ring->npoints < 3 ) 
-			continue; 
+		if ( ring->npoints < 3 )
+			continue;
 		
 		ringarea = fabs(ptarray_signed_area(ring));
 		if ( i == 0 ) /* Outer ring, positive area! */
-			poly_area += ringarea; 
+			poly_area += ringarea;
 		else /* Inner ring, negative area! */
-			poly_area -= ringarea; 
+			poly_area -= ringarea;
 	}
 
 	return poly_area;
@@ -477,7 +570,7 @@ lwpoly_is_closed(const LWPOLY *poly)
 {
 	int i = 0;
 	
-	if ( poly->nrings == 0 ) 
+	if ( poly->nrings == 0 )
 		return LW_TRUE;
 		
 	for ( i = 0; i < poly->nrings; i++ )
@@ -497,7 +590,7 @@ lwpoly_is_closed(const LWPOLY *poly)
 	return LW_TRUE;
 }
 
-int 
+int
 lwpoly_startpoint(const LWPOLY* poly, POINT4D* pt)
 {
 	if ( poly->nrings < 1 )
@@ -572,7 +665,7 @@ LWPOLY* lwpoly_grid(const LWPOLY *poly, const gridspec *grid)
 
 	LWDEBUGF(3, "lwpoly_grid: simplified polygon with %d rings", opoly->nrings);
 
-	if ( ! opoly->nrings ) 
+	if ( ! opoly->nrings )
 	{
 		lwpoly_free(opoly);
 		return NULL;

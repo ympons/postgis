@@ -1,12 +1,27 @@
 /**********************************************************************
  *
  * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2009 Paul Ramsey <pramsey@cleverelephant.ca>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "postgres.h"
 
@@ -58,7 +73,7 @@ Datum postgis_typmod_out(PG_FUNCTION_ARGS)
 	POSTGIS_DEBUGF(3, "Got typmod(srid = %d, type = %d, hasz = %d, hasm = %d)", srid, type, hasz, hasm);
 
 	/* No SRID or type or dimensionality? Then no typmod at all. Return empty string. */
-	if ( ! ( srid || type || hasz || hasz ) )
+	if ( ! ( srid || type || hasz || hasm ) )
 	{
 		*str = '\0';
 		PG_RETURN_CSTRING(str);
@@ -123,13 +138,13 @@ GSERIALIZED* postgis_valid_typmod(GSERIALIZED *gser, int32_t typmod)
 	/*
 	* #3031: If a user is handing us a MULTIPOINT EMPTY but trying to fit it into
 	* a POINT geometry column, there's a strong chance the reason she has
-	* a MULTIPOINT EMPTY because we gave it to her during data dump, 
-	* converting the internal POINT EMPTY into a EWKB MULTIPOINT EMPTY 
+	* a MULTIPOINT EMPTY because we gave it to her during data dump,
+	* converting the internal POINT EMPTY into a EWKB MULTIPOINT EMPTY
 	* (because EWKB doesn't have a clean way to represent POINT EMPTY).
-	* In such a case, it makes sense to turn the MULTIPOINT EMPTY back into a 
+	* In such a case, it makes sense to turn the MULTIPOINT EMPTY back into a
 	* point EMPTY, rather than throwing an error.
 	*/
-	if ( typmod_type == POINTTYPE && geom_type == MULTIPOINTTYPE && 
+	if ( typmod_type == POINTTYPE && geom_type == MULTIPOINTTYPE &&
 	     gserialized_is_empty(gser) )
 	{
 		LWPOINT *empty_point = lwpoint_construct_empty(geom_srid, geom_z, geom_m);
@@ -228,7 +243,7 @@ static uint32 gserialized_typmod_in(ArrayType *arr, int is_geography)
 	                  &elem_values, NULL, &n);
 
 	/* Set the SRID to the default value first */
-	if ( is_geography) 
+	if ( is_geography)
 	    TYPMOD_SET_SRID(typmod, SRID_DEFAULT);
 	else
 	    TYPMOD_SET_SRID(typmod, SRID_UNKNOWN);

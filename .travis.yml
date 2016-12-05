@@ -23,14 +23,16 @@ script:
   - ./configure
   - make
   - make check
+  - make check RUNTESTFLAGS='--dumprestore'
   - sudo make install
   - make installcheck
+  - make installcheck RUNTESTFLAGS='--dumprestore'
 
 notifications:
   email: false
   irc:
     channels:
-      - "irc.freenode.org#postgis"
+      - "irc.freenode.org#postgis-activity"
     on_success: change
     on_failure: always
     use_notice: false

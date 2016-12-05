@@ -2,12 +2,26 @@
  *
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2008 Paul Ramsey <pramsey@cleverelephant.ca>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #ifndef LWGEOM_GEOS_PREPARED_H_
 #define LWGEOM_GEOS_PREPARED_H_ 1
@@ -32,7 +46,7 @@
 * while Contains only requires that the containing argument be checked.
 * Both the Geometry and the PreparedGeometry have to be cached,
 * because the PreparedGeometry contains a reference to the geometry.
-* 
+*
 * Note that the first 6 entries are part of the common GeomCache
 * structure and have to remain in order to allow the overall caching
 * system to share code (the cache checking code is common between
@@ -40,10 +54,10 @@
 */
 typedef struct {
 	int                         type;       // <GeomCache>
-	GSERIALIZED*                geom1;      // 
-	GSERIALIZED*                geom2;      // 
-	size_t                      geom1_size; // 
-	size_t                      geom2_size; // 
+	GSERIALIZED*                geom1;      //
+	GSERIALIZED*                geom2;      //
+	size_t                      geom1_size; //
+	size_t                      geom2_size; //
 	int32                       argnum;     // </GeomCache>
 	MemoryContext               context_statement;
 	MemoryContext               context_callback;

@@ -3,25 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright (C) 2010 Sandro Santilli <strk@keybit.net>
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
  *
  **********************************************************************
  *
- * ST_RelateMatch
- *
- * DE9 Intersection Matrix pattern matching
- *
- * Developed by Sandro Santilli (strk@keybit.net) for Faunalia
- * (http://www.faunalia.it) with funding from Regione Toscana - Sistema
- * Informativo per la Gestione del Territorio e dell' Ambiente
- * [RT-SIGTA]". For the project: "Sviluppo strumenti software per il
- * trattamento di dati geografici basati su QuantumGIS e Postgis (CIG
- * 0494241492)"
+ * Copyright (C) 2010 Sandro Santilli <strk@kbt.io>
  *
  **********************************************************************/
+
 
 #include "postgres.h"
 #include "fmgr.h"
@@ -40,14 +40,6 @@ Datum ST_RelateMatch(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(ST_RelateMatch);
 Datum ST_RelateMatch(PG_FUNCTION_ARGS)
 {
-#if POSTGIS_GEOS_VERSION < 33
-	lwpgerror("The GEOS version this postgis binary "
-	        "was compiled against (%d) doesn't support "
-	        "'ST_RelateMatch' function (3.3.0+ required)",
-	        POSTGIS_GEOS_VERSION);
-	PG_RETURN_NULL();
-#else /* POSTGIS_GEOS_VERSION >= 33 */
-
 	char *mat, *pat;
 	text *mat_text, *pat_text;
 	int result;
@@ -72,8 +64,5 @@ Datum ST_RelateMatch(PG_FUNCTION_ARGS)
 
 	lwfree(mat); lwfree(pat);
 	PG_RETURN_BOOL(result);
-
-#endif /* POSTGIS_GEOS_VERSION >= 33 */
-
 }
 

@@ -3,16 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
  *
  **********************************************************************
  *
- * Node a set of linestrings 
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  *
  **********************************************************************/
+
 
 #include "lwgeom_geos.h"
 #include "liblwgeom_internal.h"
@@ -85,13 +94,6 @@ lwgeom_extract_endpoints(const LWGEOM* lwg)
 static LWGEOM*
 lwgeom_extract_unique_endpoints(const LWGEOM* lwg)
 {
-#if POSTGIS_GEOS_VERSION < 33
-	lwerror("The GEOS version this postgis binary "
-	        "was compiled against (%d) doesn't support "
-	        "'GEOSUnaryUnion' function (3.3.0+ required)",
-	        POSTGIS_GEOS_VERSION);
-	return NULL;
-#else /* POSTGIS_GEOS_VERSION >= 33 */
 	LWGEOM* ret;
 	GEOSGeometry *gepu;
 	LWMPOINT *epall = lwgeom_extract_endpoints(lwg);
@@ -120,7 +122,6 @@ lwgeom_extract_unique_endpoints(const LWGEOM* lwg)
 	}
 
 	return ret;
-#endif /* POSTGIS_GEOS_VERSION >= 33 */
 }
 
 /* exported */
@@ -128,13 +129,6 @@ extern LWGEOM* lwgeom_node(const LWGEOM* lwgeom_in);
 LWGEOM*
 lwgeom_node(const LWGEOM* lwgeom_in)
 {
-#if POSTGIS_GEOS_VERSION < 33
-	lwerror("The GEOS version this postgis binary "
-	        "was compiled against (%d) doesn't support "
-	        "'GEOSUnaryUnion' function (3.3.0+ required)",
-	        POSTGIS_GEOS_VERSION);
-	return NULL;
-#else /* POSTGIS_GEOS_VERSION >= 33 */
 	GEOSGeometry *g1, *gu, *gm;
 	LWGEOM *ep, *lines;
 	LWCOLLECTION *col, *tc;
@@ -187,7 +181,7 @@ lwgeom_node(const LWGEOM* lwgeom_in)
 
 	/*
 	 * Reintroduce endpoints from input, using split-line-by-point.
-	 * Note that by now we can be sure that each point splits at 
+	 * Note that by now we can be sure that each point splits at
 	 * most _one_ segment as any point shared by multiple segments
 	 * would already be a node. Also we can be sure that any of
 	 * the segments endpoints won't split any other segment.
@@ -254,6 +248,5 @@ lwgeom_node(const LWGEOM* lwgeom_in)
 
 	lines->srid = lwgeom_in->srid;
 	return (LWGEOM*)lines;
-#endif /* POSTGIS_GEOS_VERSION >= 33 */
 }
 

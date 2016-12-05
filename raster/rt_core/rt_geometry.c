@@ -9,7 +9,7 @@
  * Copyright (C) 2010-2011 David Zwarg <dzwarg@azavea.com>
  * Copyright (C) 2009-2011 Pierre Racine <pierre.racine@sbf.ulaval.ca>
  * Copyright (C) 2009-2011 Mateusz Loskot <mateusz@loskot.net>
- * Copyright (C) 2008-2009 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2008-2009 Sandro Santilli <strk@kbt.io>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -212,7 +212,7 @@ rt_errorstate rt_raster_get_perimeter(
 	rt_raster_get_geotransform_matrix(raster, gt);
 	numband = rt_raster_get_num_bands(raster);
 
-	RASTER_DEBUGF(3, "rt_raster_get_perimeter: raster is %dx%d", raster->width, raster->height); 
+	RASTER_DEBUGF(3, "rt_raster_get_perimeter: raster is %dx%d", raster->width, raster->height);
 
 	/* nband < 0 means all bands */
 	if (nband >= 0) {
@@ -226,7 +226,7 @@ rt_errorstate rt_raster_get_perimeter(
 	else
 		nband = -1;
 	
-	RASTER_DEBUGF(3, "rt_raster_get_perimeter: nband, numband = %d, %d", nband, numband); 
+	RASTER_DEBUGF(3, "rt_raster_get_perimeter: nband, numband = %d, %d", nband, numband);
 
 	_nband = rtalloc(sizeof(uint16_t) * numband);
 	if (_nband == NULL) {
@@ -470,18 +470,10 @@ rt_errorstate rt_raster_surface(rt_raster raster, int nband, LWMPOLY **surface) 
 		rtdealloc(gv);
 
 		/* create geometry collection */
-#if POSTGIS_GEOS_VERSION >= 33
 		gc = GEOSGeom_createCollection(GEOS_GEOMETRYCOLLECTION, geoms, geomscount);
-#else
-		gc = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geoms, geomscount);
-#endif
 
 		if (gc == NULL) {
-#if POSTGIS_GEOS_VERSION >= 33
 			rterror("rt_raster_surface: Could not create GEOS GEOMETRYCOLLECTION from set of pixel polygons");
-#else
-			rterror("rt_raster_surface: Could not create GEOS MULTIPOLYGON from set of pixel polygons");
-#endif
 
 			for (i = 0; i < geomscount; i++)
 				GEOSGeom_destroy(geoms[i]);
@@ -490,20 +482,13 @@ rt_errorstate rt_raster_surface(rt_raster raster, int nband, LWMPOLY **surface) 
 		}
 
 		/* run the union */
-#if POSTGIS_GEOS_VERSION >= 33
 		gunion = GEOSUnaryUnion(gc);
-#else
-		gunion = GEOSUnionCascaded(gc);
-#endif
+
 		GEOSGeom_destroy(gc);
 		rtdealloc(geoms);
 
 		if (gunion == NULL) {
-#if POSTGIS_GEOS_VERSION >= 33
 			rterror("rt_raster_surface: Could not union the pixel polygons using GEOSUnaryUnion()");
-#else
-			rterror("rt_raster_surface: Could not union the pixel polygons using GEOSUnionCascaded()");
-#endif
 			return ES_ERROR;
 		}
 
@@ -516,10 +501,6 @@ rt_errorstate rt_raster_surface(rt_raster raster, int nband, LWMPOLY **surface) 
 		*/
 		do {
 			LWGEOM *mpolyValid = NULL;
-
-#if POSTGIS_GEOS_VERSION < 33
-			break;
-#endif
 
 			if (GEOSisValid(gunion))
 				break;
@@ -709,7 +690,7 @@ rt_raster_get_envelope_geom(rt_raster raster, LWGEOM **env) {
 		"rt_raster_get_envelope: raster is %dx%d",
 		raster->width,
 		raster->height
-	); 
+	);
 
 	/* return point or line since at least one of the two dimensions is 0 */
 	if ((!raster->width) || (!raster->height)) {
@@ -837,7 +818,7 @@ rt_raster_get_convex_hull(rt_raster raster, LWGEOM **hull) {
 	srid = rt_raster_get_srid(raster);
 	rt_raster_get_geotransform_matrix(raster, gt);
 
-	RASTER_DEBUGF(3, "rt_raster_get_convex_hull: raster is %dx%d", raster->width, raster->height); 
+	RASTER_DEBUGF(3, "rt_raster_get_convex_hull: raster is %dx%d", raster->width, raster->height);
 
 	/* return point or line since at least one of the two dimensions is 0 */
 	if ((!raster->width) || (!raster->height)) {
@@ -942,7 +923,7 @@ rt_raster_get_convex_hull(rt_raster raster, LWGEOM **hull) {
  * Returns a set of "geomval" value, one for each group of pixel
  * sharing the same value for the provided band.
  *
- * A "geomval" value is a complex type composed of a geometry 
+ * A "geomval" value is a complex type composed of a geometry
  * in LWPOLY representation (one for each group of pixel sharing
  * the same value) and the value associated with this geometry.
  *
@@ -1253,11 +1234,6 @@ rt_raster_gdal_polygonize(
 			if not, try to make valid
 		*/
 		do {
-#if POSTGIS_GEOS_VERSION < 33
-			/* nothing can be done if the geometry was invalid if GEOS < 3.3 */
-			break;
-#endif
-
 			ggeom = (GEOSGeometry *) LWGEOM2GEOS(lwgeom, 0);
 			if (ggeom == NULL) {
 				rtwarn("Cannot test geometry for validity");

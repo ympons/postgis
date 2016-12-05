@@ -1,14 +1,28 @@
 /**********************************************************************
  *
  * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
  *
- * Copyright 2013 Sandro Santilli <strk@keybit.net>
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright 2013 Sandro Santilli <strk@kbt.io>
  * Copyright 2011 Kashif Rasul <kashif.rasul@gmail.com>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include <assert.h>
 #include "liblwgeom.h"
@@ -123,7 +137,7 @@ parse_geojson_coord(json_object *poObj, int *hasz, POINTARRAY *pa)
 			/* Initialize Z coordinate, if required */
 			if ( FLAGS_GET_Z(pa->flags) ) pt.z = 0.0;
 		}
-		else 
+		else
 		{
 			/* TODO: should we account for nSize > 3 ? */
 			/* more than 3 coordinates, we're just dropping dimensions here... */
@@ -152,7 +166,7 @@ parse_geojson_point(json_object *geojson, int *hasz, int root_srid)
 	LWDEBUGF(3, "parse_geojson_point called with root_srid = %d.", root_srid );
 
 	coords = findMemberByName( geojson, "coordinates" );
-	if ( ! coords ) 
+	if ( ! coords )
 	{
 		geojson_lwerror("Unable to find 'coordinates' in GeoJSON string", 4);
 		return NULL;
@@ -177,7 +191,7 @@ parse_geojson_linestring(json_object *geojson, int *hasz, int root_srid)
 	LWDEBUG(2, "parse_geojson_linestring called.");
 
 	points = findMemberByName( geojson, "coordinates" );
-	if ( ! points ) 
+	if ( ! points )
 	{
 		geojson_lwerror("Unable to find 'coordinates' in GeoJSON string", 4);
 	return NULL;
@@ -212,7 +226,7 @@ parse_geojson_polygon(json_object *geojson, int *hasz, int root_srid)
 	int nRings = 0, nPoints = 0;
 
 	rings = findMemberByName( geojson, "coordinates" );
-	if ( ! rings ) 
+	if ( ! rings )
 	{
 		geojson_lwerror("Unable to find 'coordinates' in GeoJSON string", 4);
 		return NULL;
@@ -281,7 +295,7 @@ parse_geojson_multipoint(json_object *geojson, int *hasz, int root_srid)
 	}
 
 	poObjPoints = findMemberByName( geojson, "coordinates" );
-	if ( ! poObjPoints ) 
+	if ( ! poObjPoints )
 	{
 		geojson_lwerror("Unable to find 'coordinates' in GeoJSON string", 4);
 		return NULL;
@@ -324,7 +338,7 @@ parse_geojson_multilinestring(json_object *geojson, int *hasz, int root_srid)
 	}
 
 	poObjLines = findMemberByName( geojson, "coordinates" );
-	if ( ! poObjLines ) 
+	if ( ! poObjLines )
 	{
 		geojson_lwerror("Unable to find 'coordinates' in GeoJSON string", 4);
 		return NULL;
@@ -376,7 +390,7 @@ parse_geojson_multipolygon(json_object *geojson, int *hasz, int root_srid)
 	}
 
 	poObjPolys = findMemberByName( geojson, "coordinates" );
-	if ( ! poObjPolys ) 
+	if ( ! poObjPolys )
 	{
 		geojson_lwerror("Unable to find 'coordinates' in GeoJSON string", 4);
 		return NULL;
@@ -399,7 +413,7 @@ parse_geojson_multipolygon(json_object *geojson, int *hasz, int root_srid)
 				{
 					json_object* points = json_object_array_get_idx( poObjPoly, j );
 					
-					if( json_type_array == json_object_get_type( poObjPoly ) )
+					if( json_type_array == json_object_get_type( points ) )
 					{
 
 						POINTARRAY *pa = ptarray_construct_empty(1, 0, 1);
@@ -439,7 +453,7 @@ parse_geojson_geometrycollection(json_object *geojson, int *hasz, int root_srid)
 	}
 
 	poObjGeoms = findMemberByName( geojson, "geometries" );
-	if ( ! poObjGeoms ) 
+	if ( ! poObjGeoms )
 	{
 		geojson_lwerror("Unable to find 'geometries' in GeoJSON string", 4);
 		return NULL;
@@ -466,14 +480,14 @@ parse_geojson(json_object *geojson, int *hasz, int root_srid)
 	json_object* type = NULL;
 	const char* name;
 
-	if( NULL == geojson ) 
+	if( NULL == geojson )
 	{
 		geojson_lwerror("invalid GeoJSON representation", 2);
 		return NULL;
 	}
 
 	type = findMemberByName( geojson, "type" );
-	if( NULL == type ) 
+	if( NULL == type )
 	{
 		geojson_lwerror("unknown GeoJSON type", 3);
 		return NULL;

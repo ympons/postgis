@@ -138,6 +138,37 @@ static void test_grid(void)
 	lwgeom_free(geomgrid);		
 }
 
+static void test_clone(void)
+{
+	static char *wkt = "GEOMETRYCOLLECTION(MULTIPOLYGON(((0 0, 10 0, 10 10, 0 10, 0 0))),POINT(1 1),LINESTRING(2 3,4 5))";
+	LWGEOM *geom1 = lwgeom_from_wkt(wkt, LW_PARSER_CHECK_ALL);
+	LWGEOM *geom2;
+	
+	/* Free in "backwards" order */
+	geom2 = lwgeom_clone(geom1);
+	lwgeom_free(geom1);
+	lwgeom_free(geom2);
+
+	/* Free in "forewards" order */
+	geom1 = lwgeom_from_wkt(wkt, LW_PARSER_CHECK_ALL);
+	geom2 = lwgeom_clone(geom1);
+	lwgeom_free(geom2);
+	lwgeom_free(geom1);
+}
+
+static void test_lwmpoint_from_lwgeom(void)
+{
+	/* This cast is so ugly, we only want to do it once.  And not even that. */
+	LWGEOM* (*to_points)(LWGEOM*) = (LWGEOM* (*)(LWGEOM*)) &lwmpoint_from_lwgeom;
+
+	do_fn_test(to_points, "MULTIPOLYGON (EMPTY)", "MULTIPOINT EMPTY");
+	do_fn_test(to_points, "POINT (30 10)", "MULTIPOINT ((30 10))");
+	do_fn_test(to_points, "LINESTRING Z (30 10 4,10 30 5,40 40 6)", "MULTIPOINT Z (30 10 4,10 30 5, 40 40 6)");
+	do_fn_test(to_points, "POLYGON((35 10,45 45,15 40,10 20,35 10),(20 30,35 35,30 20,20 30))", "MULTIPOINT(35 10,45 45,15 40,10 20,35 10,20 30,35 35,30 20,20 30)");
+	do_fn_test(to_points, "MULTIPOINT M (10 40 1,40 30 2,20 20 3,30 10 4)", "MULTIPOINT M (10 40 1,40 30 2,20 20 3,30 10 4)");
+	do_fn_test(to_points, "COMPOUNDCURVE(CIRCULARSTRING(0 0,2 0, 2 1, 2 3, 4 3),(4 3, 4 5, 1 4, 0 0))", "MULTIPOINT(0 0, 2 0, 2 1, 2 3, 4 3, 4 3, 4 5, 1 4, 0 0)");
+	do_fn_test(to_points, "TIN(((80 130,50 160,80 70,80 130)),((50 160,10 190,10 70,50 160)))", "MULTIPOINT (80 130, 50 160, 80 70, 80 130, 50 160, 10 190, 10 70, 50 160)");
+}
 
 /*
 ** Used by the test harness to register the tests in this file.
@@ -152,4 +183,6 @@ void misc_suite_setup(void)
 	PG_ADD_TEST(suite, test_misc_area);
 	PG_ADD_TEST(suite, test_misc_wkb);
 	PG_ADD_TEST(suite, test_grid);
+	PG_ADD_TEST(suite, test_clone);
+	PG_ADD_TEST(suite, test_lwmpoint_from_lwgeom);
 }

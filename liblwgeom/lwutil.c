@@ -1,3 +1,31 @@
+/**********************************************************************
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright (C) 2004-2015 Sandro Santilli <strk@kbt.io>
+ * Copyright (C) 2006 Mark Leslie <mark.leslie@lisasoft.com>
+ * Copyright (C) 2008-2009 Mark Cave-Ayland <mark.cave-ayland@siriusit.co.uk>
+ * Copyright (C) 2009-2015 Paul Ramsey <pramsey@cleverelephant.ca>
+ * Copyright (C) 2010 Olivier Courtin <olivier.courtin@camptocamp.com>
+ *
+ **********************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -50,12 +78,100 @@ static char *lwgeomTypeName[] =
 };
 
 /*
+ * Default allocators
+ *
+ * We include some default allocators that use malloc/free/realloc
+ * along with stdout/stderr since this is the most common use case
+ *
+ */
+
+static void *
+default_allocator(size_t size)
+{
+	void *mem = malloc(size);
+	return mem;
+}
+
+static void
+default_freeor(void *mem)
+{
+	free(mem);
+}
+
+static void *
+default_reallocator(void *mem, size_t size)
+{
+	void *ret = realloc(mem, size);
+	return ret;
+}
+
+/*
  * Default lwnotice/lwerror handlers
  *
  * Since variadic functions cannot pass their parameters directly, we need
  * wrappers for these functions to convert the arguments into a va_list
  * structure.
  */
+
+static void
+default_noticereporter(const char *fmt, va_list ap)
+{
+	char msg[LW_MSG_MAXLEN+1];
+	vsnprintf (msg, LW_MSG_MAXLEN, fmt, ap);
+	msg[LW_MSG_MAXLEN]='\0';
+	printf("%s\n", msg);
+}
+
+static void
+default_debuglogger(int level, const char *fmt, va_list ap)
+{
+	char msg[LW_MSG_MAXLEN+1];
+	if ( POSTGIS_DEBUG_LEVEL >= level )
+	{
+		/* Space pad the debug output */
+		int i;
+		for ( i = 0; i < level; i++ )
+			msg[i] = ' ';
+		vsnprintf(msg+i, LW_MSG_MAXLEN-i, fmt, ap);
+		msg[LW_MSG_MAXLEN]='\0';
+		printf("%s\n", msg);
+	}
+}
+
+static void
+default_errorreporter(const char *fmt, va_list ap)
+{
+	char msg[LW_MSG_MAXLEN+1];
+	vsnprintf (msg, LW_MSG_MAXLEN, fmt, ap);
+	msg[LW_MSG_MAXLEN]='\0';
+	fprintf(stderr, "%s\n", msg);
+	exit(1);
+}
+
+/**
+ * This function is called by programs which want to set up custom handling
+ * for memory management and error reporting
+ *
+ * Only non-NULL values change their respective handler
+ */
+void
+lwgeom_set_handlers(lwallocator allocator, lwreallocator reallocator,
+	        lwfreeor freeor, lwreporter errorreporter,
+	        lwreporter noticereporter) {
+
+	if ( allocator ) lwalloc_var = allocator;
+	if ( reallocator ) lwrealloc_var = reallocator;
+	if ( freeor ) lwfree_var = freeor;
+
+	if ( errorreporter ) lwerror_var = errorreporter;
+	if ( noticereporter ) lwnotice_var = noticereporter;
+}
+
+void
+lwgeom_set_debuglogger(lwdebuglogger debuglogger) {
+
+	if ( debuglogger ) lwdebug_var = debuglogger;
+}
 
 void
 lwnotice(const char *fmt, ...)
@@ -96,95 +212,9 @@ lwdebug(int level, const char *fmt, ...)
 	va_end(ap);
 }
 
-/*
- * Default allocators
- *
- * We include some default allocators that use malloc/free/realloc
- * along with stdout/stderr since this is the most common use case
- *
- */
 
-static void *
-default_allocator(size_t size)
-{
-	void *mem = malloc(size);
-	return mem;
-}
 
-static void
-default_freeor(void *mem)
-{
-	free(mem);
-}
-
-static void *
-default_reallocator(void *mem, size_t size)
-{
-	void *ret = realloc(mem, size);
-	return ret;
-}
-
-static void
-default_noticereporter(const char *fmt, va_list ap)
-{
-	char msg[LW_MSG_MAXLEN+1];
-	vsnprintf (msg, LW_MSG_MAXLEN, fmt, ap);
-	msg[LW_MSG_MAXLEN]='\0';
-	printf("%s\n", msg);
-}
-
-static void
-default_debuglogger(int level, const char *fmt, va_list ap)
-{
-	char msg[LW_MSG_MAXLEN+1];
-	if ( POSTGIS_DEBUG_LEVEL >= level )
-	{
-		/* Space pad the debug output */
-		int i;
-		for ( i = 0; i < level; i++ )
-			msg[i] = ' ';
-		vsnprintf(msg+i, LW_MSG_MAXLEN-i, fmt, ap);
-		msg[LW_MSG_MAXLEN]='\0';
-		printf("%s\n", msg);
-	}
-}
-
-static void
-default_errorreporter(const char *fmt, va_list ap)
-{
-	char msg[LW_MSG_MAXLEN+1];
-	vsnprintf (msg, LW_MSG_MAXLEN, fmt, ap);
-	msg[LW_MSG_MAXLEN]='\0';
-	fprintf(stderr, "%s\n", msg);
-	exit(1);
-}
-
-/**
- * This function is called by programs which want to set up custom handling 
- * for memory management and error reporting
- *
- * Only non-NULL values change their respective handler
- */
-void
-lwgeom_set_handlers(lwallocator allocator, lwreallocator reallocator,
-	        lwfreeor freeor, lwreporter errorreporter,
-	        lwreporter noticereporter) {
-
-	if ( allocator ) lwalloc_var = allocator;
-	if ( reallocator ) lwrealloc_var = reallocator;
-	if ( freeor ) lwfree_var = freeor;
-
-	if ( errorreporter ) lwerror_var = errorreporter;
-	if ( noticereporter ) lwnotice_var = noticereporter;
-}
-
-void
-lwgeom_set_debuglogger(lwdebuglogger debuglogger) {
-
-	if ( debuglogger ) lwdebug_var = debuglogger;
-}
-
-const char* 
+const char*
 lwtype_name(uint8_t type)
 {
 	if ( type > 15 )
@@ -363,7 +393,7 @@ clamp_srid(int srid)
       ( srid % ( SRID_MAXIMUM - SRID_USER_MAXIMUM - 1 ) );
 		lwnotice("SRID value %d > SRID_MAXIMUM converted to %d", srid, newsrid);
 	}
-	
+
 	return newsrid;
 }
 

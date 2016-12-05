@@ -3,14 +3,27 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright (C) 2012 Sandro Santilli <strk@keybit.net>
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright (C) 2012 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2008 Paul Ramsey <pramsey@cleverelephant.ca>
  * Copyright (C) 2007 Refractions Research Inc.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include <assert.h>
 
@@ -86,7 +99,12 @@ static void PreparedCacheInit(MemoryContext context);
 static void PreparedCacheReset(MemoryContext context);
 static void PreparedCacheDelete(MemoryContext context);
 static bool PreparedCacheIsEmpty(MemoryContext context);
+#if POSTGIS_PGSQL_VERSION >= 96
+static void PreparedCacheStats(MemoryContext context, int level, bool print, MemoryContextCounters *totals);
+#else
 static void PreparedCacheStats(MemoryContext context, int level);
+#endif
+
 #ifdef MEMORY_CONTEXT_CHECKING
 static void PreparedCacheCheck(MemoryContext context);
 #endif
@@ -160,14 +178,18 @@ PreparedCacheIsEmpty(MemoryContext context)
 }
 
 static void
+#if POSTGIS_PGSQL_VERSION >= 96
+PreparedCacheStats(MemoryContext context, int level, bool print, MemoryContextCounters *totals)
+#else
 PreparedCacheStats(MemoryContext context, int level)
+#endif
 {
 	/*
 	 * Simple stats display function - we must supply a function since this call is mandatory according to tgl
 	 * (see postgis-devel archives July 2007)
+	   fprintf(stderr, "%s: Prepared context\n", context->name);
 	 */
 
-	fprintf(stderr, "%s: Prepared context\n", context->name);
 }
 
 #ifdef MEMORY_CONTEXT_CHECKING
@@ -272,12 +294,12 @@ DeletePrepGeomHashEntry(MemoryContext mcxt)
 * Given a generic GeomCache, and a geometry to prepare,
 * prepare a PrepGeomCache and stick it into the GeomCache->index
 * slot. The PrepGeomCache includes the original GEOS geometry,
-* and the GEOS prepared geometry, and a pointer to the 
-* MemoryContext where the callback functions are registered. 
-* 
+* and the GEOS prepared geometry, and a pointer to the
+* MemoryContext where the callback functions are registered.
+*
 * This function is passed into the generic GetGeomCache function
 * so that it can build an appropriate indexed structure in the case
-* of a cache hit when there is no indexed structure yet 
+* of a cache hit when there is no indexed structure yet
 * available to return.
 */
 static int
@@ -308,15 +330,25 @@ PrepGeomCacheBuilder(const LWGEOM *lwgeom, GeomCache *cache)
 		AddPrepGeomHashEntry( pghe );		
 	}
 	
-	/* 
-	* Hum, we shouldn't be asked to build a new cache on top of 
+	/*
+	* Hum, we shouldn't be asked to build a new cache on top of
 	* an existing one. Error.
 	*/
 	if ( prepcache->argnum || prepcache->geom || prepcache->prepared_geom )
 	{
 		lwpgerror("PrepGeomCacheBuilder asked to build new prepcache where one already exists.");
 		return LW_FAILURE;
-	}
+    }
+
+	/*
+	 * Avoid creating a PreparedPoint around a Point or a MultiPoint.
+	 * Consider changing this behavior in the future if supported GEOS
+	 * versions correctly handle prepared points and multipoints and
+	 * provide a performance benefit.
+	 * See https://trac.osgeo.org/postgis/ticket/3437
+	 */
+	if (lwgeom_get_type(lwgeom) == POINTTYPE || lwgeom_get_type(lwgeom) == MULTIPOINTTYPE)
+		return LW_FAILURE;
 	
 	prepcache->geom = LWGEOM2GEOS( lwgeom , 0);
 	if ( ! prepcache->geom ) return LW_FAILURE;
@@ -343,7 +375,7 @@ PrepGeomCacheBuilder(const LWGEOM *lwgeom, GeomCache *cache)
 
 /**
 * This function is passed into the generic GetGeomCache function
-* in the case of a cache miss, so that it can free the particular 
+* in the case of a cache miss, so that it can free the particular
 * indexed structure being managed.
 *
 * In the case of prepared geometry, we want to leave the actual
@@ -360,8 +392,8 @@ PrepGeomCacheCleaner(GeomCache *cache)
 	if ( ! prepcache )
 		return LW_FAILURE;
 
-	/* 
-	* Clear out the references to the soon-to-be-freed GEOS objects 
+	/*
+	* Clear out the references to the soon-to-be-freed GEOS objects
 	* from the callback hash entry
 	*/
 	pghe = GetPrepGeomHashEntry(prepcache->context_callback);
@@ -373,7 +405,7 @@ PrepGeomCacheCleaner(GeomCache *cache)
 	pghe->geom = 0;
 	pghe->prepared_geom = 0;
 
-	/* 
+	/*
 	* Free the GEOS objects and free the index tree
 	*/
 	POSTGIS_DEBUGF(3, "PrepGeomCacheFreeer: freeing %p argnum %d", prepcache, prepcache->argnum);

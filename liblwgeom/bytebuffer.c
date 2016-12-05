@@ -1,39 +1,27 @@
 /**********************************************************************
- * $Id: bytebuffer.c 11218 2013-03-28 13:32:44Z robe $
  *
  * PostGIS - Spatial Types for PostgreSQL
- * Copyright 2015 Nicklas Avén <nicklas.aven@jordogskog.no>
+ * http://postgis.net
  *
- * Redistribution and use in source and binary forms, with or
- * without modification, are permitted provided that the following
- * conditions are met:
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
- * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following
- * disclaimer in the documentation and/or other materials provided
- * with the distribution.
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
  *
- * The name of the author may not be used to endorse or promote
- * products derived from this software without specific prior
- * written permission.
+ **********************************************************************
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR
- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
+ * Copyright 2015 Nicklas AvÃ©n <nicklas.aven@jordogskog.no>
  *
  **********************************************************************/
+
 
 
 #include "liblwgeom_internal.h"
@@ -42,7 +30,7 @@
 /**
 * Allocate a new bytebuffer_t. Use bytebuffer_destroy to free.
 */
-bytebuffer_t* 
+bytebuffer_t*
 bytebuffer_create(void)
 {
 	LWDEBUG(2,"Entered bytebuffer_create");
@@ -52,7 +40,7 @@ bytebuffer_create(void)
 /**
 * Allocate a new bytebuffer_t. Use bytebuffer_destroy to free.
 */
-bytebuffer_t* 
+bytebuffer_t*
 bytebuffer_create_with_size(size_t size)
 {
 	LWDEBUGF(2,"Entered bytebuffer_create_with_size %d", size);
@@ -71,7 +59,7 @@ bytebuffer_create_with_size(size_t size)
 * Allocate just the internal buffer of an existing bytebuffer_t
 * struct. Useful for allocating short-lived bytebuffers off the stack.
 */
-void 
+void
 bytebuffer_init_with_size(bytebuffer_t *b, size_t size)
 {
 	b->buf_start = lwalloc(size);
@@ -83,19 +71,19 @@ bytebuffer_init_with_size(bytebuffer_t *b, size_t size)
 /**
 * Free the bytebuffer_t and all memory managed within it.
 */
-void 
+void
 bytebuffer_destroy(bytebuffer_t *s)
 {
 	LWDEBUG(2,"Entered bytebuffer_destroy");
 	LWDEBUGF(4,"The buffer has used %d bytes",bytebuffer_getlength(s));
 	
-	if ( s->buf_start ) 
+	if ( s->buf_start )
 	{
 		LWDEBUGF(4,"let's free buf_start %p",s->buf_start);
 		lwfree(s->buf_start);
 		LWDEBUG(4,"buf_start is freed");
 	}
-	if ( s ) 
+	if ( s )
 	{
 		lwfree(s);		
 		LWDEBUG(4,"bytebuffer_t is freed");
@@ -106,7 +94,7 @@ bytebuffer_destroy(bytebuffer_t *s)
 /**
 * Set the read cursor to the beginning
 */
-void 
+void
 bytebuffer_reset_reading(bytebuffer_t *s)
 {
 	s->readcursor = s->buf_start;
@@ -117,7 +105,7 @@ bytebuffer_reset_reading(bytebuffer_t *s)
 * without the expense of freeing and re-allocating a new
 * bytebuffer_t.
 */
-void 
+void
 bytebuffer_clear(bytebuffer_t *s)
 {
 	s->readcursor = s->writecursor = s->buf_start;
@@ -127,7 +115,7 @@ bytebuffer_clear(bytebuffer_t *s)
 * If necessary, expand the bytebuffer_t internal buffer to accomodate the
 * specified additional size.
 */
-static inline void 
+static inline void
 bytebuffer_makeroom(bytebuffer_t *s, size_t size_to_add)
 {
 	LWDEBUGF(2,"Entered bytebuffer_makeroom with space need of %d", size_to_add);
@@ -153,7 +141,7 @@ bytebuffer_makeroom(bytebuffer_t *s, size_t size_to_add)
 /**
 * Writes a uint8_t value to the buffer
 */
-void 
+void
 bytebuffer_append_byte(bytebuffer_t *s, const uint8_t val)
 {	
 	LWDEBUGF(2,"Entered bytebuffer_append_byte with value %d", val);	
@@ -167,7 +155,7 @@ bytebuffer_append_byte(bytebuffer_t *s, const uint8_t val)
 /**
 * Writes a uint8_t value to the buffer
 */
-void 
+void
 bytebuffer_append_bulk(bytebuffer_t *s, void * start, size_t size)
 {	
 	LWDEBUGF(2,"bytebuffer_append_bulk with size %d",size);	
@@ -180,7 +168,7 @@ bytebuffer_append_bulk(bytebuffer_t *s, void * start, size_t size)
 /**
 * Writes a uint8_t value to the buffer
 */
-void 
+void
 bytebuffer_append_bytebuffer(bytebuffer_t *write_to,bytebuffer_t *write_from )
 {	
 	LWDEBUG(2,"bytebuffer_append_bytebuffer");	
@@ -195,7 +183,7 @@ bytebuffer_append_bytebuffer(bytebuffer_t *write_to,bytebuffer_t *write_from )
 /**
 * Writes a signed varInt to the buffer
 */
-void 
+void
 bytebuffer_append_varint(bytebuffer_t *b, const int64_t val)
 {	
 	size_t size;
@@ -208,7 +196,7 @@ bytebuffer_append_varint(bytebuffer_t *b, const int64_t val)
 /**
 * Writes a unsigned varInt to the buffer
 */
-void 
+void
 bytebuffer_append_uvarint(bytebuffer_t *b, const uint64_t val)
 {	
 	size_t size;
@@ -309,7 +297,7 @@ bytebuffer_append_double(bytebuffer_t *buf, const double val, int swap)
 /**
 * Reads a signed varInt from the buffer
 */
-int64_t 
+int64_t
 bytebuffer_read_varint(bytebuffer_t *b)
 {
 	size_t size;
@@ -321,7 +309,7 @@ bytebuffer_read_varint(bytebuffer_t *b)
 /**
 * Reads a unsigned varInt from the buffer
 */
-uint64_t 
+uint64_t
 bytebuffer_read_uvarint(bytebuffer_t *b)
 {	
 	size_t size;
@@ -333,7 +321,7 @@ bytebuffer_read_uvarint(bytebuffer_t *b)
 /**
 * Returns the length of the current buffer
 */
-size_t 
+size_t
 bytebuffer_getlength(bytebuffer_t *s)
 {
 	return (size_t) (s->writecursor - s->buf_start);

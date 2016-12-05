@@ -2,12 +2,26 @@
  *
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2001-2005 Refractions Research Inc.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "postgres.h"
 
@@ -163,8 +177,8 @@ Datum geometry_geometrytype(PG_FUNCTION_ARGS)
 {
 	GSERIALIZED *gser;
 	text *type_text;
-	static int type_str_len = 32;
-	char type_str[type_str_len];
+	static int type_str_len = 31;
+	char type_str[type_str_len + 1];
 
 	/* Read just the header from the toasted tuple */
 	gser = PG_GETARG_GSERIALIZED_P_SLICE(0, 0, gserialized_max_header_size());
@@ -186,7 +200,7 @@ Datum geometry_geometrytype(PG_FUNCTION_ARGS)
 
 
 /**
-* numpoints(LINESTRING) -- return the number of points in the 
+* numpoints(LINESTRING) -- return the number of points in the
 * linestring, or NULL if it is not a linestring
 */
 PG_FUNCTION_INFO_V1(LWGEOM_numpoints_linestring);
@@ -352,7 +366,7 @@ Datum LWGEOM_exteriorring_polygon(PG_FUNCTION_ARGS)
 		* If the input geom has a bbox, use it for
 		* the output geom, as exterior ring makes it up !
 		*/
-		if ( poly->bbox ) 
+		if ( poly->bbox )
 			bbox = gbox_copy(poly->bbox);
 
 		line = lwline_construct(poly->srid, bbox, extring);
@@ -369,7 +383,7 @@ Datum LWGEOM_exteriorring_polygon(PG_FUNCTION_ARGS)
 		* If the input geom has a bbox, use it for
 		* the output geom, as exterior ring makes it up !
 		*/
-		if ( triangle->bbox ) 
+		if ( triangle->bbox )
 			bbox = gbox_copy(triangle->bbox);
 		line = lwline_construct(triangle->srid, bbox, triangle->points);
 
@@ -485,7 +499,7 @@ Datum LWGEOM_interiorringn_polygon(PG_FUNCTION_ARGS)
 		ring = poly->rings[wanted_index];
 
 		/* COMPUTE_BBOX==TAINTING */
-		if ( poly->bbox ) 
+		if ( poly->bbox )
 		{
 			bbox = lwalloc(sizeof(GBOX));
 			ptarray_calculate_gbox_cartesian(ring, bbox);
@@ -531,11 +545,23 @@ Datum LWGEOM_pointn_linestring(PG_FUNCTION_ARGS)
 	LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
 	LWPOINT *lwpoint = NULL;
 	int type = lwgeom->type;
-	
-	/* Can't handle crazy index! */
-	if ( where < 1 )
-		PG_RETURN_NULL();
 
+	/* If index is negative, count backward */
+	if( where < 1 )
+	{
+		int count = -1;
+		if ( type == LINETYPE || type == CIRCSTRINGTYPE || type == COMPOUNDTYPE )
+			count = lwgeom_count_vertices(lwgeom);
+		if(count >0)
+		{
+			/* only work if we found the total point number */
+			/* converting where to positive backward indexing, +1 because 1 indexing */
+			where = where + count + 1;
+		}
+		if (where < 1)
+			PG_RETURN_NULL();
+	}
+	
 	if ( type == LINETYPE || type == CIRCSTRINGTYPE )
 	{
 		/* OGC index starts at one, so we substract first. */
@@ -681,8 +707,8 @@ Datum LWGEOM_m_point(PG_FUNCTION_ARGS)
 	PG_RETURN_FLOAT8(p.m);
 }
 
-/** 
-* ST_StartPoint(GEOMETRY) 
+/**
+* ST_StartPoint(GEOMETRY)
 * @return the first point of a linestring.
 * 		Return NULL if there is no LINESTRING
 */
@@ -774,7 +800,7 @@ Datum LWGEOM_from_text(PG_FUNCTION_ARGS)
 	}
 
 	/* read user-requested SRID if any */
-	if ( PG_NARGS() > 1 ) 
+	if ( PG_NARGS() > 1 )
 		lwgeom_set_srid(lwgeom, PG_GETARG_INT32(1));
 
 	geom_result = geometry_serialize(lwgeom);
@@ -788,7 +814,7 @@ Datum LWGEOM_from_text(PG_FUNCTION_ARGS)
  * 		return a geometry.
  *
  * @note that this is a wrapper around
- * 		lwgeom_from_wkb, where we throw 
+ * 		lwgeom_from_wkb, where we throw
  *      a warning if ewkb passed in
  * 		accept EWKB.
  */

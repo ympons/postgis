@@ -1,13 +1,27 @@
 /**********************************************************************
  *
  * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
  *
  * Copyright (C) 2009 Paul Ramsey <pramsey@cleverelephant.ca>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include <math.h>
 
@@ -22,7 +36,7 @@ static size_t lwgeom_to_wkb_size(const LWGEOM *geom, uint8_t variant);
 */
 static char *hexchr = "0123456789ABCDEF";
 
-char* hexbytes_from_bytes(uint8_t *bytes, size_t size) 
+char* hexbytes_from_bytes(uint8_t *bytes, size_t size)
 {
 	char *hex;
 	int i;
@@ -53,7 +67,7 @@ static int lwgeom_wkb_needs_srid(const LWGEOM *geom, uint8_t variant)
 	if ( variant & WKB_NO_SRID )
 		return LW_FALSE;
 		
-	/* We can only add an SRID if the geometry has one, and the 
+	/* We can only add an SRID if the geometry has one, and the
 	   WKB form is extended */	
 	if ( (variant & WKB_EXTENDED) && lwgeom_has_srid(geom) )
 		return LW_TRUE;
@@ -378,7 +392,7 @@ static uint8_t* ptarray_to_wkb_buf(const POINTARRAY *pa, uint8_t *buf, uint8_t v
 		buf += size;
 	}
 	/* Copy coordinates one-by-one otherwise */
-	else 
+	else
 	{
 		for ( i = 0; i < pa->npoints; i++ )
 		{
@@ -582,7 +596,7 @@ static uint8_t* lwpoly_to_wkb_buf(const LWPOLY *poly, uint8_t *buf, uint8_t vari
 
 /*
 * MULTIPOINT, MULTILINESTRING, MULTIPOLYGON, GEOMETRYCOLLECTION
-* MULTICURVE, COMPOUNDCURVE, MULTISURFACE, CURVEPOLYGON, TIN, 
+* MULTICURVE, COMPOUNDCURVE, MULTISURFACE, CURVEPOLYGON, TIN,
 * POLYHEDRALSURFACE
 */
 static size_t lwcollection_to_wkb_size(const LWCOLLECTION *col, uint8_t variant)
@@ -785,7 +799,7 @@ uint8_t* lwgeom_to_wkb(const LWGEOM *geom, uint8_t variant, size_t *size_out)
 	if ( ! (variant & WKB_NDR || variant & WKB_XDR) ||
 	       (variant & WKB_NDR && variant & WKB_XDR) )
 	{
-		if ( getMachineEndian() == NDR ) 
+		if ( getMachineEndian() == NDR )
 			variant = variant | WKB_NDR;
 		else
 			variant = variant | WKB_XDR;

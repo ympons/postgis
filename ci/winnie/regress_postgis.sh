@@ -134,6 +134,10 @@ make clean
 if [ "$POSTGIS_MINOR_VERSION" == "0" ] ; then
 cp ${MINGPROJECTS}/json-c/rel-${JSON_VER}w${OS_BUILD}${GCC_TYPE}/include/json/json_object.h.for_compile ${MINGPROJECTS}/json-c/rel-${JSON_VER}w${OS_BUILD}${GCC_TYPE}/include/json/json_object.h
 fi;
+
+#patch liblwgeom generated make to get rid of dynamic linking
+sed -i 's/LDFLAGS += -no-undefined//g' liblwgeom/Makefile
+
 make
 make install
 make check RUNTESTFLAGS=-v
@@ -152,7 +156,7 @@ if [ "$MAKE_EXTENSION" == "1" ]; then
  cp -r extensions/*/*.control ${PGPATHEDB}/share/extension
  cp -r extensions/*/*.dll ${PGPATHEDB}/lib
  
- make check RUNTESTFLAGS=--extension
+ make check RUNTESTFLAGS="--extension -v"
  
  ##test address standardizer
  cd ${POSTGIS_SRC}
@@ -163,6 +167,15 @@ if [ "$MAKE_EXTENSION" == "1" ]; then
  cd ${POSTGIS_SRC}
  cd extensions/postgis_tiger_geocoder
  make installcheck
+ if [ "$?" != "0" ]; then
+  exit $?
+ fi
+fi
+
+if [ "$DUMP_RESTORE" = "1" ]; then
+ echo "Dum restore test"
+ make install
+ make check RUNTESTFLAGS="-v --dumprestore"
  if [ "$?" != "0" ]; then
   exit $?
  fi

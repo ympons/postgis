@@ -1,9 +1,9 @@
 -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
--- 
+--
 -- PostGIS - Spatial Types for PostgreSQL
 -- http://postgis.net
 --
--- Copyright (C) 2013 Sandro Santilli <strk@keybit.net>
+-- Copyright (C) 2013 Sandro Santilli <strk@kbt.io>
 --
 -- This is free software; you can redistribute and/or modify it under
 -- the terms of the GNU General Public Licence. See the COPYING file.
@@ -21,6 +21,9 @@
 -- API FUNCTION
 --
 -- text AsTopoJSON(TopoGeometry, edgeMapTable)
+--
+-- Format specification here:
+-- http://github.com/mbostock/topojson-specification/blob/master/README.md
 --
 -- }{
 CREATE OR REPLACE FUNCTION topology.AsTopoJSON(tg topology.TopoGeometry, edgeMapTable regclass)
@@ -42,6 +45,7 @@ DECLARE
   old_search_path TEXT;
   all_faces int[];
   faces int[];
+  bounding_edges int[];
   visited_face int;
   shell_faces int[];
   visited_edges int[];
@@ -56,12 +60,12 @@ BEGIN
   SELECT name FROM topology.topology into toponame
               WHERE id = tg.topology_id;
 
-  -- Puntual TopoGeometry
+  -- TODO: implement scale ?
+
+  -- Puntal TopoGeometry, simply delegate to AsGeoJSON
   IF tg.type = 1 THEN
-    -- TODO: implement scale ?
-    --json := ST_AsGeoJSON(topology.Geometry(tg));
-    --return json;
-    RAISE EXCEPTION 'TopoJSON export does not support puntual objects';
+    json := ST_AsGeoJSON(topology.Geometry(tg));
+    return json;
   ELSIF tg.type = 2 THEN -- lineal
 
     FOR rec IN SELECT (ST_Dump(topology.Geometry(tg))).geom
@@ -128,6 +132,13 @@ BEGIN
     looking_for_holes := false;
     shell_faces := ARRAY[]::int[];
 
+    SELECT array_agg(edge_id)
+    FROM edge_data e
+    WHERE
+         ( e.left_face = ANY ( faces ) OR
+           e.right_face = ANY ( faces ) )
+    INTO bounding_edges;
+
     LOOP -- {
 
       arcs := NULL;
@@ -141,18 +152,15 @@ BEGIN
       FOR rec in -- {
 WITH RECURSIVE
 _edges AS (
-  SELECT e.*, 
+  SELECT e.*,
          e.left_face = ANY ( faces ) as lf,
          e.right_face = ANY ( faces ) as rf
   FROM edge e
-  WHERE ( e.left_face = ANY ( faces ) OR
-          e.right_face = ANY ( faces ) )
+  WHERE edge_id = ANY (bounding_edges)
+          AND NOT e.edge_id = ANY ( visited_edges )
 ),
 _leftmost_non_dangling_edge AS (
-  SELECT * FROM _edges e
-    WHERE ( e.lf or e.rf ) AND ( e.lf != e.rf )
-          AND NOT e.edge_id = ANY ( visited_edges )
-      -- TODO: and not in visited ?
+  SELECT e.* FROM _edges e WHERE e.lf != e.rf
   ORDER BY geom LIMIT 1
 ),
 _edgepath AS (
@@ -290,9 +298,9 @@ FROM _edgepath
     RAISE EXCEPTION 'Collection TopoGeometries are not supported by AsTopoJSON';
 
   END IF;
-	
+
   RETURN json;
-	
+
 END
 $$ LANGUAGE 'plpgsql' VOLATILE; -- writes into visited table
 -- } AsTopoJSON(TopoGeometry, visited_table)

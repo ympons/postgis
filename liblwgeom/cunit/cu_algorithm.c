@@ -90,6 +90,29 @@ static void test_lw_segment_side(void)
 
 }
 
+static void test_lw_arc_center(void)
+{
+/* double lw_arc_center(const POINT2D *p1, const POINT2D *p2, const POINT2D *p3, POINT2D *result); */
+	POINT2D c1;
+	double d1;
+	POINT2D p1, p2, p3;
+
+	p1.x = 2047538.600;
+	p1.y = 7268770.435;
+	p2.x = 2047538.598;
+	p2.y = 7268770.435;
+	p3.x = 2047538.596;
+	p3.y = 7268770.436;
+
+	d1 = lw_arc_center(&p1, &p2, &p3, &c1);
+
+	CU_ASSERT_DOUBLE_EQUAL(d1, 0.0046097720751, 0.0001);
+	CU_ASSERT_DOUBLE_EQUAL(c1.x, 2047538.599, 0.001);
+	CU_ASSERT_DOUBLE_EQUAL(c1.y, 7268770.4395, 0.001);
+	
+	// printf("lw_arc_center: (%12.12g, %12.12g) %12.12g\n", c1.x, c1.y, d1);
+}
+
 /*
 ** Test crossings side.
 */
@@ -959,6 +982,207 @@ static void test_lwgeom_simplify(void)
 		lwfree(ewkt);
 }
 
+
+static void do_median_dims_check(char* wkt, int expected_dims)
+{
+	LWGEOM* g = lwgeom_from_wkt(wkt, LW_PARSER_CHECK_NONE);
+	LWPOINT* result = lwgeom_median(g, 1e-8, 100, LW_FALSE);
+
+	CU_ASSERT_EQUAL(expected_dims, lwgeom_ndims((LWGEOM*) result));
+
+	lwgeom_free(g);
+	lwpoint_free(result);
+}
+
+static void test_median_handles_3d_correctly(void)
+{
+	do_median_dims_check("MULTIPOINT ((1 3), (4 7), (2 9), (0 4), (2 2))", 2);
+	do_median_dims_check("MULTIPOINT Z ((1 3 4), (4 7 8), (2 9 1), (0 4 4), (2 2 3))", 3);
+	do_median_dims_check("MULTIPOINT M ((1 3 4), (4 7 8), (2 9 1), (0 4 4), (2 2 3))", 2);
+	do_median_dims_check("MULTIPOINT ZM ((1 3 4 5), (4 7 8 6), (2 9 1 7), (0 4 4 8), (2 2 3 9))", 3);
+}
+
+static void do_median_test(char* input, char* expected)
+{
+	LWGEOM* g = lwgeom_from_wkt(input, LW_PARSER_CHECK_NONE);
+	LWPOINT* expected_result = lwgeom_as_lwpoint(lwgeom_from_wkt(expected, LW_PARSER_CHECK_NONE));
+	POINT3DZ actual_pt;
+	POINT3DZ expected_pt;
+
+	LWPOINT* result = lwgeom_median(g, FP_TOLERANCE / 10.0, 1000, LW_TRUE);
+	int passed = LW_TRUE;
+	
+	lwpoint_getPoint3dz_p(result, &actual_pt);
+	lwpoint_getPoint3dz_p(expected_result, &expected_pt);
+
+	passed = passed && lwgeom_is_empty((LWGEOM*) expected_result) == lwgeom_is_empty((LWGEOM*) result);
+	passed = passed && (lwgeom_has_z((LWGEOM*) expected_result) == lwgeom_has_z((LWGEOM*) result));
+
+	if (!lwgeom_is_empty((LWGEOM*) result))
+	{
+		passed = passed && FP_EQUALS(actual_pt.x, expected_pt.x);
+		passed = passed && FP_EQUALS(actual_pt.y, expected_pt.y);
+		passed = passed && (!lwgeom_has_z((LWGEOM*) expected_result) || FP_EQUALS(actual_pt.z, expected_pt.z));
+	}
+
+	if (!passed)
+		printf("median_test expected %s got %s\n", lwgeom_to_ewkt((LWGEOM*) expected_result), lwgeom_to_ewkt((LWGEOM*) result));
+
+	CU_ASSERT_TRUE(passed);
+
+	lwgeom_free(g);
+	lwpoint_free(expected_result);
+	lwpoint_free(result);
+}
+
+static void test_median_robustness(void)
+{
+	/* A simple implementation of Weiszfeld's algorithm will fail if the median is equal
+	 * to any one of the inputs, during any iteration of the algorithm.
+	 *
+	 * Because the algorithm uses the centroid as a starting point, this situation will
+	 * occur in the test case below.
+	 */
+	do_median_test("MULTIPOINT ((0 -1), (0 0), (0 1))", "POINT (0 0)");
+
+	/* Same as above but 3D, and shifter */
+	do_median_test("MULTIPOINT ((1 -1 3), (1 0 2), (2 1 1))", "POINT (1 0 2)");
+
+	/* Starting point is duplicated */
+	do_median_test("MULTIPOINT ((0 -1), (0 0), (0 0), (0 1))", "POINT (0 0)");
+
+	/* Cube */
+	do_median_test("MULTIPOINT ((10 10 10), (10 20 10), (20 10 10), (20 20 10), (10 10 20), (10 20 20), (20 10 20), (20 20 20))",
+				   "POINT (15 15 15)");
+
+	/* Some edge cases */
+	do_median_test("MULTIPOINT EMPTY", "POINT EMPTY");
+	do_median_test("MULTIPOINT (EMPTY)", "POINT EMPTY");
+	do_median_test("POINT (7 6)", "POINT (7 6)");
+	do_median_test("POINT (7 6 2)", "POINT (7 6 2)");
+	do_median_test("MULTIPOINT ((7 6 2), EMPTY)", "POINT (7 6 2)");
+}
+
+static void test_point_density(void)
+{
+	LWGEOM *geom;
+	LWMPOINT *mpt;
+	// char *ewkt;
+
+	/* POLYGON */
+	geom = lwgeom_from_wkt("POLYGON((1 0,0 1,1 2,2 1,1 0))", LW_PARSER_CHECK_NONE);
+	mpt = lwgeom_to_points(geom, 100);
+	CU_ASSERT_EQUAL(mpt->ngeoms,100);
+	// ewkt = lwgeom_to_ewkt((LWGEOM*)mpt);
+	// printf("%s\n", ewkt);
+	// lwfree(ewkt);
+	lwmpoint_free(mpt);
+
+	mpt = lwgeom_to_points(geom, 1);
+	CU_ASSERT_EQUAL(mpt->ngeoms,1);
+	lwmpoint_free(mpt);
+
+	mpt = lwgeom_to_points(geom, 0);
+	CU_ASSERT_EQUAL(mpt, NULL);
+	lwmpoint_free(mpt);
+
+	lwgeom_free(geom);
+
+	/* MULTIPOLYGON */
+	geom = lwgeom_from_wkt("MULTIPOLYGON(((10 0,0 10,10 20,20 10,10 0)),((0 0,5 0,5 5,0 5,0 0)))", LW_PARSER_CHECK_NONE);
+
+	mpt = lwgeom_to_points(geom, 1000);
+	CU_ASSERT_EQUAL(mpt->ngeoms,1000);
+	lwmpoint_free(mpt);
+
+	mpt = lwgeom_to_points(geom, 1);
+	CU_ASSERT_EQUAL(mpt->ngeoms,1);
+	lwmpoint_free(mpt);
+
+	lwgeom_free(geom);
+}
+
+static void test_lwpoly_construct_circle(void)
+{
+	LWPOLY* p;
+	GBOX* g;
+	const int srid = 4326;
+	const int segments_per_quad = 17;
+	const int x = 10;
+	const int y = 20;
+	const int r = 5;
+
+	/* With normal arguments you should get something circle-y */
+	p = lwpoly_construct_circle(srid, x, y, r, segments_per_quad, LW_TRUE);
+
+	ASSERT_INT_EQUAL(lwgeom_count_vertices(p), segments_per_quad * 4 + 1);
+	ASSERT_INT_EQUAL(lwgeom_get_srid(lwpoly_as_lwgeom(p)), srid)
+
+	g = lwgeom_get_bbox(lwpoly_as_lwgeom(p));
+	CU_ASSERT_DOUBLE_EQUAL(g->xmin, x-r, 0.1);
+	CU_ASSERT_DOUBLE_EQUAL(g->xmax, x+r, 0.1);
+	CU_ASSERT_DOUBLE_EQUAL(g->ymin, y-r, 0.1);
+	CU_ASSERT_DOUBLE_EQUAL(g->ymax, y+r, 0.1);
+
+	CU_ASSERT_DOUBLE_EQUAL(lwgeom_area(p), M_PI*5*5, 0.1);
+
+	lwpoly_free(p);
+
+	/* No segments? No circle. */
+	p = lwpoly_construct_circle(srid, x, y, r, 0, LW_TRUE);
+	CU_ASSERT_TRUE(p == NULL);
+
+	/* Negative radius? No circle. */
+	p = lwpoly_construct_circle(srid, x, y, -1e-3, segments_per_quad, LW_TRUE);
+	CU_ASSERT_TRUE(p == NULL);
+
+	/* Zero radius? Invalid circle */
+	p = lwpoly_construct_circle(srid, x, y, 0, segments_per_quad, LW_TRUE);
+	CU_ASSERT_TRUE(p != NULL);
+	lwpoly_free(p);
+}
+
+static void test_kmeans(void)
+{
+	static int cluster_size = 100;
+	static int num_clusters = 4;
+	static double spread = 1.5;
+	int N = cluster_size * num_clusters;
+	LWGEOM **geoms;
+	int i, j, k=0;
+	int *r;
+
+	geoms = lwalloc(sizeof(LWGEOM*) * N);
+
+	for (j = 0; j < num_clusters; j++) {
+		for (i = 0; i < cluster_size; i++)
+		{
+			double u1 = 1.0 * rand() / RAND_MAX;
+			double u2 = 1.0 * rand() / RAND_MAX;
+			double z1 = spread * j + sqrt(-2*log2(u1))*cos(2*M_PI*u2);
+			double z2 = spread * j + sqrt(-2*log2(u1))*sin(2*M_PI*u2);
+
+			LWPOINT *lwp = lwpoint_make2d(SRID_UNKNOWN, z1, z2);
+			geoms[k++] = lwpoint_as_lwgeom(lwp);
+		}
+	}
+
+	r = lwgeom_cluster_2d_kmeans((const LWGEOM **)geoms, N, num_clusters);
+
+	// for (i = 0; i < k; i++)
+	// {
+	// 	printf("[%d] %s\n", r[i], lwgeom_to_ewkt(geoms[i]));
+	// }
+
+	/* Clean up */
+	lwfree(r);
+	for (i = 0; i < k; i++)
+		lwgeom_free(geoms[i]);
+	lwfree(geoms);
+
+	return;
+}
+
 /*
 ** Used by test harness to register the tests in this file.
 */
@@ -983,4 +1207,10 @@ void algorithms_suite_setup(void)
 	PG_ADD_TEST(suite,test_geohash_point_as_int);
 	PG_ADD_TEST(suite,test_isclosed);
 	PG_ADD_TEST(suite,test_lwgeom_simplify);
+	PG_ADD_TEST(suite,test_lw_arc_center);
+	PG_ADD_TEST(suite,test_point_density);
+	PG_ADD_TEST(suite,test_kmeans);
+	PG_ADD_TEST(suite,test_median_handles_3d_correctly);
+	PG_ADD_TEST(suite,test_median_robustness);
+	PG_ADD_TEST(suite,test_lwpoly_construct_circle);
 }

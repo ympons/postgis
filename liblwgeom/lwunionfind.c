@@ -3,12 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2015 Daniel Baston <dbaston@gmail.com>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "liblwgeom.h"
 #include "lwunionfind.h"
@@ -47,12 +60,24 @@ UF_destroy(UNIONFIND* uf)
 uint32_t
 UF_find (UNIONFIND* uf, uint32_t i)
 {
-	while (uf->clusters[i] != i)
-	{
-		uf->clusters[i] = uf->clusters[uf->clusters[i]];
-		i = uf->clusters[i];
+	uint32_t base = i;
+	while (uf->clusters[base] != base) {
+		base = uf->clusters[base];
 	}
+
+	while (i != base) {
+		uint32_t next = uf->clusters[i];
+		uf->clusters[i] = base;
+		i = next;
+	}
+
 	return i;
+}
+
+uint32_t
+UF_size (UNIONFIND* uf, uint32_t i)
+{
+    return uf->cluster_sizes[UF_find(uf, i)];
 }
 
 void
@@ -115,6 +140,41 @@ UF_ordered_by_cluster(UNIONFIND* uf)
 	lwfree(cluster_id_ptr_by_elem_id);
 	return ordered_ids;
 }
+
+uint32_t*
+UF_get_collapsed_cluster_ids(UNIONFIND* uf, const char* is_in_cluster)
+{
+	uint32_t* ordered_components = UF_ordered_by_cluster(uf);
+	uint32_t* new_ids = lwalloc(uf->N * sizeof(uint32_t));
+	uint32_t last_old_id, current_new_id, i;
+	char encountered_cluster = LW_FALSE;
+
+	current_new_id = 0;
+	for (i = 0; i < uf->N; i++)
+	{
+		uint32_t j = ordered_components[i];
+		if (!is_in_cluster || is_in_cluster[j])
+		{
+			uint32_t current_old_id = UF_find(uf, j);
+			if (!encountered_cluster)
+			{
+				encountered_cluster = LW_TRUE;
+				last_old_id = current_old_id;
+			}
+
+			if (current_old_id != last_old_id)
+				current_new_id++;
+
+			new_ids[j] = current_new_id;
+			last_old_id = current_old_id;
+		}
+	}
+
+	lwfree(ordered_components);
+
+	return new_ids;
+}
+
 static int
 cmp_int(const void *a, const void *b)
 {

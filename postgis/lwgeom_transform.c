@@ -3,12 +3,25 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright (C) 2001-2003 Refractions Research Inc.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "postgres.h"
 #include "fmgr.h"
@@ -109,22 +122,8 @@ Datum transform_geom(PG_FUNCTION_ARGS)
 	int32 result_srid ;
 	char *pj_errstr;
 
-
-
 	result_srid = PG_GETARG_INT32(3);
-	if (result_srid == SRID_UNKNOWN)
-	{
-		elog(ERROR,"tranform: destination SRID = %d",SRID_UNKNOWN);
-		PG_RETURN_NULL();
-	}
-
 	geom = PG_GETARG_GSERIALIZED_P_COPY(0);
-	if (gserialized_get_srid(geom) == SRID_UNKNOWN)
-	{
-		pfree(geom);
-		elog(ERROR,"transform_geom: source SRID = %d",SRID_UNKNOWN);
-		PG_RETURN_NULL();
-	}
 
 	/* Set the search path if we haven't already */
 	SetPROJ4LibPath();

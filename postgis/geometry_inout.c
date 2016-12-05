@@ -1,3 +1,27 @@
+/**********************************************************************
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * ^copyright^
+ *
+ **********************************************************************/
+
 #include "postgres.h"
 #include "utils/geo_decls.h"
 
@@ -153,7 +177,7 @@ Datum path_to_geometry(PG_FUNCTION_ARGS)
 	for ( i = 0; i < path->npts; i++ )
 	{
 		p = path->p[i];
-		pt.x = p.x; 
+		pt.x = p.x;
 		pt.y = p.y;
 		ptarray_append_point(pa, &pt, LW_FALSE);
 	}
@@ -252,7 +276,7 @@ Datum polygon_to_geometry(PG_FUNCTION_ARGS)
 	{
 		POINT4D pt;
 		p = polygon->p[i % polygon->npts];
-		pt.x = p.x; 
+		pt.x = p.x;
 		pt.y = p.y;
 		ptarray_append_point(pa, &pt, LW_FALSE);
 	}

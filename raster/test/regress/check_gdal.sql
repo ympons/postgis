@@ -1,19 +1,19 @@
 -- postgis.gdal_datapath
-SELECT 
+SELECT
 	CASE
 		WHEN strpos(postgis_gdal_version(), 'GDAL_DATA') <> 0
 			THEN false
 		ELSE NULL
 	END;
 SET postgis.gdal_datapath = '';
-SELECT 
+SELECT
 	CASE
 		WHEN strpos(postgis_gdal_version(), 'GDAL_DATA') <> 0
 			THEN NULL
 		ELSE TRUE
 	END;
 SET postgis.gdal_datapath = default;
-SELECT 
+SELECT
 	CASE
 		WHEN strpos(postgis_gdal_version(), 'GDAL_DATA') <> 0
 			THEN false
@@ -22,7 +22,7 @@ SELECT
 
 -- postgis.gdal_enabled_drivers
 SET client_min_messages TO warning;
-
+SET postgis.gdal_enabled_drivers = 'DISABLE_ALL';
 SELECT count(*) = 0 FROM ST_GDALDrivers();
 SHOW postgis.gdal_enabled_drivers;
 
@@ -35,9 +35,5 @@ SHOW postgis.gdal_enabled_drivers;
 SELECT count(*) = 3 FROM ST_GDALDrivers();
 
 SET postgis.gdal_enabled_drivers = 'DISABLE_ALL';
-SHOW postgis.gdal_enabled_drivers;
-SELECT count(*) = 0 FROM ST_GDALDrivers();
-
-SET postgis.gdal_enabled_drivers = default;
 SHOW postgis.gdal_enabled_drivers;
 SELECT count(*) = 0 FROM ST_GDALDrivers();

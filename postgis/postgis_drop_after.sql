@@ -4,7 +4,7 @@
 -- PostGIS - Spatial Types for PostgreSQL
 -- http://postgis.net
 --
--- Copyright (C) 2011-2012 Sandro Santilli <strk@keybit.net>
+-- Copyright (C) 2011-2012 Sandro Santilli <strk@kbt.io>
 -- Copyright (C) 2010-2012 Regina Obe <lr@pcorp.us>
 -- Copyright (C) 2009      Paul Ramsey <pramsey@cleverelephant.ca>
 --
@@ -28,6 +28,14 @@ DROP AGGREGATE IF EXISTS st_geomunion(geometry);
 DROP AGGREGATE IF EXISTS accum_old(geometry);
 DROP AGGREGATE IF EXISTS st_accum_old(geometry);
 
+DROP AGGREGATE IF EXISTS st_astwkb_agg(geometry, integer); -- temporarely introduced before 2.2.0 final
+DROP AGGREGATE IF EXISTS st_astwkb_agg(geometry, integer, bigint); -- temporarely introduced before 2.2.0 final
+DROP AGGREGATE IF EXISTS st_astwkbagg(geometry, integer); -- temporarely introduced before 2.2.0 final
+DROP AGGREGATE IF EXISTS st_astwkbagg(geometry, integer, bigint); -- temporarely introduced before 2.2.0 final
+DROP AGGREGATE IF EXISTS st_astwkbagg(geometry, integer, bigint, boolean); -- temporarely introduced before 2.2.0 final
+DROP AGGREGATE IF EXISTS st_astwkbagg(geometry, integer, bigint, boolean, boolean); -- temporarely introduced before 2.2.0 final
+
+
 -- BEGIN Management functions that now have default param for typmod --
 DROP FUNCTION IF EXISTS AddGeometryColumn(varchar,varchar,varchar,varchar,integer,varchar,integer);
 DROP FUNCTION IF EXISTS AddGeometryColumn(varchar,varchar,varchar,integer,varchar,integer);
@@ -47,10 +55,10 @@ DROP FUNCTION IF EXISTS box2d_overlap(box2d, box2d);
 DROP FUNCTION IF EXISTS box2d_same(box2d, box2d);
 DROP FUNCTION IF EXISTS box2d_intersects(box2d, box2d);
 DROP FUNCTION IF EXISTS st_area(geography); -- this one changed to use default parameters
-DROP FUNCTION IF EXISTS ST_AsGeoJson(geometry); -- this one changed to use default args 
-DROP FUNCTION IF EXISTS ST_AsGeoJson(geography); -- this one changed to use default args 
-DROP FUNCTION IF EXISTS ST_AsGeoJson(geometry,int4); -- this one changed to use default args 
-DROP FUNCTION IF EXISTS ST_AsGeoJson(geography,int4); -- this one changed to use default args 
+DROP FUNCTION IF EXISTS ST_AsGeoJson(geometry); -- this one changed to use default args
+DROP FUNCTION IF EXISTS ST_AsGeoJson(geography); -- this one changed to use default args
+DROP FUNCTION IF EXISTS ST_AsGeoJson(geometry,int4); -- this one changed to use default args
+DROP FUNCTION IF EXISTS ST_AsGeoJson(geography,int4); -- this one changed to use default args
 DROP FUNCTION IF EXISTS ST_AsGeoJson(int4,geometry); -- this one changed to use default args
 DROP FUNCTION IF EXISTS ST_AsGeoJson(int4,geography); -- this one changed to use default args
 DROP FUNCTION IF EXISTS ST_AsGeoJson(int4,geometry,int4); -- this one changed to use default args
@@ -104,8 +112,8 @@ DROP FUNCTION IF EXISTS st_geometry(text);
 DROP FUNCTION IF EXISTS st_geometry(bytea);
 DROP FUNCTION IF EXISTS st_bytea(geometry);
 DROP FUNCTION IF EXISTS st_addbbox(geometry);
-DROP FUNCTION IF EXISTS st_dropbbox(geometry); 
-DROP FUNCTION IF EXISTS st_hasbbox(geometry); 
+DROP FUNCTION IF EXISTS st_dropbbox(geometry);
+DROP FUNCTION IF EXISTS st_hasbbox(geometry);
 DROP FUNCTION IF EXISTS cache_bbox();
 DROP FUNCTION IF EXISTS st_cache_bbox();
 DROP FUNCTION IF EXISTS ST_GeoHash(geometry); -- changed to use default args
@@ -138,6 +146,7 @@ DROP FUNCTION IF EXISTS st_geometry_eq(geometry, geometry);
 DROP FUNCTION IF EXISTS st_geometry_cmp(geometry, geometry);
 DROP FUNCTION IF EXISTS SnapToGrid(geometry, float8, float8);
 DROP FUNCTION IF EXISTS st_removerepeatedpoints(geometry);
+DROP FUNCTION IF EXISTS st_voronoi(geometry, geometry, double precision, boolean); --temporarely introduced before 2.3.0 final
 
 DROP FUNCTION IF EXISTS geometry_gist_sel_2d (internal, oid, internal, int4);
 DROP FUNCTION IF EXISTS geometry_gist_joinsel_2d(internal, oid, internal, smallint);
@@ -147,3 +156,17 @@ DROP FUNCTION IF EXISTS geography_gist_join_selectivity(internal, oid, internal,
 DROP FUNCTION IF EXISTS ST_AsBinary(text); -- deprecated in 2.0
 DROP FUNCTION IF EXISTS postgis_uses_stats(); -- deprecated in 2.0
 
+DROP FUNCTION IF EXISTS st_astwkb(geometry,integer,bigint,bool,bool); -- temporarely introduced before 2.2.0 final
+DROP FUNCTION IF EXISTS pgis_twkb_accum_transfn(internal,geometry,integer); -- temporarely introduced before 2.2.0 final
+DROP FUNCTION IF EXISTS pgis_twkb_accum_transfn(internal,geometry,integer,bigint); -- temporarely introduced before 2.2.0 final
+DROP FUNCTION IF EXISTS pgis_twkb_accum_transfn(internal,geometry,integer,bigint,bool); -- temporarely introduced before 2.2.0 final
+DROP FUNCTION IF EXISTS pgis_twkb_accum_transfn(internal,geometry,integer,bigint,bool,bool); -- temporarely introduced before 2.2.0 final
+DROP FUNCTION IF EXISTS pgis_twkb_accum_finalfn(internal); -- temporarely introduced before 2.2.0 final
+
+DROP FUNCTION IF EXISTS st_seteffectivearea(geometry, double precision); -- temporarely introduced before 2.2.0 final
+
+DROP FUNCTION IF EXISTS geometry_distance_box_nd(geometry,geometry); -- temporarely introduced before 2.2.0 final
+
+-- pgis_abs type was increased from 8 bytes in 2.1 to 16 bytes in 2.2
+-- See #3460
+UPDATE pg_type SET typlen=16 WHERE typname='pgis_abs' AND typlen=8;

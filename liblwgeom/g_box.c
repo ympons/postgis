@@ -1,12 +1,27 @@
 /**********************************************************************
  *
  * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2009 Paul Ramsey <pramsey@cleverelephant.ca>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #if !HAVE_ISFINITE
 #endif
@@ -105,6 +120,26 @@ void gbox_expand(GBOX *g, double d)
 	{
 		g->mmin -= d;
 		g->mmax += d;
+	}
+}
+
+void gbox_expand_xyzm(GBOX *g, double dx, double dy, double dz, double dm)
+{
+	g->xmin -= dx;
+	g->xmax += dx;
+	g->ymin -= dy;
+	g->ymax += dy;
+
+	if (FLAGS_GET_Z(g->flags))
+	{
+		g->zmin -= dz;
+		g->zmax += dz;
+	}
+
+	if (FLAGS_GET_M(g->flags))
+	{
+		g->mmin -= dm;
+		g->mmax += dm;
 	}
 }
 
@@ -296,7 +331,7 @@ int gbox_overlaps(const GBOX *g1, const GBOX *g2)
 	return LW_TRUE;
 }
 
-int 
+int
 gbox_overlaps_2d(const GBOX *g1, const GBOX *g2)
 {
 
@@ -312,7 +347,7 @@ gbox_overlaps_2d(const GBOX *g1, const GBOX *g2)
 	return LW_TRUE;
 }
 
-int 
+int
 gbox_contains_2d(const GBOX *g1, const GBOX *g2)
 {
 	if ( ( g2->xmin < g1->xmin ) || ( g2->xmax > g1->xmax ) ||
@@ -323,7 +358,7 @@ gbox_contains_2d(const GBOX *g1, const GBOX *g2)
 	return LW_TRUE;
 }
 
-int 
+int
 gbox_contains_point2d(const GBOX *g, const POINT2D *p)
 {
 	if ( ( g->xmin <= p->x ) && ( g->xmax >= p->x ) &&
@@ -567,7 +602,7 @@ static int lwcircstring_calculate_gbox_cartesian(LWCIRCSTRING *curve, GBOX *gbox
 
 	/* Initialize */
 	gbox->xmin = gbox->ymin = gbox->zmin = gbox->mmin = FLT_MAX;
-	gbox->xmax = gbox->ymax = gbox->zmax = gbox->mmax = FLT_MIN;
+	gbox->xmax = gbox->ymax = gbox->zmax = gbox->mmax = -1*FLT_MAX;
 
 	for ( i = 2; i < curve->points->npoints; i += 2 )
 	{
@@ -626,8 +661,8 @@ static int lwcollection_calculate_gbox_cartesian(LWCOLLECTION *coll, GBOX *gbox)
 	{
 		if ( lwgeom_calculate_gbox_cartesian((LWGEOM*)(coll->geoms[i]), &subbox) == LW_SUCCESS )
 		{
-			/* Keep a copy of the sub-bounding box for later 
-			if ( coll->geoms[i]->bbox ) 
+			/* Keep a copy of the sub-bounding box for later
+			if ( coll->geoms[i]->bbox )
 				lwfree(coll->geoms[i]->bbox);
 			coll->geoms[i]->bbox = gbox_copy(&subbox); */
 			if ( first )

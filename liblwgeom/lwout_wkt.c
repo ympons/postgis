@@ -1,13 +1,27 @@
 /**********************************************************************
  *
  * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
  *
  * Copyright (C) 2009 Paul Ramsey <pramsey@cleverelephant.ca>
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include "liblwgeom_internal.h"
 #include "lwgeom_log.h"
@@ -50,15 +64,15 @@ static void dimension_qualifiers_to_wkt_sb(const LWGEOM *geom, stringbuffer_t *s
 
 /*
 * Write an empty token out, padding with a space if
-* necessary. 
+* necessary.
 */
 static void empty_to_wkt_sb(stringbuffer_t *sb)
 {
 	if ( ! strchr(" ,(", stringbuffer_lastchar(sb)) ) /* "EMPTY" */
-	{ 
-		stringbuffer_append(sb, " "); 
+	{
+		stringbuffer_append(sb, " ");
 	}
-	stringbuffer_append(sb, "EMPTY"); 
+	stringbuffer_append(sb, "EMPTY");
 }
 
 /*
@@ -141,7 +155,7 @@ static void lwline_to_wkt_sb(const LWLINE *line, stringbuffer_t *sb, int precisi
 		dimension_qualifiers_to_wkt_sb((LWGEOM*)line, sb, variant);
 	}
 	if ( lwline_is_empty(line) )
-	{  
+	{
 		empty_to_wkt_sb(sb);
 		return;
 	}
@@ -323,7 +337,7 @@ static void lwcompound_to_wkt_sb(const LWCOMPOUND *comp, stringbuffer_t *sb, int
 		}
 		else
 		{
-			lwerror("lwcompound_to_wkt_sb: Unknown type recieved %d - %s", type, lwtype_name(type));
+			lwerror("lwcompound_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
 		}
 	}
 	stringbuffer_append(sb, ")");
@@ -370,7 +384,7 @@ static void lwcurvepoly_to_wkt_sb(const LWCURVEPOLY *cpoly, stringbuffer_t *sb, 
 			lwcompound_to_wkt_sb((LWCOMPOUND*)cpoly->rings[i], sb, precision, variant );
 			break;
 		default:
-			lwerror("lwcurvepoly_to_wkt_sb: Unknown type recieved %d - %s", type, lwtype_name(type));
+			lwerror("lwcurvepoly_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
 		}
 	}
 	stringbuffer_append(sb, ")");
@@ -418,7 +432,7 @@ static void lwmcurve_to_wkt_sb(const LWMCURVE *mcurv, stringbuffer_t *sb, int pr
 			lwcompound_to_wkt_sb((LWCOMPOUND*)mcurv->geoms[i], sb, precision, variant );
 			break;
 		default:
-			lwerror("lwmcurve_to_wkt_sb: Unknown type recieved %d - %s", type, lwtype_name(type));
+			lwerror("lwmcurve_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
 		}
 	}
 	stringbuffer_append(sb, ")");
@@ -462,7 +476,7 @@ static void lwmsurface_to_wkt_sb(const LWMSURFACE *msurf, stringbuffer_t *sb, in
 			lwcurvepoly_to_wkt_sb((LWCURVEPOLY*)msurf->geoms[i], sb, precision, variant);
 			break;
 		default:
-			lwerror("lwmsurface_to_wkt_sb: Unknown type recieved %d - %s", type, lwtype_name(type));
+			lwerror("lwmsurface_to_wkt_sb: Unknown type received %d - %s", type, lwtype_name(type));
 		}
 	}
 	stringbuffer_append(sb, ")");
@@ -499,7 +513,7 @@ static void lwcollection_to_wkt_sb(const LWCOLLECTION *collection, stringbuffer_
 }
 
 /*
-* TRIANGLE 
+* TRIANGLE
 */
 static void lwtriangle_to_wkt_sb(const LWTRIANGLE *tri, stringbuffer_t *sb, int precision, uint8_t variant)
 {
@@ -509,14 +523,14 @@ static void lwtriangle_to_wkt_sb(const LWTRIANGLE *tri, stringbuffer_t *sb, int 
 		dimension_qualifiers_to_wkt_sb((LWGEOM*)tri, sb, variant);
 	}
 	if ( lwtriangle_is_empty(tri) )
-	{  
+	{
 		empty_to_wkt_sb(sb);
 		return;
 	}
 
 	stringbuffer_append(sb, "("); /* Triangles have extraneous brackets */
 	ptarray_to_wkt_sb(tri->points, sb, precision, variant);
-	stringbuffer_append(sb, ")"); 
+	stringbuffer_append(sb, ")");
 }
 
 /*

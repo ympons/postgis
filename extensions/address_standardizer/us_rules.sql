@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS us_rules (
-    id serial, rule text, is_custom boolean NOT NULL DEFAULT true, CONSTRAINT pk_us_rules PRIMARY KEY(id) 
+    id serial, rule text, is_custom boolean NOT NULL DEFAULT true, CONSTRAINT pk_us_rules PRIMARY KEY(id)
 );
 
 -- this will be needed for upgrading to prevent purging of custom entries
@@ -3436,7 +3436,7 @@ INSERT INTO us_rules (rule) VALUES ('18 0 -1 1 1 -1 3 12');
 INSERT INTO us_rules (rule) VALUES ('25 -1 1 -1 3 12');
 INSERT INTO us_rules (rule) VALUES ('21 0 -1 1 1 -1 3 12');
 INSERT INTO us_rules (rule) VALUES ('0 21 -1 1 1 -1 3 9');
-INSERT INTO us_rules (rule) VALUES ('0 0 -1 1 1 -1 3 9');
+INSERT INTO us_rules (rule) VALUES ('0 0 -1 1 1 -1 3 15');
 INSERT INTO us_rules (rule) VALUES ('21 0 0 -1 1 1 1 -1 3 9');
 INSERT INTO us_rules (rule) VALUES ('0 0 21 -1 1 1 1 -1 3 9');
 INSERT INTO us_rules (rule) VALUES ('0 0 18 -1 1 1 1 -1 3 9');
@@ -4375,6 +4375,7 @@ INSERT INTO us_rules (rule) VALUES ('0 22 6 3 -1 4 2 5 3 -1 1 9');
 INSERT INTO us_rules (rule) VALUES ('0 3 6 -1 4 3 5 -1 1 9');
 INSERT INTO us_rules (rule) VALUES ('0 3 1 2 -1 1 3 5 6 -1 1 17');
 INSERT INTO us_rules (rule) VALUES ('0 3 1 2 22 -1 1 3 5 6 7 -1 1 17');
+INSERT INTO us_rules (rule) VALUES ('0 1 6 -1 1 5 5 -1 1 9');
 INSERT INTO us_rules (rule) VALUES ('-1');
 
 

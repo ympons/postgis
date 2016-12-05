@@ -144,13 +144,6 @@ ERROR:  First argument must be a LINESTRING
 #1060|FFFFFFFF2
 #1273|t
 #1273.1|t
-ERROR:  stats for "t.g" do not exist
-ERROR:  stats for "t.g" do not exist
-WARNING:  ST_Estimated_Extent signature was deprecated in 2.1.0. Please use ST_EstimatedExtent
-ERROR:  stats for "t.g" do not exist
-ERROR:  stats for "t.g" do not exist
-#877.4|-10.15000|20.15000|-50.40000|30.40000
-#877.5|-10.15000|20.15000|-50.40000|30.40000
 #1292|GEOMETRYCOLLECTION(POINT(180 90),POLYGON((140 50,150 50,180 50,140 50),(140 60,150 60,180 60,140 60)))
 NOTICE:  Coordinate values were coerced into range [-180 -90, 180 90] for GEOGRAPHY
 NOTICE:  Coordinate values were coerced into range [-180 -90, 180 90] for GEOGRAPHY
@@ -214,7 +207,7 @@ ERROR:  invalid SRID: 999000 not found in spatial_ref_sys
 NOTICE:  SRID value -1 converted to the officially unknown SRID value 0
 #1596.6|public.road_pg.roads_geom SRID changed to 0
 #1596.7|0
-#1596|Point[BGS]
+#1596|Point[GS]
 #1695|MULTIPOLYGON EMPTY
 #1697.1|0
 #1697.2|0
@@ -244,6 +237,7 @@ ERROR:  invalid GML representation
 #2110.2|t
 #2110.3|t
 #2145|6792004
+#2232|M 0 0 l 0 0 1 0 0 0 1 0 0 0
 #2307|MULTIPOLYGON(((-41.1932 -7.3257,-41.1616 -7.3257,-41.1569 -7.3257,-41.1569 -7.3483,-41.1932 -7.3483,-41.1932 -7.3257),(-41.1616 -7.3257,-41.1879 -7.3257,-41.1879 -7.3425,-41.1616 -7.3425,-41.1616 -7.3257)))
 #2409|GeometryCollection[B] with 2 elements
   MultiSurface[] with 2 elements
@@ -275,4 +269,35 @@ ERROR:  invalid GML representation
 #2788|f|Self-intersection|POINT(1 1)
 #2870|Point[GS]
 #2956|t
+#2965|LINESTRING(20.9511664253809 52.3984560730436)
+#2996|t
+#3119a|121
+#3119b|291
+#3119c|615
+#3119d|291
 #3172|LINESTRING M (0 0 1,0 0 2)
+#3300|POLYGON((-71.7821 42.2622,-71.7821 42.9067,-71.029 42.9067,-71.029 42.2622,-71.7821 42.2622))
+#3355|t
+#3356|LineString[] with 2 points|LineString[GS] with 2 points|LineString[GS] with 2 points
+#3356|LineString[B] with 3 points|LineString[BGS] with 3 points|LineString[BGS] with 3 points
+#3367|POLYGON EMPTY
+#3368|\x660001011fb98788d35ed6fbcdc831c580012b959f01469d8d0e9305ff8618ed08b1b607e302a614fe70bc4682b303b4379ab503a228eeb603e2138eb802900cc0b802ba04dab802b801a8840cb0229cca06f401c216f403a016ea05d0c301a8b301cc189226ac15ee27f811a029b40eac2ae00a902b8407c82b9e03d0e305801dfad3239504ce7e8d01e2f701f6019b04d1e2279bf901ff01
+#3375|GEOMETRYCOLLECTION(POINT(0 -7))
+#3399|1|1
+#3399|10|10
+#3399|100|100
+#3399|1000|1000
+ERROR:  invalid KML representation
+#3437a|5
+#3437b|5
+#3437c|5
+#3437d|5
+#3437e|5
+#3470|t
+#3470b|50
+#3569|BOX(1 2,3 4)
+#3579|f|t
+#3620a|POINT(3 7)
+#3620b|POINT(2 8)
+#3627a|o}~~|AdshNoSsBgd@eGoBlm@wKhj@~@?
+#3627b|t

@@ -2,12 +2,26 @@
  *
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
  * Copyright 2001-2006 Refractions Research Inc.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,7 +78,7 @@ lwgeom_has_arc(const LWGEOM *geom)
 		col = (LWCOLLECTION *)geom;
 		for (i=0; i<col->ngeoms; i++)
 		{
-			if (lwgeom_has_arc(col->geoms[i]) == LW_TRUE) 
+			if (lwgeom_has_arc(col->geoms[i]) == LW_TRUE)
 				return LW_TRUE;
 		}
 		return LW_FALSE;
@@ -127,7 +141,7 @@ lwcircle_stroke(const POINT4D *p1, const POINT4D *p2, const POINT4D *p3, uint32_
 	if ( (radius < 0.0 || p2_side == 0) && ! is_circle )
 	    return NULL;
 		
-	/* The side of the p1/p3 line that p2 falls on dictates the sweep  
+	/* The side of the p1/p3 line that p2 falls on dictates the sweep
 	   direction from p1 to p3. */
 	if ( p2_side == -1 )
 		clockwise = LW_TRUE;
@@ -175,7 +189,7 @@ lwcircle_stroke(const POINT4D *p1, const POINT4D *p2, const POINT4D *p3, uint32_
 
 	/* Sweep from a1 to a3 */
 	ptarray_append_point(pa, p1, LW_FALSE);
-	for ( angle = a1 + increment; clockwise ? angle > a3 : angle < a3; angle += increment ) 
+	for ( angle = a1 + increment; clockwise ? angle > a3 : angle < a3; angle += increment )
 	{
 		pt.x = center.x + radius * cos(angle);
 		pt.y = center.y + radius * sin(angle);
@@ -428,6 +442,8 @@ lwcollection_stroke(const LWCOLLECTION *collection, uint32_t perQuad)
 		case CURVEPOLYTYPE:
 			geoms[i] = (LWGEOM *)lwcurvepoly_stroke((LWCURVEPOLY *)tmp, perQuad);
 			break;
+		case MULTICURVETYPE:
+		case MULTISURFACETYPE:
 		case COLLECTIONTYPE:
 			geoms[i] = (LWGEOM *)lwcollection_stroke((LWCOLLECTION *)tmp, perQuad);
 			break;
@@ -516,7 +532,7 @@ static int pt_continues_arc(const POINT4D *a1, const POINT4D *a2, const POINT4D 
 	LWDEBUGF(4, "circle_radius=%g, b_distance=%g, diff=%g, percentage=%g", radius, b_distance, diff, diff/radius);
 	
 	/* Is the point b on the circle? */
-	if ( diff < EPSILON_SQLMM ) 
+	if ( diff < EPSILON_SQLMM )
 	{
 		int a2_side = lw_segment_side(t1, t3, t2);
 		int b_side  = lw_segment_side(t1, t3, tb);
@@ -526,7 +542,7 @@ static int pt_continues_arc(const POINT4D *a1, const POINT4D *a2, const POINT4D 
 		/* Is the angle similar to the previous one ? */
 		diff = fabs(angle1 - angle2);
 		LWDEBUGF(4, " angle1: %g, angle2: %g, diff:%g", angle1, angle2, diff);
-		if ( diff > EPSILON_SQLMM ) 
+		if ( diff > EPSILON_SQLMM )
 		{
 			return LW_FALSE;
 		}
@@ -673,7 +689,7 @@ pta_unstroke(const POINTARRAY *points, int type, int srid)
 				lw_arc_center((POINT2D*)&first, (POINT2D*)&b, (POINT2D*)&a1, (POINT2D*)&center);
 				angle = lw_arc_angle((POINT2D*)&first, (POINT2D*)&center, (POINT2D*)&b);
         int p2_side = lw_segment_side((POINT2D*)&first, (POINT2D*)&a1, (POINT2D*)&b);
-        if ( p2_side >= 0 ) angle = -angle; 
+        if ( p2_side >= 0 ) angle = -angle;
 
 				if ( angle < 0 ) angle = 2 * M_PI + angle;
 				num_quadrants = ( 4 * angle ) / ( 2 * M_PI );
@@ -808,7 +824,7 @@ lwmline_unstroke(const LWMLINE *mline)
 	return (LWGEOM *)lwcollection_construct(MULTICURVETYPE, mline->srid, NULL, mline->ngeoms, geoms);
 }
 
-LWGEOM * 
+LWGEOM *
 lwmpolygon_unstroke(const LWMPOLY *mpoly)
 {
 	LWGEOM **geoms;

@@ -44,6 +44,35 @@
 			</xsl:for-each>
 			</itemizedlist>
 		</sect1>
+		
+		<sect1 id="PostGIS_Window_Functions">
+			<title>PostGIS Window Functions</title>
+			<para>The functions given below are spatial window functions provided with PostGIS that can be used just like any other sql window function such as row_numer(), lead(), lag(). All these require an SQL OVER() clause.</para>
+			<itemizedlist>
+			<!-- Pull out the purpose section for each ref entry and strip whitespace and put in a variable to be tagged unto each function comment  -->
+			<xsl:for-each select='//refentry'>
+				<xsl:sort select="refnamediv/refname"/>
+				<xsl:variable name='comment'>
+					<xsl:value-of select="normalize-space(translate(translate(refnamediv/refpurpose,'&#x0d;&#x0a;', ' '), '&#09;', ' '))"/>
+				</xsl:variable>
+				<xsl:variable name="refid">
+					<xsl:value-of select="@id" />
+				</xsl:variable>
+				<xsl:variable name="refname">
+					<xsl:value-of select="refnamediv/refname" />
+				</xsl:variable>
+
+			<!-- For each function prototype if it takes a geometry set then catalog it as an aggregate function  -->
+				<xsl:for-each select="refsynopsisdiv/funcsynopsis/funcprototype">
+					<xsl:choose>
+						<xsl:when test="contains(paramdef/type,' winset')">
+							 <listitem><simpara><link linkend="{$refid}"><xsl:value-of select="$refname" /></link> - <xsl:value-of select="$comment" /></simpara></listitem>
+						</xsl:when>
+					</xsl:choose>
+				</xsl:for-each>
+			</xsl:for-each>
+			</itemizedlist>
+		</sect1>
 
 		<sect1 id="PostGIS_SQLMM_Functions">
 			<title>PostGIS SQL-MM Compliant Functions</title>
@@ -81,7 +110,7 @@
 			<title>PostGIS Geography Support Functions</title>
 			<para>The functions and operators given below are PostGIS functions/operators that take as input or return as output a <link linkend="PostGIS_Geography">geography</link> data type object.</para>
 			<note><para>Functions with a (T) are not native geodetic functions, and use a ST_Transform call to and from geometry to do the operation.  As a result, they may not behave as expected when going over dateline, poles, 
-				and for large geometries or geometry pairs that cover more than one UTM zone. Basic tranform - (favoring UTM, Lambert Azimuthal (North/South), and falling back on mercator in worst case scenario)</para></note>
+				and for large geometries or geometry pairs that cover more than one UTM zone. Basic transform - (favoring UTM, Lambert Azimuthal (North/South), and falling back on mercator in worst case scenario)</para></note>
 				<itemizedlist>
 			<!-- Pull out the purpose section for each ref entry and strip whitespace and put in a variable to be tagged unto each function comment  -->
 				<xsl:for-each select='//refentry'>
@@ -220,7 +249,7 @@
 
 		<sect1 id="PostGIS_Curved_GeometryFunctions">
 			<title>PostGIS Curved Geometry Support Functions</title>
-			<para>The functions given below are PostGIS functions that can use CIRCULARSTRING, CURVEDPOLYGON, and other curved geometry types</para>
+			<para>The functions given below are PostGIS functions that can use CIRCULARSTRING, CURVEPOLYGON, and other curved geometry types</para>
 				<itemizedlist>
 			<!-- Pull out the purpose section for each ref entry and strip whitespace and put in a variable to be tagged unto each function comment  -->
 				<xsl:for-each select='//refentry'>
@@ -351,7 +380,7 @@
 								<xsl:choose>
 									<!-- direct support -->
 									<xsl:when test="contains(refsynopsisdiv/funcsynopsis,'geometry') or contains(refsynopsisdiv/funcsynopsis/funcprototype/funcdef,'geometry')">
-										<entry><xsl:value-of select="$matrix_checkmark" disable-output-escaping="yes"/></entry>
+										<entry><xsl:choose><xsl:when test="contains(.,'needs SFCGAL')"><xsl:value-of select="$matrix_sfcgal_required" disable-output-escaping="yes"/></xsl:when><xsl:otherwise><xsl:value-of select="$matrix_checkmark" disable-output-escaping="yes"/></xsl:otherwise></xsl:choose></entry>
 									</xsl:when>
 									<!-- support via autocast -->
 									<xsl:when test="contains(refsynopsisdiv/funcsynopsis,'box') or contains(refsynopsisdiv/funcsynopsis/funcprototype/funcdef,'box')">
@@ -450,12 +479,76 @@
 		</para>
 	   </sect1>
 
-		<sect1 id="NewFunctions">
+	   <sect1 id="NewFunctions">
 			<title>New, Enhanced or changed PostGIS Functions</title>
-				<sect2 id="NewFunctions_2_2">
+			<note><para>PostGIS 2.3.0: PostgreSQL 9.6+ support for parallel queries.</para></note>
+			<note><para>PostGIS 2.3.0: PostgreSQL 9.4+ support for BRIN indexes. Refer to <xref linkend="brin_indexes" />.</para></note>
+			<note><para>PostGIS 2.3.0: Tiger Geocoder upgraded to work with TIGER 2016 data.</para></note>
+			<sect2 id="NewFunctions_2_3">
+				<title>PostGIS Functions new or enhanced in 2.3</title>
+				<para>The functions given below are PostGIS functions that were added or enhanced.</para>
+
+				<para>Functions new in PostGIS 2.3</para>
+				<itemizedlist>
+				<!-- Pull out the purpose section for each ref entry and strip whitespace and put in a variable to be tagged unto each function comment  -->
+					<xsl:for-each select='//refentry'>
+						<xsl:sort select="refnamediv/refname"/>
+						<xsl:variable name='comment'>
+							<xsl:value-of select="normalize-space(translate(translate(refnamediv/refpurpose,'&#x0d;&#x0a;', ' '), '&#09;', ' '))"/>
+						</xsl:variable>
+						<xsl:variable name="refid">
+							<xsl:value-of select="@id" />
+						</xsl:variable>
+						
+						<xsl:variable name="refname">
+							<xsl:value-of select="refnamediv/refname" />
+						</xsl:variable>
+				
+				
+				<!-- For each section if there is note about availability in this version -->
+							<xsl:for-each select="refsection">
+								<xsl:for-each select="para | */para">
+									<xsl:choose>
+										<xsl:when test="contains(.,'Availability: 2.3')">
+											<listitem><simpara><link linkend="{$refid}"><xsl:value-of select="$refname" /></link> - <xsl:value-of select="." /><xsl:text> </xsl:text> <xsl:value-of select="$comment" /></simpara></listitem>
+										</xsl:when>
+									</xsl:choose>
+								</xsl:for-each>
+							</xsl:for-each>
+					</xsl:for-each>
+				</itemizedlist>
+				
+				<para>The functions given below are PostGIS functions that are enhanced in PostGIS 2.3.</para>
+				<itemizedlist>
+				<!-- Pull out the purpose section for each ref entry   -->
+					<xsl:for-each select='//refentry'>
+						<xsl:sort select="@id"/>
+						<xsl:variable name="refid">
+							<xsl:value-of select="@id" />
+						</xsl:variable>
+						
+						<xsl:variable name="refname">
+							<xsl:value-of select="refnamediv/refname" />
+						</xsl:variable>
+				<!-- For each section if there is note about enhanced in this version -->
+							<xsl:for-each select="refsection">
+								<xsl:for-each select="para | */para">
+									<xsl:choose>
+										<xsl:when test="contains(.,'Enhanced: 2.3')">
+											<listitem><simpara><link linkend="{$refid}"><xsl:value-of select="$refname" /></link> - <xsl:value-of select="." /></simpara></listitem>
+										</xsl:when>
+									</xsl:choose>
+								</xsl:for-each>
+							</xsl:for-each>
+					</xsl:for-each>
+				</itemizedlist>	
+
+			</sect2>
+			
+			<sect2 id="NewFunctions_2_2">
 				<title>PostGIS Functions new or enhanced in 2.2</title>
 				<para>The functions given below are PostGIS functions that were added or enhanced.</para>
-	
+				
 				<note><para>postgis_sfcgal now can be installed as an extension using CREATE EXTENSION postgis_sfcgal;</para></note>
 				<note><para>PostGIS 2.2.0: Tiger Geocoder upgraded to work with TIGER 2015 data.</para></note>
 				<note><para>address_standardizer, address_standardizer_data_us extensions for standardizing address data refer to <xref linkend="Address_Standardizer" /> for details.</para></note>
@@ -475,8 +568,8 @@
 						<xsl:variable name="refname">
 							<xsl:value-of select="refnamediv/refname" />
 						</xsl:variable>
-
-
+				
+				
 				<!-- For each section if there is note about availability in this version -->
 							<xsl:for-each select="refsection">
 								<xsl:for-each select="para | */para">

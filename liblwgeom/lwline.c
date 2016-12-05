@@ -3,13 +3,26 @@
  * PostGIS - Spatial Types for PostgreSQL
  * http://postgis.net
  *
- * Copyright (C) 2012 Sandro Santilli <strk@keybit.net>
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright (C) 2012 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2001-2006 Refractions Research Inc.
  *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU General Public Licence. See the COPYING file.
- *
  **********************************************************************/
+
 
 /* basic LWLINE functions */
 
@@ -83,7 +96,7 @@ void printLWLINE(LWLINE *line)
 
 /* @brief Clone LWLINE object. Serialized point lists are not copied.
  *
- * @see ptarray_clone 
+ * @see ptarray_clone
  */
 LWLINE *
 lwline_clone(const LWLINE *g)
@@ -152,12 +165,13 @@ lwline_same(const LWLINE *l1, const LWLINE *l2)
 LWLINE *
 lwline_from_lwgeom_array(int srid, uint32_t ngeoms, LWGEOM **geoms)
 {
- 	int i;
+	int i;
 	int hasz = LW_FALSE;
 	int hasm = LW_FALSE;
 	POINTARRAY *pa;
 	LWLINE *line;
 	POINT4D pt;
+	LWPOINTITERATOR* it;
 
 	/*
 	 * Find output dimensions, check integrity
@@ -169,7 +183,9 @@ lwline_from_lwgeom_array(int srid, uint32_t ngeoms, LWGEOM **geoms)
 		if ( hasz && hasm ) break; /* Nothing more to learn! */
 	}
 
-	/* ngeoms should be a guess about how many points we have in input */
+	/*
+	 * ngeoms should be a guess about how many points we have in input.
+	 * It's an underestimate for lines and multipoints */
 	pa = ptarray_construct_empty(hasz, hasm, ngeoms);
 	
 	for ( i=0; i < ngeoms; i++ )
@@ -185,7 +201,20 @@ lwline_from_lwgeom_array(int srid, uint32_t ngeoms, LWGEOM **geoms)
 		}
 		else if ( g->type == LINETYPE )
 		{
+			/*
+			 * Append the new line points, de-duplicating against the previous points.
+			 * Duplicated points internal to the linestring are untouched.
+			 */
 			ptarray_append_ptarray(pa, ((LWLINE*)g)->points, -1);
+		}
+		else if ( g->type == MULTIPOINTTYPE )
+		{
+			it = lwpointiterator_create(g);
+			while(lwpointiterator_next(it, &pt))
+			{
+				ptarray_append_point(pa, &pt, LW_TRUE);
+			}
+			lwpointiterator_destroy(it);
 		}
 		else
 		{
@@ -248,7 +277,7 @@ lwline_from_ptarray(int srid, uint32_t npoints, LWPOINT **points)
 
 	if ( pa->npoints > 0 )
 		line = lwline_construct(srid, NULL, pa);
-	else 
+	else
 		line = lwline_construct_empty(srid, hasz, hasm);
 	
 	return line;
@@ -269,7 +298,7 @@ lwline_from_lwmpoint(int srid, const LWMPOINT *mpoint)
 	char hasm = lwgeom_has_m(lwgeom);
 	uint32_t npoints = mpoint->ngeoms;
 
-	if ( lwgeom_is_empty(lwgeom) ) 
+	if ( lwgeom_is_empty(lwgeom) )
 	{
 		return lwline_construct_empty(srid, hasz, hasm);
 	}
@@ -424,9 +453,9 @@ lwline_measured_from_lwline(const LWLINE *lwline, double m_start, double m_end)
 }
 
 LWGEOM*
-lwline_remove_repeated_points(LWLINE *lwline, double tolerance)
+lwline_remove_repeated_points(const LWLINE *lwline, double tolerance)
 {
-	POINTARRAY* npts = ptarray_remove_repeated_points(lwline->points, tolerance);
+	POINTARRAY* npts = ptarray_remove_repeated_points_minpoints(lwline->points, tolerance, 2);
 
 	LWDEBUGF(3, "%s: npts %p", __func__, npts);
 
@@ -535,7 +564,7 @@ LWLINE* lwline_simplify(const LWLINE *iline, double dist, int preserve_collapsed
 			ptarray_append_point(pa, &pt, LW_TRUE);
 		}
 		/* Return null for collapse */
-		else 
+		else
 		{
 			ptarray_free(pa);
 			return NULL;

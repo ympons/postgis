@@ -1,3 +1,27 @@
+/**********************************************************************
+ *
+ * PostGIS - Spatial Types for PostgreSQL
+ * http://postgis.net
+ *
+ * PostGIS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * PostGIS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PostGIS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **********************************************************************
+ *
+ * Copyright 2011 Nicklas Avén
+ *
+ **********************************************************************/
+
 
 /**********************************************************************
  *
@@ -37,25 +61,13 @@ get_3dcross_product(VECTOR3D *v1,VECTOR3D *v2, VECTOR3D *v)
 	return LW_TRUE;
 }
 
-/**
-Used for check compability before sending control to 2D calculations
-in case of mixed dimmentionality*/
-static inline int
-supported_type(const LWGEOM *lwg)
-{
-	int	t = lwg->type;
-	if(t==POINTTYPE || t==LINETYPE || t==POLYGONTYPE)
-		return LW_TRUE;
-	else
-		return LW_FALSE;
-}
 
 /**
-This function is used to create a vertical line used for cases where one if the 
-geometries lacks z-values. The vertical line crosses the 2d point that is closest 
+This function is used to create a vertical line used for cases where one if the
+geometries lacks z-values. The vertical line crosses the 2d point that is closest
 and the z-range is from maxz to minz in the geoemtrie that has z values.
 */
-static 
+static
 LWGEOM* create_v_line(const LWGEOM *lwgeom,double x, double y, int srid)
 {
 	
@@ -72,19 +84,19 @@ LWGEOM* create_v_line(const LWGEOM *lwgeom,double x, double y, int srid)
 	 return (LWGEOM *)lwline_from_ptarray(srid, 2, lwpoints);		
 }
 
-LWGEOM * 
+LWGEOM *
 lwgeom_closest_line_3d(const LWGEOM *lw1, const LWGEOM *lw2)
 {
 	return lw_dist3d_distanceline(lw1, lw2, lw1->srid, DIST_MIN);
 }
 
-LWGEOM * 
+LWGEOM *
 lwgeom_furthest_line_3d(LWGEOM *lw1, LWGEOM *lw2)
 {
 	return lw_dist3d_distanceline(lw1, lw2, lw1->srid, DIST_MAX);
 }
 
-LWGEOM * 
+LWGEOM *
 lwgeom_closest_point_3d(const LWGEOM *lw1, const LWGEOM *lw2)
 {
 	return lw_dist3d_distancepoint(lw1, lw2, lw1->srid, DIST_MIN);
@@ -113,10 +125,6 @@ lw_dist3d_distanceline(const LWGEOM *lw1, const LWGEOM *lw2, int srid, int mode)
 	/*as an infinite z-value at one or two of the geometries*/
 	if(!lwgeom_has_z(lw1) || !lwgeom_has_z(lw2))
 	{
-		if(!supported_type(lw1))
-			lwerror("Unsupported geometry type: %s", lwtype_name(lw1->type));
-		if(!supported_type(lw2))
-			lwerror("Unsupported geometry type: %s", lwtype_name(lw2->type));
 		
 		lwnotice("One or both of the geometries is missing z-value. The unknown z-value will be regarded as \"any value\"");
 		
@@ -221,15 +229,9 @@ lw_dist3d_distancepoint(const LWGEOM *lw1, const LWGEOM *lw2, int srid, int mode
 	/*If not, send it to 2D-calculations which will give the same result*/
 	/*as an infinite z-value at one or two of the geometries*/
 	if(!lwgeom_has_z(lw1) || !lwgeom_has_z(lw2))
-	{
-		if(!supported_type(lw1))
-			lwerror("Unsupported geometry type: %s", lwtype_name(lw1->type));
-		if(!supported_type(lw2))
-			lwerror("Unsupported geometry type: %s", lwtype_name(lw2->type));
-		
+	{		
 		lwnotice("One or both of the geometries is missing z-value. The unknown z-value will be regarded as \"any value\"");
-		
-		
+				
 		if(!lwgeom_has_z(lw1) && !lwgeom_has_z(lw2))
 			return lw_dist2d_distancepoint(lw1, lw2, srid, mode);
 			
@@ -325,11 +327,6 @@ lwgeom_maxdistance3d_tolerance(const LWGEOM *lw1, const LWGEOM *lw2, double tole
 {
 	if(!lwgeom_has_z(lw1) || !lwgeom_has_z(lw2))
 	{
-		if(!supported_type(lw1))
-			lwerror("Unsupported geometry type: %s", lwtype_name(lw1->type));
-		if(!supported_type(lw2))
-			lwerror("Unsupported geometry type: %s", lwtype_name(lw2->type));
-		
 		lwnotice("One or both of the geometries is missing z-value. The unknown z-value will be regarded as \"any value\"");
 		return lwgeom_maxdistance2d_tolerance(lw1, lw2, tolerance);	
 	}
@@ -367,12 +364,8 @@ lwgeom_mindistance3d_tolerance(const LWGEOM *lw1, const LWGEOM *lw2, double tole
 {
 	if(!lwgeom_has_z(lw1) || !lwgeom_has_z(lw2))
 	{
-		if(!supported_type(lw1))
-			lwerror("Unsupported geometry type: %s", lwtype_name(lw1->type));
-		if(!supported_type(lw2))
-			lwerror("Unsupported geometry type: %s", lwtype_name(lw2->type));
-
 		lwnotice("One or both of the geometries is missing z-value. The unknown z-value will be regarded as \"any value\"");
+		
 		return lwgeom_mindistance2d_tolerance(lw1, lw2, tolerance);	
 	}
 	DISTPTS3D thedl;
@@ -618,8 +611,8 @@ lw_dist3d_point_line(LWPOINT *point, LWLINE *line, DISTPTS3D *dl)
 
 Computes point to polygon distance
 For mindistance that means:
-1)find the plane of the polygon 
-2)projecting the point to the plane of the polygon 
+1)find the plane of the polygon
+2)projecting the point to the plane of the polygon
 3)finding if that projected point is inside the polygon, if so the distance is measured to that projected point
 4) if not in polygon above, check the distance against the boundary of the polygon
 for max distance it is always point against boundary
@@ -701,7 +694,7 @@ int lw_dist3d_poly_poly(LWPOLY *poly1, LWPOLY *poly2, DISTPTS3D *dl)
 	if(!define_plane(poly2->rings[0], &plane))
 		return LW_FALSE;
 	
-	/*What we do here is to compare the bondary of one polygon with the other polygon 
+	/*What we do here is to compare the bondary of one polygon with the other polygon
 	and then take the second boudary comparing with the first polygon*/
 	dl->twisted=1;
 	if(!lw_dist3d_ptarray_poly(poly1->rings[0], poly2,&plane, dl))
@@ -901,7 +894,7 @@ lw_dist3d_ptarray_ptarray(POINTARRAY *l1, POINTARRAY *l2,DISTPTS3D *dl)
 
 Finds the two closest points on two linesegments
 */
-int 
+int
 lw_dist3d_seg_seg(POINT3DZ *s1p1, POINT3DZ *s1p2, POINT3DZ *s2p1, POINT3DZ *s2p2, DISTPTS3D *dl)
 {
 	VECTOR3D v1, v2, vl;
@@ -941,10 +934,10 @@ lw_dist3d_seg_seg(POINT3DZ *s1p1, POINT3DZ *s1p2, POINT3DZ *s2p1, POINT3DZ *s2p2
 	c = DOT(v2,v2);
 	d = DOT(v1,vl);
 	e = DOT(v2,vl);
-	D = a*c - b*b; 
+	D = a*c - b*b;
 
 
-	if (D <0.000000001) 
+	if (D <0.000000001)
 	{        /* the lines are almost parallel*/
 		s1k = 0.0; /*If the lines are paralell we try by using the startpoint of first segment. If that gives a projected point on the second line outside segment 2 it wil be found that s2k is >1 or <0.*/
 		if(b>c)   /* use the largest denominator*/
@@ -956,7 +949,7 @@ lw_dist3d_seg_seg(POINT3DZ *s1p1, POINT3DZ *s1p2, POINT3DZ *s2p1, POINT3DZ *s2p2
 			s2k =e/c;
 		}
 	}
-	else 
+	else
 	{
 		s1k = (b*e - c*d) / D;
 		s2k = (a*e - b*d) / D;
@@ -965,7 +958,7 @@ lw_dist3d_seg_seg(POINT3DZ *s1p1, POINT3DZ *s1p2, POINT3DZ *s2p1, POINT3DZ *s2p2
 	/* Now we check if the projected closest point on the infinite lines is outside our segments. If so the combinations with start and end points will be tested*/
 	if(s1k<0.0||s1k>1.0||s2k<0.0||s2k>1.0)
 	{
-		if(s1k<0.0) 
+		if(s1k<0.0)
 		{
 
 			if (!lw_dist3d_pt_seg(s1p1, s2p1, s2p2, dl))
@@ -1018,7 +1011,7 @@ lw_dist3d_seg_seg(POINT3DZ *s1p1, POINT3DZ *s1p2, POINT3DZ *s2p1, POINT3DZ *s2p2
 
 /**
 
-Checking if the point projected on the plane of the polygon actually is inside that polygon. 
+Checking if the point projected on the plane of the polygon actually is inside that polygon.
 If so the mindistance is between that projected point and our original point.
 If not we check from original point to the bounadary.
 If the projected point is inside a hole of the polygon we check the distance to the boudary of that hole.
@@ -1081,7 +1074,7 @@ int lw_dist3d_ptarray_poly(POINTARRAY *pa, LWPOLY *poly,PLANE3D *plane, DISTPTS3
 		
 		/*If s1and s2 has different signs that means they are on different sides of the plane of the polygon.
 		That means that the edge between the points crosses the plane and might intersect with the polygon*/
-		if((s1*s2)<=0) 
+		if((s1*s2)<=0)
 		{
 			f=fabs(s1)/(fabs(s1)+fabs(s2)); /*The size of s1 and s2 is the distance from the point to the plane.*/
 			get_3dvector_from_points(&projp1, &projp2,&projp1_projp2);
@@ -1104,7 +1097,7 @@ int lw_dist3d_ptarray_poly(POINTARRAY *pa, LWPOLY *poly,PLANE3D *plane, DISTPTS3
 						break;
 					}
 				}		
-				if(intersects) 
+				if(intersects)
 				{
 					dl->distance=0.0;
 					dl->p1.x=intersectionp.x;
@@ -1206,7 +1199,7 @@ define_plane(POINTARRAY *pa, PLANE3D *pl)
 
 Finds a point on a plane from where the original point is perpendicular to the plane
 */
-double 
+double
 project_point_on_plane(POINT3DZ *p,  PLANE3D *pl, POINT3DZ *p0)
 {
 /*In our plane definition we have a point on the plane and a normal vektor (pl.pv), perpendicular to the plane
@@ -1224,7 +1217,7 @@ So, we already have a direction from p to find p0, but we don't know the distanc
 	
 	p0->x=p->x+pl->pv.x*f;
 	p0->y=p->y+pl->pv.y*f;
-	p0->z=p->z+pl->pv.z*f;      
+	p0->z=p->z+pl->pv.z*f;
 	
 	return f;		
 }

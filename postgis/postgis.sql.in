@@ -20,11 +20,10 @@
 
 #include "sqldefines.h"
 
-SET client_min_messages TO warning;
-
 -- INSTALL VERSION: POSTGIS_LIB_VERSION
 
 BEGIN;
+SET LOCAL client_min_messages TO warning;
 
 -- Check that no other postgis is installed
 DO $$
@@ -1236,6 +1235,20 @@ CREATE OR REPLACE FUNCTION ST_Area(geometry)
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
 	COST 10;
 
+-- Availability: 2.4.0
+CREATE OR REPLACE FUNCTION ST_IsPolygonCW(geometry)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME','ST_IsPolygonCW'
+	LANGUAGE 'c' IMMUTABLE STRICT
+	COST 10;
+
+-- Availability: 2.4.0
+CREATE OR REPLACE FUNCTION ST_IsPolygonCCW(geometry)
+	RETURNS boolean
+	AS 'MODULE_PATHNAME','ST_IsPolygonCCW'
+	LANGUAGE 'c' IMMUTABLE STRICT
+	COST 10;
+
 -- Availability: 2.0.0
 CREATE OR REPLACE FUNCTION ST_DistanceSpheroid(geom1 geometry, geom2 geometry,spheroid)
 	RETURNS FLOAT8
@@ -1291,7 +1304,7 @@ CREATE OR REPLACE FUNCTION ST_Force2D(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_force_2d'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 5;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.2.2
 -- Deprecation in 2.1.0
@@ -1307,7 +1320,7 @@ CREATE OR REPLACE FUNCTION ST_Force3DZ(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_force_3dz'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.2.2
 -- Deprecation in 2.1.0
@@ -1323,7 +1336,7 @@ CREATE OR REPLACE FUNCTION ST_Force3D(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_force_3dz'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.2.2
 -- Deprecation in 2.1.0
@@ -1339,7 +1352,7 @@ CREATE OR REPLACE FUNCTION ST_Force3DM(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_force_3dm'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.2.2
 -- Deprecation in 2.1.0
@@ -1355,7 +1368,7 @@ CREATE OR REPLACE FUNCTION ST_Force4D(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_force_4d'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.2.2
 -- Deprecation in 2.1.0
@@ -1371,7 +1384,7 @@ CREATE OR REPLACE FUNCTION ST_ForceCollection(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_force_collection'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 10;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.2.2
 -- Deprecation in 2.1.0
@@ -1399,7 +1412,7 @@ CREATE OR REPLACE FUNCTION ST_Multi(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_force_multi'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 10;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 2.2.0
 CREATE OR REPLACE FUNCTION ST_ForceCurve(geometry)
@@ -1418,42 +1431,42 @@ CREATE OR REPLACE FUNCTION ST_ForceSFS(geometry, version text)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_force_sfs'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 10;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.2.2
 CREATE OR REPLACE FUNCTION ST_Expand(box3d,float8)
 	RETURNS box3d
 	AS 'MODULE_PATHNAME', 'BOX3D_expand'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 2.3.0
 CREATE OR REPLACE FUNCTION ST_Expand(box box3d, dx float8, dy float8, dz float8 DEFAULT 0)
 	RETURNS box3d
 	AS 'MODULE_PATHNAME', 'BOX3D_expand'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.2.2
 CREATE OR REPLACE FUNCTION ST_Expand(geometry,float8)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_expand'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 2.3.0
 CREATE OR REPLACE FUNCTION ST_Expand(geom geometry, dx float8, dy float8, dz float8 DEFAULT 0, dm float8 DEFAULT 0)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_expand'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- PostGIS equivalent function: envelope(geometry)
 CREATE OR REPLACE FUNCTION ST_Envelope(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_envelope'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 2.2.0
 CREATE OR REPLACE FUNCTION ST_BoundingDiagonal(geom geometry, fits boolean DEFAULT false)
@@ -1466,14 +1479,28 @@ CREATE OR REPLACE FUNCTION ST_Reverse(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_reverse'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 10;
+	COST 1; -- reset cost, see #3675
+
+-- Availability: 2.4.0
+CREATE OR REPLACE FUNCTION ST_ForcePolygonCW(geometry)
+	RETURNS geometry
+	AS 'MODULE_PATHNAME', 'LWGEOM_force_clockwise_poly'
+	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
+	COST 15;
+
+-- Availability: 2.4.0
+CREATE OR REPLACE FUNCTION ST_ForcePolygonCCW(geometry)
+	RETURNS geometry
+	AS $$ SELECT @extschema@.ST_Reverse(@extschema@.ST_ForcePolygonCW($1)) $$
+	LANGUAGE SQL IMMUTABLE STRICT _PARALLEL
+	COST 15;
 
 -- Availability: 1.2.2
 CREATE OR REPLACE FUNCTION ST_ForceRHR(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_force_clockwise_poly'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 15;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.5.0
 CREATE OR REPLACE FUNCTION postgis_noop(geometry)
@@ -1487,7 +1514,7 @@ CREATE OR REPLACE FUNCTION ST_Normalize(geom geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'ST_Normalize'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 20; -- 20 as it delegates to GEOS
+	COST 1; -- reset cost, see #3675
 
 -- Deprecation in 1.5.0
 CREATE OR REPLACE FUNCTION ST_zmflag(geometry)
@@ -1692,14 +1719,14 @@ CREATE OR REPLACE FUNCTION ST_BuildArea(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'ST_BuildArea'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 100;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.4.0
 CREATE OR REPLACE FUNCTION ST_Polygonize (geometry[])
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'polygonize_garray'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 100;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 2.2
 CREATE OR REPLACE FUNCTION ST_ClusterIntersecting(geometry[])
@@ -1724,7 +1751,7 @@ CREATE OR REPLACE FUNCTION ST_LineMerge(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'linemerge'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 100;
+	COST 1; -- reset cost, see #3675
 
 -----------------------------------------------------------------------------
 -- Affine transforms
@@ -1735,7 +1762,7 @@ CREATE OR REPLACE FUNCTION ST_Affine(geometry,float8,float8,float8,float8,float8
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_affine'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.2.2
 CREATE OR REPLACE FUNCTION ST_Affine(geometry,float8,float8,float8,float8,float8,float8)
@@ -2764,7 +2791,7 @@ CREATE OR REPLACE FUNCTION ST_Transform(geometry,integer)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME','transform'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 100;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 2.3.0
 CREATE OR REPLACE FUNCTION ST_Transform(geom geometry, to_proj text)
@@ -2861,6 +2888,7 @@ DECLARE
 	rast_scr_ver text;
 	topo_scr_ver text;
 	json_lib_ver text;
+	protobuf_lib_ver text;
 	sfcgal_lib_ver text;
 	sfcgal_scr_ver text;
 BEGIN
@@ -2868,6 +2896,7 @@ BEGIN
 	SELECT postgis_proj_version() INTO projver;
 	SELECT postgis_geos_version() INTO geosver;
 	SELECT postgis_libjson_version() INTO json_lib_ver;
+	SELECT postgis_libprotobuf_version() INTO protobuf_lib_ver;
 	BEGIN
 		SELECT postgis_gdal_version() INTO gdalver;
 	EXCEPTION
@@ -2955,6 +2984,10 @@ BEGIN
 
 	IF json_lib_ver IS NOT NULL THEN
 		fullver = fullver || ' LIBJSON="' || json_lib_ver || '"';
+	END IF;
+
+	IF protobuf_lib_ver IS NOT NULL THEN
+		fullver = fullver || ' LIBPROTOBUF="' || protobuf_lib_ver || '"';
 	END IF;
 
 	-- fullver = fullver || ' DBPROC="' || dbproc || '"';
@@ -3095,28 +3128,28 @@ CREATE OR REPLACE FUNCTION ST_Simplify(geometry, float8)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_simplify2d'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 50;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 2.2.0
 CREATE OR REPLACE FUNCTION ST_Simplify(geometry, float8, boolean)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_simplify2d'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 50; -- COST guessed from ST_Simplify(geometry, float8)
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 2.2.0
 CREATE OR REPLACE FUNCTION ST_SimplifyVW(geometry,  float8)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_SetEffectiveArea'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 50; -- COST guessed from ST_Simplify(geometry, float8)
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 2.2.0
 CREATE OR REPLACE FUNCTION ST_SetEffectiveArea(geometry,  float8 default -1, integer default 1)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_SetEffectiveArea'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 50; -- COST guessed from ST_Simplify(geometry, float8)
+	COST 1; -- reset cost, see #3675
 
 -- ST_SnapToGrid(input, xoff, yoff, xsize, ysize)
 -- Availability: 1.2.2
@@ -3124,7 +3157,7 @@ CREATE OR REPLACE FUNCTION ST_SnapToGrid(geometry, float8, float8, float8, float
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_snaptogrid'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- ST_SnapToGrid(input, xsize, ysize) # offsets=0
 -- Availability: 1.2.2
@@ -3132,7 +3165,7 @@ CREATE OR REPLACE FUNCTION ST_SnapToGrid(geometry, float8, float8)
 	RETURNS geometry
 	AS 'SELECT @extschema@.ST_SnapToGrid($1, 0, 0, $2, $3)'
 	LANGUAGE 'sql' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 -- ST_SnapToGrid(input, size) # xsize=ysize=size, offsets=0
 -- Availability: 1.2.2
@@ -3147,14 +3180,14 @@ CREATE OR REPLACE FUNCTION ST_SnapToGrid(geom1 geometry, geom2 geometry, float8,
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_snaptogrid_pointoff'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25; -- COST from ST_SnapToGrid(input, xoff, yoff, xsize, ysize)
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.2.2
 CREATE OR REPLACE FUNCTION ST_Segmentize(geometry, float8)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_segmentize2d'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 ---------------------------------------------------------------
 -- LRS
@@ -3264,21 +3297,21 @@ CREATE OR REPLACE FUNCTION ST_Intersection(geom1 geometry, geom2 geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME','intersection'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 100; -- Guessed cost
+	COST 1; -- reset cost, see #3675
 
 -- PostGIS equivalent function: buffer(geometry,float8)
 CREATE OR REPLACE FUNCTION ST_Buffer(geometry,float8)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME','buffer'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 5000;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.5.0 - requires GEOS-3.2 or higher
 CREATE OR REPLACE FUNCTION _ST_Buffer(geometry,float8,cstring)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME','buffer'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 5000;
+	COST 1; -- reset cost, see #3675
 
 -- Availability: 1.2.2
 CREATE OR REPLACE FUNCTION ST_Buffer(geometry,float8,integer)
@@ -3314,21 +3347,21 @@ CREATE OR REPLACE FUNCTION ST_OffsetCurve(line geometry, distance float8, params
        RETURNS geometry
        AS 'MODULE_PATHNAME','ST_OffsetCurve'
        LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-       COST 100; -- Guessed cost
+       COST 1; -- reset cost, see #3675
 
 -- Availability: 2.3.0
 CREATE OR REPLACE FUNCTION ST_GeneratePoints(area geometry, npoints numeric)
        RETURNS geometry
        AS 'MODULE_PATHNAME','ST_GeneratePoints'
        LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-       COST 400; -- Guessed cost
+       COST 1; -- reset cost, see #3675
 
 -- PostGIS equivalent function: convexhull(geometry)
 CREATE OR REPLACE FUNCTION ST_ConvexHull(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME','convexhull'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 250;
+	COST 1; -- reset cost, see #3675
 
 -- Only accepts LINESTRING as parameters.
 -- Availability: 1.4.0
@@ -3350,7 +3383,7 @@ CREATE OR REPLACE FUNCTION ST_SimplifyPreserveTopology(geometry, float8)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME','topologypreservesimplify'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 2000;
+	COST 1; -- reset cost, see #3675
 
 -- Requires GEOS >= 3.1.0
 -- Availability: 1.4.0
@@ -3474,7 +3507,7 @@ CREATE OR REPLACE FUNCTION ST_RemoveRepeatedPoints(geom geometry, tolerance floa
        RETURNS geometry
        AS 'MODULE_PATHNAME', 'ST_RemoveRepeatedPoints'
        LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-       COST 25;
+       COST 1; -- reset cost, see #3675
 
 -- Requires GEOS >= 3.5.0
 -- Availability: 2.2.0
@@ -3510,7 +3543,7 @@ CREATE OR REPLACE FUNCTION ST_MakeValid(geometry)
        RETURNS geometry
        AS 'MODULE_PATHNAME', 'ST_MakeValid'
        LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-       COST 1000;
+       COST 1; -- reset cost, see #3675
 
 -- ST_CleanGeometry(in geometry)
 --
@@ -3531,7 +3564,7 @@ CREATE OR REPLACE FUNCTION ST_CleanGeometry(geometry)
        RETURNS geometry
        AS 'MODULE_PATHNAME', 'ST_CleanGeometry'
        LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-       COST 1000;
+       COST 1; -- reset cost, see #3675
 
 --------------------------------------------------------------------------------
 -- ST_Split
@@ -3551,7 +3584,7 @@ CREATE OR REPLACE FUNCTION ST_Split(geom1 geometry, geom2 geometry)
        RETURNS geometry
        AS 'MODULE_PATHNAME', 'ST_Split'
        LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-       COST 100; -- Guessed cost
+       COST 1; -- reset cost, see #3675
 
 --------------------------------------------------------------------------------
 -- ST_SharedPaths
@@ -3574,7 +3607,7 @@ CREATE OR REPLACE FUNCTION ST_SharedPaths(geom1 geometry, geom2 geometry)
        RETURNS geometry
        AS 'MODULE_PATHNAME', 'ST_SharedPaths'
        LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-       COST 100; -- Guessed cost
+       COST 1; -- reset cost, see #3675
 
 --------------------------------------------------------------------------------
 -- ST_Snap
@@ -3591,7 +3624,7 @@ CREATE OR REPLACE FUNCTION ST_Snap(geom1 geometry, geom2 geometry, float8)
        RETURNS geometry
        AS 'MODULE_PATHNAME', 'ST_Snap'
        LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-       COST 100; -- Guessed cost
+       COST 1; -- reset cost, see #3675
 
 --------------------------------------------------------------------------------
 -- ST_RelateMatch
@@ -3627,7 +3660,7 @@ CREATE OR REPLACE FUNCTION ST_Node(g geometry)
        RETURNS geometry
        AS 'MODULE_PATHNAME', 'ST_Node'
        LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-       COST 100; -- Guessed cost
+       COST 1; -- reset cost, see #3675
 
 --------------------------------------------------------------------------------
 -- ST_DelaunayTriangles
@@ -3651,7 +3684,7 @@ CREATE OR REPLACE FUNCTION ST_DelaunayTriangles(g1 geometry, tolerance float8 DE
        RETURNS geometry
        AS 'MODULE_PATHNAME', 'ST_DelaunayTriangles'
        LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-       COST 25000;
+       COST 1; -- reset cost, see #3675
 
 
 --------------------------------------------------------------------------------
@@ -3683,20 +3716,20 @@ CREATE OR REPLACE FUNCTION _ST_Voronoi(g1 geometry, clip geometry DEFAULT NULL, 
        RETURNS geometry
        AS 'MODULE_PATHNAME', 'ST_Voronoi'
        LANGUAGE 'c' IMMUTABLE _PARALLEL
-       COST 25000; -- Guessed cost
+       COST 1; -- reset cost, see #3675
 
 
 CREATE OR REPLACE FUNCTION ST_VoronoiPolygons(g1 geometry, tolerance float8 DEFAULT 0.0, extend_to geometry DEFAULT NULL)
        RETURNS geometry
        AS $$ SELECT @extschema@._ST_Voronoi(g1, extend_to, tolerance, true) $$
        LANGUAGE SQL IMMUTABLE _PARALLEL
-       COST 25000; -- Guessed cost
+       COST 1; -- reset cost, see #3675
 
 CREATE OR REPLACE FUNCTION ST_VoronoiLines(g1 geometry, tolerance float8 DEFAULT 0.0, extend_to geometry DEFAULT NULL)
        RETURNS geometry
        AS $$ SELECT @extschema@._ST_Voronoi(g1, extend_to, tolerance, false) $$
        LANGUAGE SQL IMMUTABLE _PARALLEL
-       COST 25000; -- Guessed cost
+       COST 1; -- reset cost, see #3675
 
 --------------------------------------------------------------------------------
 -- Aggregates and their supporting functions
@@ -4144,7 +4177,7 @@ CREATE OR REPLACE FUNCTION ST_Centroid(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'centroid'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 100;
+	COST 1; -- reset cost, see #3675
 
 
 -- Availability: 2.3.0
@@ -4164,7 +4197,7 @@ CREATE OR REPLACE FUNCTION ST_PointOnSurface(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'pointonsurface'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 2500; --this looks suspicious, should not be this high
+	COST 1; -- reset cost, see #3675
 
 -- PostGIS equivalent function: IsSimple(geometry)
 CREATE OR REPLACE FUNCTION ST_IsSimple(geometry)
@@ -4374,6 +4407,70 @@ CREATE OR REPLACE FUNCTION ST_AsGeoJson(gj_version int4, geom geometry, maxdecim
 	RETURNS TEXT
 	AS $$ SELECT @extschema@.ST_AsGeoJson($2::@extschema@.geometry, $3::int4, $4::int4); $$
 	LANGUAGE 'sql' IMMUTABLE STRICT _PARALLEL;
+
+-----------------------------------------------------------------------
+-- Mapbox Vector Tile OUTPUT
+-- Availability: 2.4.0
+-----------------------------------------------------------------------
+
+-- Availability: 2.4.0
+CREATE OR REPLACE FUNCTION pgis_asmvt_transfn(internal, text, int4, text, anyelement)
+	RETURNS internal
+	AS 'MODULE_PATHNAME', 'pgis_asmvt_transfn'
+	LANGUAGE c IMMUTABLE;
+
+-- Availability: 2.4.0
+CREATE OR REPLACE FUNCTION pgis_asmvt_finalfn(internal)
+	RETURNS bytea
+	AS 'MODULE_PATHNAME', 'pgis_asmvt_finalfn'
+	LANGUAGE c IMMUTABLE;
+
+-- Availability: 2.4.0
+CREATE AGGREGATE ST_AsMVT(text, int4, text, anyelement)
+(
+	sfunc = pgis_asmvt_transfn,
+	stype = internal,
+	finalfunc = pgis_asmvt_finalfn
+);
+
+-- Availability: 2.4.0
+CREATE OR REPLACE FUNCTION ST_AsMVTGeom(geom geometry, bounds box2d, extent int4, buffer int4, clip_geom bool)
+	RETURNS geometry
+	AS 'MODULE_PATHNAME','ST_AsMVTGeom'
+	LANGUAGE 'c' IMMUTABLE  _PARALLEL;
+
+-- Availability: 2.4.0
+CREATE OR REPLACE FUNCTION postgis_libprotobuf_version()
+	RETURNS text
+	AS 'MODULE_PATHNAME','postgis_libprotobuf_version'
+	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL;
+
+
+-----------------------------------------------------------------------
+-- GEOBUF OUTPUT
+-- Availability: 2.4.0
+-----------------------------------------------------------------------
+
+-- Availability: 2.4.0
+CREATE OR REPLACE FUNCTION pgis_asgeobuf_transfn(internal, text, anyelement)
+	RETURNS internal
+	AS 'MODULE_PATHNAME', 'pgis_asgeobuf_transfn'
+	LANGUAGE c IMMUTABLE;
+
+-- Availability: 2.4.0
+CREATE OR REPLACE FUNCTION pgis_asgeobuf_finalfn(internal)
+	RETURNS bytea
+	AS 'MODULE_PATHNAME', 'pgis_asgeobuf_finalfn'
+	LANGUAGE c IMMUTABLE;
+
+-- Availability: 2.4.0
+CREATE AGGREGATE ST_AsGeobuf(text, anyelement)
+(
+	sfunc = pgis_asgeobuf_transfn,
+	stype = internal,
+	finalfunc = pgis_asgeobuf_finalfn
+);
+
 
 ------------------------------------------------------------------------
 -- GeoHash (geohash.org)
@@ -5065,7 +5162,7 @@ CREATE OR REPLACE FUNCTION ST_SwapOrdinates(geom geometry, ords cstring)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'ST_SwapOrdinates'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25; -- COST guessed from ST_FlipCoordinates(geometry)
+	COST 1; -- reset cost, see #3675
 
 -- NOTE: same as ST_SwapOrdinates(geometry, 'xy')
 --       but slightly faster in that it doesn't need to parse ordinate
@@ -5074,7 +5171,7 @@ CREATE OR REPLACE FUNCTION ST_FlipCoordinates(geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'ST_FlipCoordinates'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL
-	COST 25;
+	COST 1; -- reset cost, see #3675
 
 --
 -- SFSQL 1.1
@@ -5407,19 +5504,19 @@ CREATE OR REPLACE FUNCTION ST_3DClosestPoint(geom1 geometry, geom2 geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_closestpoint3d'
 	LANGUAGE 'c' IMMUTABLE STRICT
-	COST 100;
+	COST 1; -- reset cost, see #3675
 
 CREATE OR REPLACE FUNCTION ST_3DShortestLine(geom1 geometry, geom2 geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_shortestline3d'
 	LANGUAGE 'c' IMMUTABLE STRICT
-	COST 100;
+	COST 1; -- reset cost, see #3675
 
 CREATE OR REPLACE FUNCTION ST_3DLongestLine(geom1 geometry, geom2 geometry)
 	RETURNS geometry
 	AS 'MODULE_PATHNAME', 'LWGEOM_longestline3d'
 	LANGUAGE 'c' IMMUTABLE STRICT
-	COST 100;
+	COST 1; -- reset cost, see #3675
 
 CREATE OR REPLACE FUNCTION _ST_3DDWithin(geom1 geometry, geom2 geometry,float8)
 	RETURNS boolean
@@ -5569,300 +5666,9 @@ CREATE OR REPLACE FUNCTION ST_InterpolatePoint(Line geometry, Point geometry)
 	AS 'MODULE_PATHNAME', 'ST_InterpolatePoint'
 	LANGUAGE 'c' IMMUTABLE STRICT _PARALLEL;
 
-#if POSTGIS_PGSQL_VERSION > 94
---------------------------------------------------------------------
--- BRIN support                                                   --
---------------------------------------------------------------------
 
----------------------------------
--- 2d operators                --
----------------------------------
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION contains_2d(box2df, geometry)
-RETURNS boolean
-AS 'MODULE_PATHNAME','gserialized_contains_box2df_geom_2d'
-LANGUAGE 'c' IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION is_contained_2d(box2df, geometry)
-RETURNS boolean
-AS 'MODULE_PATHNAME','gserialized_within_box2df_geom_2d'
-LANGUAGE 'c' IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION overlaps_2d(box2df, geometry)
-RETURNS boolean
-AS 'MODULE_PATHNAME','gserialized_overlaps_box2df_geom_2d'
-LANGUAGE 'c' IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION overlaps_2d(box2df, box2df)
-RETURNS boolean
-AS 'MODULE_PATHNAME','gserialized_contains_box2df_box2df_2d'
-LANGUAGE 'c' IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION contains_2d(box2df, box2df)
-RETURNS boolean
-AS 'MODULE_PATHNAME','gserialized_contains_box2df_box2df_2d'
-LANGUAGE 'c' IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION is_contained_2d(box2df, box2df)
-RETURNS boolean
-AS 'MODULE_PATHNAME','gserialized_contains_box2df_box2df_2d'
-LANGUAGE 'c' IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OPERATOR ~ (
-  LEFTARG    = box2df,
-  RIGHTARG   = geometry,
-  PROCEDURE  = contains_2d,
-  COMMUTATOR = @
-);
-
--- Availability: 2.3.0
-CREATE OPERATOR @ (
-  LEFTARG    = box2df,
-  RIGHTARG   = geometry,
-  PROCEDURE  = is_contained_2d,
-  COMMUTATOR = ~
-);
-
--- Availability: 2.3.0
-CREATE OPERATOR && (
-  LEFTARG    = box2df,
-  RIGHTARG   = geometry,
-  PROCEDURE  = overlaps_2d,
-  COMMUTATOR = &&
-);
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION contains_2d(geometry, box2df)
-RETURNS boolean
-AS $$
-  SELECT $2 @ $1;
-$$ LANGUAGE SQL IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION is_contained_2d(geometry, box2df)
-RETURNS boolean
-AS $$
-  SELECT $2 ~ $1;
-$$ LANGUAGE SQL IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION overlaps_2d(geometry, box2df)
-RETURNS boolean
-AS $$
-  SELECT $2 OPERATOR(@extschema@.&&) $1;
-$$ LANGUAGE SQL IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OPERATOR ~ (
-  LEFTARG = geometry,
-  RIGHTARG = box2df,
-  COMMUTATOR = @,
-  PROCEDURE  = contains_2d
-);
-
--- Availability: 2.3.0
-CREATE OPERATOR @ (
-  LEFTARG = geometry,
-  RIGHTARG = box2df,
-  COMMUTATOR = ~,
-  PROCEDURE = is_contained_2d
-);
-
--- Availability: 2.3.0
-CREATE OPERATOR && (
-  LEFTARG    = geometry,
-  RIGHTARG   = box2df,
-  PROCEDURE  = overlaps_2d,
-  COMMUTATOR = &&
-);
-
--- Availability: 2.3.0
-CREATE OPERATOR && (
-  LEFTARG   = box2df,
-  RIGHTARG  = box2df,
-  PROCEDURE = overlaps_2d,
-  COMMUTATOR = &&
-);
-
--- Availability: 2.3.0
-CREATE OPERATOR @ (
-  LEFTARG   = box2df,
-  RIGHTARG  = box2df,
-  PROCEDURE = is_contained_2d,
-  COMMUTATOR = ~
-);
-
--- Availability: 2.3.0
-CREATE OPERATOR ~ (
-  LEFTARG   = box2df,
-  RIGHTARG  = box2df,
-  PROCEDURE = contains_2d,
-  COMMUTATOR = @
-);
-
-----------------------------
--- nd operators           --
-----------------------------
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION overlaps_nd(gidx, geometry)
-RETURNS boolean
-AS 'MODULE_PATHNAME','gserialized_gidx_geom_overlaps'
-LANGUAGE 'c' IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION overlaps_nd(gidx, gidx)
-RETURNS boolean
-AS 'MODULE_PATHNAME','gserialized_gidx_gidx_overlaps'
-LANGUAGE 'c' IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OPERATOR &&& (
-  LEFTARG    = gidx,
-  RIGHTARG   = geometry,
-  PROCEDURE  = overlaps_nd,
-  COMMUTATOR = &&&
-);
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION overlaps_nd(geometry, gidx)
-RETURNS boolean
-AS $$
-  SELECT $2 OPERATOR(@extschema@.&&&) $1;
-$$ LANGUAGE SQL IMMUTABLE STRICT;
-
--- Availability: 2.3.0
-CREATE OPERATOR &&& (
-  LEFTARG    = geometry,
-  RIGHTARG   = gidx,
-  PROCEDURE  = overlaps_nd,
-  COMMUTATOR = &&&
-);
-
--- Availability: 2.3.0
-CREATE OPERATOR &&& (
-  LEFTARG   = gidx,
-  RIGHTARG  = gidx,
-  PROCEDURE = overlaps_nd,
-  COMMUTATOR = &&&
-);
-
-------------------------------
--- Create operator families --
-------------------------------
-
--------------
--- 2D case --
--------------
-
--- Availability: 2.3.0
-CREATE OPERATOR FAMILY brin_geometry_inclusion_ops_2d USING brin;
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION geom2d_brin_inclusion_add_value(internal, internal, internal, internal) RETURNS boolean
-	AS 'MODULE_PATHNAME','geom2d_brin_inclusion_add_value'
-	LANGUAGE 'c';
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION geom3d_brin_inclusion_add_value(internal, internal, internal, internal) RETURNS boolean
-	AS 'MODULE_PATHNAME','geom3d_brin_inclusion_add_value'
-	LANGUAGE 'c';
-
--- Availability: 2.3.0
-CREATE OR REPLACE FUNCTION geom4d_brin_inclusion_add_value(internal, internal, internal, internal) RETURNS boolean
-	AS 'MODULE_PATHNAME','geom4d_brin_inclusion_add_value'
-	LANGUAGE 'c';
-
--- Availability: 2.3.0
-CREATE OPERATOR CLASS brin_geometry_inclusion_ops_2d
-  DEFAULT FOR TYPE geometry
-  USING brin
-  FAMILY brin_geometry_inclusion_ops_2d AS
-    OPERATOR      3        &&(geometry, geometry),
-    OPERATOR      7        ~(geometry, geometry),
-    OPERATOR      8        @(geometry, geometry),
-    FUNCTION      1        brin_inclusion_opcinfo(internal) ,
-    FUNCTION      2        geom2d_brin_inclusion_add_value(internal, internal, internal, internal) ,
-    FUNCTION      3        brin_inclusion_consistent(internal, internal, internal) ,
-    FUNCTION      4        brin_inclusion_union(internal, internal, internal) ,
-  STORAGE box2df;
-
-ALTER OPERATOR FAMILY brin_geometry_inclusion_ops_2d USING brin ADD
-    OPERATOR      3         &&(box2df, geometry),
-    OPERATOR      7         ~(box2df, geometry),
-    OPERATOR      8         @(box2df, geometry),
-
-    OPERATOR      3         &&(geometry, box2df),
-    OPERATOR      7         ~(geometry, box2df),
-    OPERATOR      8         @(geometry, box2df),
-
-    OPERATOR      3         &&(box2df, box2df),
-    OPERATOR      7         ~(box2df, box2df),
-    OPERATOR      8         @(box2df, box2df);
-
--------------
--- 3D case --
--------------
-
--- Availability: 2.3.0
-CREATE OPERATOR FAMILY brin_geometry_inclusion_ops_3d USING brin;
-
--- Availability: 2.3.0
-CREATE OPERATOR CLASS brin_geometry_inclusion_ops_3d
-  FOR TYPE geometry
-  USING brin
-  FAMILY brin_geometry_inclusion_ops_3d AS
-    OPERATOR      3        &&&(geometry, geometry),
-    FUNCTION      1        brin_inclusion_opcinfo(internal) ,
-    FUNCTION      2        geom3d_brin_inclusion_add_value(internal, internal, internal, internal) ,
-    FUNCTION      3        brin_inclusion_consistent(internal, internal, internal) ,
-    FUNCTION      4        brin_inclusion_union(internal, internal, internal) ,
-  STORAGE gidx;
-
-ALTER OPERATOR FAMILY brin_geometry_inclusion_ops_3d USING brin ADD
-    OPERATOR      3         &&&(gidx, geometry),
-
-    OPERATOR      3         &&&(geometry, gidx),
-
-    OPERATOR      3         &&&(gidx, gidx);
-
--------------
--- 4D case --
--------------
-
--- Availability: 2.3.0
-CREATE OPERATOR FAMILY brin_geometry_inclusion_ops_4d USING brin;
-
--- Availability: 2.3.0
-CREATE OPERATOR CLASS brin_geometry_inclusion_ops_4d
-  FOR TYPE geometry
-  USING brin
-  FAMILY brin_geometry_inclusion_ops_4d AS
-    OPERATOR      3        &&&(geometry, geometry),
-    FUNCTION      1        brin_inclusion_opcinfo(internal) ,
-    FUNCTION      2        geom4d_brin_inclusion_add_value(internal, internal, internal, internal) ,
-    FUNCTION      3        brin_inclusion_consistent(internal, internal, internal) ,
-    FUNCTION      4        brin_inclusion_union(internal, internal, internal) ,
-  STORAGE gidx;
-
-ALTER OPERATOR FAMILY brin_geometry_inclusion_ops_4d USING brin ADD
-    OPERATOR      3         &&&(gidx, geometry),
-
-    OPERATOR      3         &&&(geometry, gidx),
-
-    OPERATOR      3         &&&(gidx, gidx);
-
----------------------------------------------------------------
--- END
----------------------------------------------------------------
-#endif
+-- moved to separate file cause its invovled
+#include "postgis_brin.sql.in"
 
 ---------------------------------------------------------------
 -- USER CONTRIBUTED

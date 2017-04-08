@@ -1096,8 +1096,7 @@ ShpLoaderOpenShape(SHPLOADERSTATE *state)
 		state->types[j] = type;
 		state->widths[j] = field_width;
 		state->precisions[j] = field_precision;
-		fprintf(stderr, "XXX %s width:%d prec:%d\n", name, field_width,
-field_precision);
+/*		fprintf(stderr, "XXX %s width:%d prec:%d\n", name, field_width, field_precision); */
 
 		if (state->config->encoding)
 		{
@@ -1522,8 +1521,8 @@ ShpLoaderGenerateSQLRowStatement(SHPLOADERSTATE *state, int item, char **strreco
 	sb = stringbuffer_create();
 	stringbuffer_clear(sb);
 
-	/* If we are reading the DBF only and the record has been marked deleted, return deleted record status */
-	if (state->config->readshape == 0 && DBFIsRecordDeleted(state->hDBFHandle, item))
+	/* Skip deleted records */
+	if (state->hDBFHandle && DBFIsRecordDeleted(state->hDBFHandle, item))
 	{
 		*strrecord = NULL;
 		return SHPLOADERRECDELETED;

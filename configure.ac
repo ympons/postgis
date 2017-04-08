@@ -408,7 +408,7 @@ else
 	if test "x$PG_CONFIG" = "xyes"; then
 		AC_MSG_ERROR([you must specify a parameter to --with-pgconfig, e.g. --with-pgconfig=/path/to/pg_config])
 	else
-		if test -f $PG_CONFIG; then
+		if test -f "$PG_CONFIG"; then
 			AC_MSG_RESULT([Using user-specified pg_config file: $PG_CONFIG])
 		else
 			AC_MSG_ERROR([the user-specified pg_config file $PG_CONFIG does not exist])
@@ -425,7 +425,7 @@ if test "x$LIBLWGEOM_ONLY" = "xno"; then
   dnl the postgresql-server-dev packages are installed :)
   dnl ===========================================================================
 
-  PGXS=`$PG_CONFIG --pgxs`
+  PGXS=`"$PG_CONFIG" --pgxs`
   if test "x$PGXS" = "x" -o ! -f "$PGXS"; then
     AC_MSG_ERROR([the PGXS Makefile $PGXS cannot be found. Please install the PostgreSQL server development packages and re-run configure.])
   fi
@@ -435,15 +435,15 @@ if test "x$LIBLWGEOM_ONLY" = "xno"; then
   dnl Extract the version information from pg_config
   dnl Note: we extract the major & minor separately, ensure they are numeric, and then combine to give
   dnl the final version. This is to guard against user error...
-  PGSQL_FULL_VERSION=`$PG_CONFIG --version`
+  PGSQL_FULL_VERSION=`"$PG_CONFIG" --version`
   PGSQL_MAJOR_VERSION=`echo $PGSQL_FULL_VERSION | sed 's/[[^0-9]]*\([[0-9]]*\).*/\1/'`
   PGSQL_MINOR_VERSION=`echo $PGSQL_FULL_VERSION | sed 's/[[^\.]]*\.\([[0-9]]*\).*/\1/'`
   PGSQL_MINOR_VERSION=`echo $PGSQL_MINOR_VERSION | sed 's/.*devel.*/0/'`
   POSTGIS_PGSQL_VERSION="$PGSQL_MAJOR_VERSION$PGSQL_MINOR_VERSION"
 
-  PGSQL_PKGLIBDIR=`$PG_CONFIG --pkglibdir`
-  PGSQL_LIBDIR=`$PG_CONFIG --libdir`
-  PGSQL_SHAREDIR=`$PG_CONFIG --sharedir`
+  PGSQL_PKGLIBDIR=`"$PG_CONFIG" --pkglibdir`
+  PGSQL_LIBDIR=`"$PG_CONFIG" --libdir`
+  PGSQL_SHAREDIR=`"$PG_CONFIG" --sharedir`
 
   AC_MSG_RESULT([checking PostgreSQL version... $PGSQL_FULL_VERSION])
   dnl Ensure that we are using PostgreSQL >= 9.2
@@ -459,14 +459,14 @@ if test "x$LIBLWGEOM_ONLY" = "xno"; then
   dnl Note: We don't need the server-side LDFLAGS or CPPFLAGS because we get these from PGXS
 
   dnl Extract the linker and include flags for the frontend (for programs that use libpq)
-  PGSQL_FE_LDFLAGS=-L`$PG_CONFIG --libdir`" -lpq"
-  PGSQL_FE_CPPFLAGS=-I`$PG_CONFIG --includedir`
+  PGSQL_FE_LDFLAGS=-L`"$PG_CONFIG" --libdir`" -lpq"
+  PGSQL_FE_CPPFLAGS=-I`"$PG_CONFIG" --includedir`
 
   AC_SUBST([PGSQL_FE_LDFLAGS])
   AC_SUBST([PGSQL_FE_CPPFLAGS])
 
   dnl Extract the include flags for the backend (libpgcommon)
-  PGSRV_INC=`$PG_CONFIG --includedir-server`
+  PGSRV_INC=`"$PG_CONFIG" --includedir-server`
   PGSQL_BE_CPPFLAGS="-I${PGSRV_INC}"
   dnl Add $PGSRV_INC/port/win32 to MinGW build to pick up netdb.h
   case $host in
@@ -478,23 +478,23 @@ if test "x$LIBLWGEOM_ONLY" = "xno"; then
   AC_SUBST([PGSQL_BE_CPPFLAGS])
 
   dnl Extract the documentation and man page directories
-  PGSQL_DOCDIR=`$PG_CONFIG --docdir`
-  PGSQL_MANDIR=`$PG_CONFIG --mandir`
+  PGSQL_DOCDIR=`"$PG_CONFIG" --docdir`
+  PGSQL_MANDIR=`"$PG_CONFIG" --mandir`
 
   AC_SUBST([PGSQL_DOCDIR])
   AC_SUBST([PGSQL_MANDIR])
 
   dnl Extract the locale directory
-  PGSQL_LOCALEDIR=`$PG_CONFIG --localedir`
+  PGSQL_LOCALEDIR=`"$PG_CONFIG" --localedir`
   AC_DEFINE_UNQUOTED([PGSQL_LOCALEDIR], ["$PGSQL_LOCALEDIR"], [Location of PostgreSQL locale directory])
 
   dnl Extract the executable directory
-  PGSQL_BINDIR=`$PG_CONFIG --bindir`
+  PGSQL_BINDIR=`"$PG_CONFIG" --bindir`
 
   AC_SUBST([PGSQL_BINDIR])
 
   dnl Extract the share directory
-  PGSQL_SHAREDIR=`$PG_CONFIG --sharedir`
+  PGSQL_SHAREDIR=`"$PG_CONFIG" --sharedir`
 
   AC_SUBST([PGSQL_SHAREDIR])
 
@@ -897,6 +897,83 @@ AC_SUBST([HAVE_JSON])
 fi dnl }
 
 
+dnl ===========================================================================
+dnl Detect if pkg-config installed
+dnl ===========================================================================
+# check for pkg-config
+AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+if test "$PKG_CONFIG" = "no"; then
+   AC_MSG_WARN([Cannot find pkg-config, make sure it is installed in your PATH])
+fi
+
+
+dnl ===========================================================================
+dnl Detect if protobuf-c installed
+dnl ===========================================================================
+
+CHECK_PROTOBUF=yes
+HAVE_PROTOBUF=no
+
+AC_ARG_WITH([protobuf],
+	[AS_HELP_STRING([--without-protobuf], [build without protobuf-c support])],
+	[CHECK_PROTOBUF="$withval"], [])
+
+if test "$CHECK_PROTOBUF" != "no"; then dnl {
+
+AC_ARG_WITH([protobufdir],
+	[AS_HELP_STRING([--with-protobufdir=PATH], [specify the protobuf-c installation directory])],
+	[PROTOBUFDIR="$withval"], [PROTOBUFDIR=])
+
+if test ! "x$PROTOBUFDIR" = "x"; then
+	dnl Make sure that the directory exists
+	if test "x$PROTOBUFDIR" = "xyes"; then
+		AC_MSG_ERROR([you must specify a parameter to --with-protobufdir, e.g. --with-protobufdir=/path/to])
+	else
+		AC_MSG_RESULT([Using user-specified protobuf-c directory: $PROTOBUFDIR])
+
+		dnl Add the include directory to PROTOBUF_CPPFLAGS
+		PROTOBUF_CPPFLAGS="-I$PROTOBUFDIR/include"
+		PROTOBUF_LDFLAGS="-L$PROTOBUFDIR/lib"
+	fi
+fi
+
+dnl Check that we can find the protobuf/protobuf.h header file
+CPPFLAGS_SAVE="$CPPFLAGS"
+CPPFLAGS="$PROTOBUF_CPPFLAGS"
+AC_CHECK_HEADER([protobuf-c/protobuf-c.h], [HAVE_PROTOBUF=yes], [])	
+CPPFLAGS="$CPPFLAGS_SAVE"
+
+dnl Ensure we can link against libprotobuf-c
+LIBS_SAVE="$LIBS"
+LIBS="$PROTOBUF_LDFLAGS"
+AC_CHECK_LIB([protobuf-c], [protobuf_c_message_check], [HAVE_PROTOBUF=yes; PROTOBUF_LDFLAGS="${PROTOBUF_LDFLAGS} -lprotobuf-c"], [HAVE_PROTOBUF=no])
+LIBS="$LIBS_SAVE"
+
+if test "$PKG_CONFIG" = "no"; then
+	AC_MSG_WARN([Cannot find pkg-config, disabling protobuf support.])
+	HAVE_PROTOBUF=no
+else
+	dnl Ensure libprotobuf-c is of minimum required version
+	PKG_CHECK_MODULES([PROTOBUFC], [libprotobuf-c >= 1.1.0], [HAVE_PROTOBUF=yes], [HAVE_PROTOBUF=no])
+fi
+
+if test "$HAVE_PROTOBUF" = "yes"; then
+	AC_PATH_PROG(PROTOCC, protoc-c)
+	if test "x$PROTOCC" = "x"; then
+	  AC_MSG_WARN([Protobuf compiler missing, disabling protobuf support.])
+	  HAVE_PROTOBUF=no
+	else
+	  AC_DEFINE([HAVE_LIBPROTOBUF], 1, [Define to 1 if libprotobuf-c is present])
+	fi
+fi
+
+AC_SUBST([PROTOBUF_CPPFLAGS])
+AC_SUBST([PROTOBUF_LDFLAGS])
+AC_SUBST([HAVE_PROTOBUF])
+
+fi dnl }
+
+
 
 dnl ===========================================================================
 dnl Detect GTK+2.0 for GUI
@@ -1051,10 +1128,10 @@ else
     AC_MSG_RESULT([ADDRESS_STANDARDIZER support: disabled])
 fi
 
-CPPFLAGS="$PGSQL_CPPFLAGS $GEOS_CPPFLAGS $PROJ_CPPFLAGS $XML2_CPPFLAGS $SFCGAL_CPPFLAGS $JSON_CPPFLAGS $PCRE_CPPFLAGS $CPPFLAGS"
+CPPFLAGS="$PGSQL_CPPFLAGS $GEOS_CPPFLAGS $PROJ_CPPFLAGS $PROTOBUF_CPPFLAGS $XML2_CPPFLAGS $SFCGAL_CPPFLAGS $JSON_CPPFLAGS $PCRE_CPPFLAGS $CPPFLAGS"
 dnl AC_MSG_RESULT([CPPFLAGS: $CPPFLAGS])
 
-SHLIB_LINK="$PGSQL_LDFLAGS $GEOS_LDFLAGS $PROJ_LDFLAGS -lgeos_c -lproj $JSON_LDFLAGS $XML2_LDFLAGS $SFCGAL_LDFLAGS $PCRE_LDFLAGS $EXCLUDELIBS_LDFLAGS"
+SHLIB_LINK="$PGSQL_LDFLAGS $GEOS_LDFLAGS $PROJ_LDFLAGS -lgeos_c -lproj $JSON_LDFLAGS $PROTOBUF_LDFLAGS $XML2_LDFLAGS $SFCGAL_LDFLAGS $PCRE_LDFLAGS $EXCLUDELIBS_LDFLAGS"
 AC_SUBST([SHLIB_LINK])
 dnl AC_MSG_RESULT([SHLIB_LINK: $SHLIB_LINK])
 
@@ -1396,6 +1473,7 @@ AC_MSG_RESULT([  PROJ4 version:        ${POSTGIS_PROJ_VERSION}])
 AC_MSG_RESULT([  Libxml2 config:       ${XML2CONFIG}])
 AC_MSG_RESULT([  Libxml2 version:      ${POSTGIS_LIBXML2_VERSION}])
 AC_MSG_RESULT([  JSON-C support:       ${HAVE_JSON}])
+AC_MSG_RESULT([  protobuf-c support:   ${HAVE_PROTOBUF}])
 AC_MSG_RESULT([  PCRE support:         ${HAVE_PCRE}])
 AC_MSG_RESULT([  PostGIS debug level:  ${POSTGIS_DEBUG_LEVEL}])
 AC_MSG_RESULT([  Perl:                 ${PERL}])

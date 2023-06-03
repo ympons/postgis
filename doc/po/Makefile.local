@@ -1,10 +1,13 @@
-# This file should be included by the Makefile
-# in each language directory
+# This file should be installed in each
+# language directory
 
 local-all: local-html comments
 
 local-html: symlinks
 	$(MAKE) html
+
+local-cheatsheets: symlinks
+	$(MAKE) cheatsheets
 
 local-pdf: symlinks
 	$(MAKE) pdf
@@ -14,7 +17,7 @@ local-check: symlinks
 
 symlinks:
 	rm -f html; ln -s ../../html html
-	rm -f xsl; ln -s ../../xsl xsl
+	rm -f xsl; ln -s $(srcdir)/../../xsl xsl
 
 # for XML_SOURCES
 include ../../Makefile
@@ -23,5 +26,5 @@ include ../../Makefile
 PO2XML=po2xml
 
 $(XML_SOURCES): %.xml: %.xml.po
-	$(PO2XML) ../../$@ $< > $@
+	$(PO2XML) $(srcdir)/../../$@ $< > $@
 

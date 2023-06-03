@@ -384,7 +384,7 @@ rt_band_reclass(
 
 typedef struct _rti_iterator_arg_t* _rti_iterator_arg;
 struct _rti_iterator_arg_t {
-	int count;
+	uint32_t count;
 
 	rt_raster *raster;
 	int *isempty;
@@ -458,7 +458,7 @@ _rti_iterator_arg_init() {
 
 static void
 _rti_iterator_arg_destroy(_rti_iterator_arg _param) {
-	int i = 0;
+	uint32_t i = 0;
 
 	if (_param->raster != NULL)
 		rtdealloc(_param->raster);
@@ -668,8 +668,8 @@ _rti_iterator_arg_populate(
 
 static int
 _rti_iterator_arg_empty_init(_rti_iterator_arg _param) {
-	int x = 0;
-	int y = 0;
+	uint32_t x = 0;
+	uint32_t y = 0;
 
 	_param->empty.values = rtalloc(sizeof(double *) * _param->dimension.rows);
 	_param->empty.nodata = rtalloc(sizeof(int *) * _param->dimension.rows);
@@ -698,7 +698,7 @@ _rti_iterator_arg_empty_init(_rti_iterator_arg _param) {
 
 static int
 _rti_iterator_arg_callback_init(_rti_iterator_arg _param) {
-	int i = 0;
+	uint32_t i = 0;
 
 	_param->arg = rtalloc(sizeof(struct rt_iterator_arg_t));
 	if (_param->arg == NULL) {
@@ -744,8 +744,8 @@ _rti_iterator_arg_callback_init(_rti_iterator_arg _param) {
 
 static void
 _rti_iterator_arg_callback_clean(_rti_iterator_arg _param) {
-	int i = 0;
-	int y = 0;
+	uint32_t i = 0;
+	uint32_t y = 0;
 
 	for (i = 0; i < _param->count; i++) {
 		RASTER_DEBUGF(5, "empty at @ %p", _param->empty.values);
@@ -1015,7 +1015,7 @@ rt_raster_iterator(
 
 			for (i = 0; i < itrcount; i++) {
 				if (!_param->isempty[i]) {
-					memcpy(rtnrast, _param->raster[i], sizeof(struct rt_raster_serialized_t));
+					memcpy(rtnrast, _param->raster[i], sizeof(struct rt_raster_t));
 					break;
 				}
 			}
@@ -1062,6 +1062,7 @@ rt_raster_iterator(
 		*/
 		case ET_FIRST:
 			i = 0;
+			/* FALLTHROUGH */
 		case ET_SECOND:
 			if (i < 0) {
 				if (itrcount < 2)
@@ -1069,9 +1070,10 @@ rt_raster_iterator(
 				else
 					i = 1;
 			}
+			/* FALLTHROUGH */
 		case ET_LAST:
 			if (i < 0) i = itrcount - 1;
-			
+
 			/* input raster is null, return NULL */
 			if (_param->raster[i] == NULL) {
 				RASTER_DEBUGF(3, "returning NULL as %s raster is NULL and extent type is ET_%s",
@@ -1102,6 +1104,7 @@ rt_raster_iterator(
 				*rtnraster = rtnrast;
 				return ES_NONE;
 			}
+			/* FALLTHROUGH */
 		/* copy the custom extent raster */
 		case ET_CUSTOM:
 			rtnrast = rtalloc(sizeof(struct rt_raster_t));
@@ -1115,11 +1118,11 @@ rt_raster_iterator(
 
 			switch (extenttype) {
 				case ET_CUSTOM:
-					memcpy(rtnrast, customextent, sizeof(struct rt_raster_serialized_t));
+					memcpy(rtnrast, customextent, sizeof(struct rt_raster_t));
 					break;
 				/* first, second, last */
 				default:
-					memcpy(rtnrast, _param->raster[i], sizeof(struct rt_raster_serialized_t));
+					memcpy(rtnrast, _param->raster[i], sizeof(struct rt_raster_t));
 					break;
 			}
 			rtnrast->numBands = 0;
@@ -1148,7 +1151,7 @@ rt_raster_iterator(
 
 		_rti_iterator_arg_destroy(_param);
 		rt_raster_destroy(rtnrast);
-		
+
 		return ES_ERROR;
 	}
 
@@ -1239,7 +1242,7 @@ rt_raster_iterator(
 					_param->band.isnodata[i]
 				) {
 					RASTER_DEBUG(4, "empty raster, band does not exist or band is NODATA. using empty values and NODATA");
-					
+
 					x = _x;
 					y = _y;
 
@@ -1366,7 +1369,7 @@ rt_raster_iterator(
 					return ES_ERROR;
 				}
 			}
-	
+
 			/* callback */
 			RASTER_DEBUG(4, "calling callback function");
 			value = 0;

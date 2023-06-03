@@ -31,7 +31,6 @@ CREATE OR REPLACE FUNCTION make_test_raster(
 		rast := ST_MakeEmptyRaster(width, height, ul_x, ul_y, 1, 1, skew_x, skew_y, 0);
 		rast := ST_AddBand(rast, 1, '8BUI', initvalue, nodataval);
 
-
 		INSERT INTO raster_mapalgebra VALUES (rid, rast);
 
 		RETURN;
@@ -261,11 +260,13 @@ FROM (
 		rid1,
 		rid2,
 		extent,
-		(ST_Metadata(rast)).*,
-		(ST_BandMetadata(rast, 1)).*,
+		mda.*,
+		bmd.*,
 		ST_Value(rast, 1, 1, 1) AS firstvalue,
 		ST_Value(rast, 1, ST_Width(rast), ST_Height(rast)) AS lastvalue
 	FROM raster_mapalgebra_out
+		LEFT JOIN LATERAL ST_Metadata(rast) AS mda ON true
+		LEFT JOIN LATERAL ST_BandMetadata(rast, 1) AS bmd ON true
 ) AS r;
 
 DROP TABLE IF EXISTS raster_mapalgebra;

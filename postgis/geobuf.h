@@ -31,7 +31,8 @@
 #include "utils/array.h"
 #include "utils/typcache.h"
 #include "utils/lsyscache.h"
-#include "catalog/pg_type.h" 
+#include "catalog/pg_type.h"
+#include "catalog/namespace.h"
 #include "executor/spi.h"
 #include "executor/executor.h"
 #include "access/htup_details.h"
@@ -41,7 +42,7 @@
 #include "lwgeom_pg.h"
 #include "lwgeom_log.h"
 
-#ifdef HAVE_LIBPROTOBUF
+#if defined HAVE_LIBPROTOBUF
 
 #include "geobuf.pb-c.h"
 

@@ -166,7 +166,7 @@ RTreeCreateInteriorNode(RTREE_NODE* left, RTREE_NODE* right)
 * Creates a leaf node given the pointer to the start point of the segment.
 */
 static RTREE_NODE*
-RTreeCreateLeafNode(POINTARRAY* pa, int startPoint)
+RTreeCreateLeafNode(POINTARRAY* pa, uint32_t startPoint)
 {
 	RTREE_NODE *parent;
 	LWLINE *line;
@@ -192,13 +192,13 @@ RTreeCreateLeafNode(POINTARRAY* pa, int startPoint)
 	getPoint4d_p(pa, startPoint, &tmp);
 	value1 = tmp.y;
 	ptarray_append_point(npa,&tmp,LW_TRUE);
-	
+
 	getPoint4d_p(pa, startPoint+1, &tmp);
 	value2 = tmp.y;
 	ptarray_append_point(npa,&tmp,LW_TRUE);
 
 	line = lwline_construct(SRID_UNKNOWN, NULL, npa);
-	
+
 	parent = lwalloc(sizeof(RTREE_NODE));
 	parent->interval = RTreeCreateInterval(value1, value2);
 	parent->segment = line;
@@ -219,8 +219,8 @@ RTreeCreate(POINTARRAY* pointArray)
 {
 	RTREE_NODE* root;
 	RTREE_NODE** nodes = lwalloc(pointArray->npoints * sizeof(RTREE_NODE*));
-	int i, nodeCount;
-	int childNodes, parentNodes;
+	uint32_t i, nodeCount;
+	uint32_t childNodes, parentNodes;
 
 	POSTGIS_DEBUGF(2, "RTreeCreate called with pointarray %p", pointArray);
 
@@ -283,7 +283,7 @@ RTreeMergeMultiLines(LWMLINE *line1, LWMLINE *line2)
 {
 	LWGEOM **geoms;
 	LWCOLLECTION *col;
-	int i, j, ngeoms;
+	uint32_t i, j, ngeoms;
 
 	POSTGIS_DEBUGF(2, "RTreeMergeMultiLines called on %p, %d, %d; %p, %d, %d", line1, line1->ngeoms, line1->type, line2, line2->ngeoms, line2->type);
 
@@ -315,13 +315,13 @@ RTreeMergeMultiLines(LWMLINE *line1, LWMLINE *line2)
 static int
 RTreeBuilder(const LWGEOM* lwgeom, GeomCache* cache)
 {
-	int i, p, r;
+	uint32_t i, p, r;
 	LWMPOLY *mpoly;
 	LWPOLY *poly;
 	int nrings;
 	RTreeGeomCache* rtree_cache = (RTreeGeomCache*)cache;
 	RTREE_POLY_CACHE* currentCache;
-	
+
 	if ( ! cache )
 		return LW_FAILURE;
 
@@ -330,7 +330,7 @@ RTreeBuilder(const LWGEOM* lwgeom, GeomCache* cache)
 		lwpgerror("RTreeBuilder asked to build index where one already exists.");
 		return LW_FAILURE;
 	}
-	
+
 	if (lwgeom->type == MULTIPOLYGONTYPE)
 	{
 		POSTGIS_DEBUG(2, "RTreeBuilder MULTIPOLYGON");
@@ -387,7 +387,7 @@ RTreeBuilder(const LWGEOM* lwgeom, GeomCache* cache)
 		lwpgerror("RTreeBuilder got asked to build index on non-polygon");
 		return LW_FAILURE;
 	}
-	return LW_SUCCESS;	
+	return LW_SUCCESS;
 }
 
 /**
@@ -398,16 +398,16 @@ static int
 RTreeFreer(GeomCache* cache)
 {
 	RTreeGeomCache* rtree_cache = (RTreeGeomCache*)cache;
-	
+
 	if ( ! cache )
 		return LW_FAILURE;
-	
+
 	if ( rtree_cache->index )
 	{
 		RTreeCacheClear(rtree_cache->index);
 		lwfree(rtree_cache->index);
 		rtree_cache->index = 0;
-		rtree_cache->argnum = 0;
+		rtree_cache->gcache.argnum = 0;
 	}
 	return LW_SUCCESS;
 }
@@ -428,8 +428,8 @@ static GeomCacheMethods RTreeCacheMethods =
 	RTreeAllocator
 };
 
-RTREE_POLY_CACHE*
-GetRtreeCache(FunctionCallInfoData* fcinfo, GSERIALIZED* g1)
+RTREE_POLY_CACHE *
+GetRtreeCache(FunctionCallInfo fcinfo, SHARED_GSERIALIZED *g1)
 {
 	RTreeGeomCache* cache = (RTreeGeomCache*)GetGeomCache(fcinfo, &RTreeCacheMethods, g1, NULL);
 	RTREE_POLY_CACHE* index = NULL;
@@ -471,7 +471,7 @@ LWMLINE *RTreeFindLineSegments(RTREE_NODE *root, double value)
 		lwgeoms = lwalloc(sizeof(LWGEOM *));
 		lwgeoms[0] = (LWGEOM *)root->segment;
 
-		POSTGIS_DEBUGF(3, "Found geom %p, type %d, dim %d", root->segment, root->segment->type, FLAGS_GET_Z(root->segment->flags));
+		POSTGIS_DEBUGF(3, "Found geom %p, type %d, dim %d", root->segment, root->segment->type, lwgeom_ndims((LWGEOM *)(root->segment)));
 
 		result = (LWMLINE *)lwcollection_construct(MULTILINETYPE, SRID_UNKNOWN, NULL, 1, lwgeoms);
 	}
@@ -484,7 +484,7 @@ LWMLINE *RTreeFindLineSegments(RTREE_NODE *root, double value)
 		tmp = RTreeFindLineSegments(root->leftNode, value);
 		if (tmp)
 		{
-			POSTGIS_DEBUGF(3, "Found geom %p, type %d, dim %d", tmp, tmp->type, FLAGS_GET_Z(tmp->flags));
+			POSTGIS_DEBUGF(3, "Found geom %p, type %d, dim %d", tmp, tmp->type, lwgeom_ndims((LWGEOM *)tmp));
 
 			if (result)
 				result = RTreeMergeMultiLines(result, tmp);
@@ -501,7 +501,7 @@ LWMLINE *RTreeFindLineSegments(RTREE_NODE *root, double value)
 		tmp = RTreeFindLineSegments(root->rightNode, value);
 		if (tmp)
 		{
-			POSTGIS_DEBUGF(3, "Found geom %p, type %d, dim %d", tmp, tmp->type, FLAGS_GET_Z(tmp->flags));
+			POSTGIS_DEBUGF(3, "Found geom %p, type %d, dim %d", tmp, tmp->type, lwgeom_ndims((LWGEOM *)tmp));
 
 			if (result)
 				result = RTreeMergeMultiLines(result, tmp);

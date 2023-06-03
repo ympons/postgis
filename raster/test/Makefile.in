@@ -11,15 +11,18 @@ RT_CORE=../rt_core
 
 all: check
 
-core-check:
+check: check-unit check-regress
+
+core-check: check-unit
+
+check-unit:
 	$(MAKE) -C cunit check
 
-check: core-check
+check-regress:
 	$(MAKE) -C regress check
 
 clean:
 	$(MAKE) -C cunit $@
-	$(MAKE) -C regress $@
 
 distclean: clean
 	$(MAKE) -C cunit $@

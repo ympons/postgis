@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 ## begin variables passed in by jenkins
 
@@ -13,6 +13,14 @@ set -e
 # export GDAL_VER=2.0
 # export MAKE_GARDEN=1
 # export MAKE_EXTENSION=1
+
+export PG_VER=13
+# export PGPORT=8442
+export OS_BUILD=64
+#this is passed in via postgis_make_dist.sh via jenkins
+#export reference=
+export GEOS_VER=3.10
+export GDAL_VER=3.4
 
 ## end variables passed in by jenkins
 
@@ -36,10 +44,11 @@ CPPFLAGS="-I${PGPATH}/include"  \
 LDFLAGS="-L${PGPATH}/lib"  ./configure \
   --with-pgconfig=${PGPATH}/bin/pg_config \
   --with-geosconfig=${PROJECTS}/geos/rel-${GEOS_VER}w${OS_BUILD}/bin/geos-config \
-  --without-raster
+  --without-raster --without-protobuf
 make clean
 cd doc
-
+make update-pot
+make pull-tx
 
 mv postgis.xml postgis.xml.orig
 sed -e "s:</title>:</title><subtitle><subscript>SVN Revision (<emphasis>${POSTGIS_SVN_REVISION}</emphasis>)</subscript></subtitle>:" postgis.xml.orig > postgis.xml
@@ -49,7 +58,7 @@ make check-localized
 #make pdf
 rm -rf images
 mkdir images
-cp html/images/* images 
+cp html/images/* images
 #make epub
 #make -e chunked-html 2>&1 | tee -a doc-errors.log
 #make update-po

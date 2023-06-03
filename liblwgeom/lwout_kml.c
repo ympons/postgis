@@ -30,6 +30,7 @@
 static int lwgeom_to_kml2_sb(const LWGEOM *geom, int precision, const char *prefix, stringbuffer_t *sb);
 static int lwpoint_to_kml2_sb(const LWPOINT *point, int precision, const char *prefix, stringbuffer_t *sb);
 static int lwline_to_kml2_sb(const LWLINE *line, int precision, const char *prefix, stringbuffer_t *sb);
+static int lwtriangle_to_kml2_sb(const LWTRIANGLE *tri, int precision, const char *prefix, stringbuffer_t *sb);
 static int lwpoly_to_kml2_sb(const LWPOLY *poly, int precision, const char *prefix, stringbuffer_t *sb);
 static int lwcollection_to_kml2_sb(const LWCOLLECTION *col, int precision, const char *prefix, stringbuffer_t *sb);
 static int ptarray_to_kml2_sb(const POINTARRAY *pa, int precision, stringbuffer_t *sb);
@@ -39,12 +40,11 @@ static int ptarray_to_kml2_sb(const POINTARRAY *pa, int precision, stringbuffer_
 */
 
 /* takes a GEOMETRY and returns a KML representation */
-char*
+lwvarlena_t *
 lwgeom_to_kml2(const LWGEOM *geom, int precision, const char *prefix)
 {
 	stringbuffer_t *sb;
 	int rv;
-	char *kml;
 
 	/* Can't do anything with empty */
 	if( lwgeom_is_empty(geom) )
@@ -52,17 +52,17 @@ lwgeom_to_kml2(const LWGEOM *geom, int precision, const char *prefix)
 
 	sb = stringbuffer_create();
 	rv = lwgeom_to_kml2_sb(geom, precision, prefix, sb);
-	
+
 	if ( rv == LW_FAILURE )
 	{
 		stringbuffer_destroy(sb);
 		return NULL;
 	}
-	
-	kml = stringbuffer_getstringcopy(sb);
+
+	lwvarlena_t *v = stringbuffer_getvarlenacopy(sb);
 	stringbuffer_destroy(sb);
-	
-	return kml;
+
+	return v;
 }
 
 static int
@@ -76,12 +76,16 @@ lwgeom_to_kml2_sb(const LWGEOM *geom, int precision, const char *prefix, stringb
 	case LINETYPE:
 		return lwline_to_kml2_sb((LWLINE*)geom, precision, prefix, sb);
 
+	case TRIANGLETYPE:
+		return lwtriangle_to_kml2_sb((LWTRIANGLE *)geom, precision, prefix, sb);
+
 	case POLYGONTYPE:
 		return lwpoly_to_kml2_sb((LWPOLY*)geom, precision, prefix, sb);
 
 	case MULTIPOINTTYPE:
 	case MULTILINETYPE:
 	case MULTIPOLYGONTYPE:
+	case TINTYPE:
 		return lwcollection_to_kml2_sb((LWCOLLECTION*)geom, precision, prefix, sb);
 
 	default:
@@ -93,28 +97,20 @@ lwgeom_to_kml2_sb(const LWGEOM *geom, int precision, const char *prefix, stringb
 static int
 ptarray_to_kml2_sb(const POINTARRAY *pa, int precision, stringbuffer_t *sb)
 {
-	int i, j;
-	int dims = FLAGS_GET_Z(pa->flags) ? 3 : 2;
+	uint32_t i, j;
+	uint32_t dims = FLAGS_GET_Z(pa->flags) ? 3 : 2;
 	POINT4D pt;
 	double *d;
-	
+
 	for ( i = 0; i < pa->npoints; i++ )
 	{
 		getPoint4d_p(pa, i, &pt);
 		d = (double*)(&pt);
-		if ( i ) stringbuffer_append(sb," ");
+		if ( i ) stringbuffer_append_len(sb," ",1);
 		for (j = 0; j < dims; j++)
 		{
-			if ( j ) stringbuffer_append(sb,",");
-			if( fabs(d[j]) < OUT_MAX_DOUBLE )
-			{
-				if ( stringbuffer_aprintf(sb, "%.*f", precision, d[j]) < 0 ) return LW_FAILURE;
-			}
-			else
-			{
-				if ( stringbuffer_aprintf(sb, "%g", d[j]) < 0 ) return LW_FAILURE;
-			}
-			stringbuffer_trim_trailing_zeroes(sb);
+			if ( j ) stringbuffer_append_len(sb,",",1);
+			stringbuffer_append_double(sb, d[j], precision);
 		}
 	}
 	return LW_SUCCESS;
@@ -142,15 +138,35 @@ lwline_to_kml2_sb(const LWLINE *line, int precision, const char *prefix, stringb
 	if ( ptarray_to_kml2_sb(line->points, precision, sb) == LW_FAILURE ) return LW_FAILURE;
 	/* Close linestring */
 	if ( stringbuffer_aprintf(sb, "</%scoordinates></%sLineString>", prefix, prefix) < 0 ) return LW_FAILURE;
-	
+
+	return LW_SUCCESS;
+}
+
+static int
+lwtriangle_to_kml2_sb(const LWTRIANGLE *tri, int precision, const char *prefix, stringbuffer_t *sb)
+{
+	/* Open polygon */
+	if (stringbuffer_aprintf(
+		sb, "<%sPolygon><%souterBoundaryIs><%sLinearRing><%scoordinates>", prefix, prefix, prefix, prefix) < 0)
+		return LW_FAILURE;
+	/* Coordinate array */
+	if (ptarray_to_kml2_sb(tri->points, precision, sb) == LW_FAILURE)
+		return LW_FAILURE;
+	/* Close polygon */
+	if (stringbuffer_aprintf(
+		sb, "</%scoordinates></%sLinearRing></%souterBoundaryIs></%sPolygon>", prefix, prefix, prefix, prefix) <
+	    0)
+		return LW_FAILURE;
+
 	return LW_SUCCESS;
 }
 
 static int
 lwpoly_to_kml2_sb(const LWPOLY *poly, int precision, const char *prefix, stringbuffer_t *sb)
 {
-	int i, rv;
-	
+	uint32_t i;
+	int rv;
+
 	/* Open polygon */
 	if ( stringbuffer_aprintf(sb, "<%sPolygon>", prefix) < 0 ) return LW_FAILURE;
 	for ( i = 0; i < poly->nrings; i++ )
@@ -159,17 +175,17 @@ lwpoly_to_kml2_sb(const LWPOLY *poly, int precision, const char *prefix, stringb
 		if( i )
 			rv = stringbuffer_aprintf(sb, "<%sinnerBoundaryIs><%sLinearRing><%scoordinates>", prefix, prefix, prefix);
 		else
-			rv = stringbuffer_aprintf(sb, "<%souterBoundaryIs><%sLinearRing><%scoordinates>", prefix, prefix, prefix);		
+			rv = stringbuffer_aprintf(sb, "<%souterBoundaryIs><%sLinearRing><%scoordinates>", prefix, prefix, prefix);
 		if ( rv < 0 ) return LW_FAILURE;
-		
+
 		/* Coordinate array */
 		if ( ptarray_to_kml2_sb(poly->rings[i], precision, sb) == LW_FAILURE ) return LW_FAILURE;
-		
+
 		/* Inner or outer ring closing tags */
 		if( i )
 			rv = stringbuffer_aprintf(sb, "</%scoordinates></%sLinearRing></%sinnerBoundaryIs>", prefix, prefix, prefix);
 		else
-			rv = stringbuffer_aprintf(sb, "</%scoordinates></%sLinearRing></%souterBoundaryIs>", prefix, prefix, prefix);		
+			rv = stringbuffer_aprintf(sb, "</%scoordinates></%sLinearRing></%souterBoundaryIs>", prefix, prefix, prefix);
 		if ( rv < 0 ) return LW_FAILURE;
 	}
 	/* Close polygon */
@@ -181,14 +197,15 @@ lwpoly_to_kml2_sb(const LWPOLY *poly, int precision, const char *prefix, stringb
 static int
 lwcollection_to_kml2_sb(const LWCOLLECTION *col, int precision, const char *prefix, stringbuffer_t *sb)
 {
-	int i, rv;
-		
+	uint32_t i;
+	int rv;
+
 	/* Open geometry */
 	if ( stringbuffer_aprintf(sb, "<%sMultiGeometry>", prefix) < 0 ) return LW_FAILURE;
 	for ( i = 0; i < col->ngeoms; i++ )
 	{
 		rv = lwgeom_to_kml2_sb(col->geoms[i], precision, prefix, sb);
-		if ( rv == LW_FAILURE ) return LW_FAILURE;		
+		if ( rv == LW_FAILURE ) return LW_FAILURE;
 	}
 	/* Close geometry */
 	if ( stringbuffer_aprintf(sb, "</%sMultiGeometry>", prefix) < 0 ) return LW_FAILURE;

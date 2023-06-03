@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2017-01-28 07:02+0000\n"
+"Report-Msgid-Bugs-To: https://bugs.kde.org\n"
+"POT-Creation-Date: 2022-07-13 19:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
@@ -43,7 +43,7 @@ msgstr ""
 #: extras_address_standardizer.xml:6
 #, no-c-format
 msgid ""
-"The code is built into a single postgresql extension library called "
+"The code is built into a single PostgreSQL extension library called "
 "<code>address_standardizer</code> which can be installed with <code>CREATE "
 "EXTENSION address_standardizer;</code>. In addition to the "
 "address_standardizer extension, a sample data extension called "
@@ -64,8 +64,8 @@ msgstr ""
 #: extras_address_standardizer.xml:8
 #, no-c-format
 msgid ""
-"For installation instructions refer to: <xref linkend="
-"\"installing_pagc_address_standardizer\"/>."
+"For installation instructions refer to: <xref "
+"linkend=\"installing_pagc_address_standardizer\"/>."
 msgstr ""
 
 #. Tag: title
@@ -180,8 +180,8 @@ msgstr ""
 #: extras_address_standardizer.xml:51
 #, no-c-format
 msgid ""
-"The token numbers denote the output reference number in the <xref linkend="
-"\"rulestab\"/>."
+"The token numbers denote the output reference number in the <xref "
+"linkend=\"rulestab\"/>."
 msgstr ""
 
 #. Tag: para
@@ -311,7 +311,7 @@ msgstr ""
 #: extras_address_standardizer.xml:95
 #, no-c-format
 msgid ""
-"is text (token number <code>8</code>): RURAL ROUTE . Example <emphasis>8</"
+"is text (token number <code>8</code>): RURAL ROUTE . Example <emphasis>7</"
 "emphasis> in <code>RR 7</code>."
 msgstr ""
 
@@ -510,8 +510,8 @@ msgstr ""
 #: extras_address_standardizer.xml:168
 #, no-c-format
 msgid ""
-"Numbers for corresponding output tokens are listed in <xref linkend=\"stdaddr"
-"\"/>."
+"Numbers for corresponding output tokens are listed in <xref "
+"linkend=\"stdaddr\"/>."
 msgstr ""
 
 #. Tag: title
@@ -546,8 +546,8 @@ msgstr ""
 #: extras_address_standardizer.xml:181
 #, no-c-format
 msgid ""
-"(13). The ampersand (&amp;) is frequently used to abbreviate the word \"and"
-"\"."
+"(13). The ampersand (&amp;) is frequently used to abbreviate the word "
+"\"and\"."
 msgstr ""
 
 #. Tag: term
@@ -1075,7 +1075,7 @@ msgstr ""
 #: extras_address_standardizer.xml:448
 #, no-c-format
 msgid ""
-"i(token number <code>14</code>): The <emphasis role=\"bold\">BOX</emphasis> "
+"(token number <code>14</code>): The <emphasis role=\"bold\">BOX</emphasis> "
 "in <code>BOX 3B</code>"
 msgstr ""
 
@@ -1236,7 +1236,7 @@ msgstr ""
 #: extras_address_standardizer.xml:529
 #, no-c-format
 msgid ""
-"A gaz (short for gazeteer) table is used to classify place names and "
+"A gaz (short for gazeteer) table is used to standardize place names and "
 "associate that input with <xref linkend=\"rule_input_tokens\"/> and (b) "
 "standardized representations. For example if you are in US, you may load "
 "these with State Names and associated abbreviations."
@@ -1287,7 +1287,7 @@ msgstr ""
 #: extras_address_standardizer.xml:588
 #, no-c-format
 msgid ""
-"Returns takes as input an address, and returns a record output consisting of "
+"Returns takes an address as input, and returns a record output consisting of "
 "fields <emphasis>num</emphasis>, <emphasis>street</emphasis>, "
 "<emphasis>street2</emphasis>, <emphasis>address1</emphasis>, <emphasis>city</"
 "emphasis>, <emphasis>state</emphasis>, <emphasis>zip</emphasis>, "
@@ -1558,6 +1558,6 @@ msgstr ""
 #: extras_address_standardizer.xml:684
 #, no-c-format
 msgid ""
-", <xref linkend=\"rulestab\"/>, <xref linkend=\"lextab\"/>, <xref linkend="
-"\"gaztab\"/>, <xref linkend=\"Pagc_Normalize_Address\"/>"
+", <xref linkend=\"rulestab\"/>, <xref linkend=\"lextab\"/>, <xref "
+"linkend=\"gaztab\"/>, <xref linkend=\"Pagc_Normalize_Address\"/>"
 msgstr ""

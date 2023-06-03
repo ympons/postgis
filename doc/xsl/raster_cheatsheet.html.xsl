@@ -8,12 +8,12 @@
 	 statements from postgis xml doc reference
      ******************************************************************** -->
 	<xsl:output method="text" />
-	<xsl:variable name='postgis_version'>2.1</xsl:variable>
+	<xsl:variable name='postgis_version'>3.4</xsl:variable>
 	<xsl:variable name='new_tag'>Availability: <xsl:value-of select="$postgis_version" /></xsl:variable>
 	<xsl:variable name='enhanced_tag'>Enhanced: <xsl:value-of select="$postgis_version" /></xsl:variable>
 	<xsl:variable name='include_examples'>false</xsl:variable>
 	<xsl:variable name='output_purpose'>true</xsl:variable>
-	<xsl:variable name='linkstub'>http://postgis.net/docs/manual-dev/</xsl:variable>
+	<xsl:variable name='linkstub'>https://postgis.net/docs/manual-<xsl:value-of select="$postgis_version" />/</xsl:variable>
 <xsl:template match="/">
 	<xsl:text><![CDATA[<html><head><title>PostGIS Raster Cheat Sheet</title>
 	<style type="text/css">
@@ -75,7 +75,7 @@ body {
 	color: #fff;
 	background-color: #4a124a;
 	font-size: 9.5pt;
-	
+
 }
 .section td {
 	font-family: Arial, sans-serif;
@@ -104,7 +104,7 @@ code {font-size: 8pt}
 -->
 </style>
 	</head><body><h1 style='text-align:center'>PostGIS ]]></xsl:text> <xsl:value-of select="$postgis_version" /><xsl:text><![CDATA[ Raster Cheatsheet</h1>]]></xsl:text>
-		<xsl:text><![CDATA[<span class='notes'>New in this release <sup>1</sup> Enhanced in this release <sup>2</sup> Requires GEOS 3.3 or higher<sup>g3.3</sup>    &nbsp;2.5/3D support<sup>3d</sup>&nbsp;SQL-MM<sup>mm</sup> &nbsp;Supports geography <sup>G</sup></span> <div id="content_functions">]]></xsl:text>
+		<xsl:text><![CDATA[<span class='notes'>New in this release <sup>1</sup> Enhanced in this release <sup>2</sup> Requires GEOS 3.9 or higher<sup>g3.9</sup> &nbsp;aggregate <sup>agg</sup> &nbsp;&nbsp;  &nbsp;2.5/3D support<sup>3d</sup>&nbsp;SQL-MM<sup>mm</sup> &nbsp;Supports geography <sup>G</sup></span> <div id="content_functions">]]></xsl:text>
 			<xsl:apply-templates select="/book/chapter[@id='RT_reference']" name="function_list" />
 			<xsl:text><![CDATA[</div>]]></xsl:text>
 			<xsl:text><![CDATA[<div id="content_examples">]]></xsl:text>
@@ -115,8 +115,8 @@ code {font-size: 8pt}
 			<xsl:text><![CDATA[</div>]]></xsl:text>
 			<xsl:text><![CDATA[</body></html>]]></xsl:text>
 </xsl:template>
-			
-        
+
+
   <xsl:template match="chapter" name="function_list">
 		<xsl:for-each select="sect1[//funcprototype]">
 			<!--Beginning of section -->
@@ -124,25 +124,27 @@ code {font-size: 8pt}
 				<xsl:value-of select="title" />
 				<!-- end of section header beginning of function list -->
 				<xsl:text><![CDATA[</th></tr>]]></xsl:text>
-			<xsl:for-each select="refentry">
+			<xsl:for-each select="current()//refentry">
 				<!-- add row for each function and alternate colors of rows -->
 				<!-- , hyperlink to online manual -->
-		 		<![CDATA[<tr]]> class="<xsl:choose><xsl:when test="position() mod 2 = 0">evenrow</xsl:when><xsl:otherwise>oddrow</xsl:otherwise></xsl:choose>" <![CDATA[><td colspan='2'><span class='func'>]]><xsl:text><![CDATA[<a href="]]></xsl:text><xsl:value-of select="$linkstub" /><xsl:value-of select="@id" />.html<xsl:text><![CDATA[" target="_blank">]]></xsl:text><xsl:value-of select="refnamediv/refname" /><xsl:text><![CDATA[</a>]]></xsl:text><![CDATA[</span>]]><xsl:if test="contains(.,$new_tag)"><![CDATA[<sup>1</sup> ]]></xsl:if> 
+		 		<![CDATA[<tr]]> class="<xsl:choose><xsl:when test="position() mod 2 = 0">evenrow</xsl:when><xsl:otherwise>oddrow</xsl:otherwise></xsl:choose>" <![CDATA[><td colspan='2'><span class='func'>]]><xsl:text><![CDATA[<a href="]]></xsl:text><xsl:value-of select="$linkstub" /><xsl:value-of select="@id" />.html<xsl:text><![CDATA[" target="_blank">]]></xsl:text><xsl:value-of select="refnamediv/refname" /><xsl:text><![CDATA[</a>]]></xsl:text><![CDATA[</span>]]><xsl:if test="contains(.,$new_tag)"><![CDATA[<sup>1</sup> ]]></xsl:if>
 		 		<!-- enhanced tag -->
 		 		<xsl:if test="contains(.,$enhanced_tag)"><![CDATA[<sup>2</sup> ]]></xsl:if>
 		 		<xsl:if test="contains(.,'implements the SQL/MM')"><![CDATA[<sup>mm</sup> ]]></xsl:if>
 		 		<xsl:if test="contains(refsynopsisdiv/funcsynopsis,'geography') or contains(refsynopsisdiv/funcsynopsis/funcprototype/funcdef,'geography')"><![CDATA[<sup>G</sup>  ]]></xsl:if>
-		 		<xsl:if test="contains(.,'GEOS &gt;= 3.3')"><![CDATA[<sup>g3.3</sup> ]]></xsl:if>
+		 		<xsl:if test="contains(.,'GEOS &gt;= 3.9')"><![CDATA[<sup>g3.9</sup> ]]></xsl:if>
 		 		<xsl:if test="contains(.,'This function supports 3d')"><![CDATA[<sup>3D</sup> ]]></xsl:if>
 		 		<!-- if only one proto just dispaly it on first line -->
 		 		<xsl:if test="count(refsynopsisdiv/funcsynopsis/funcprototype) = 1">
-		 			(<xsl:call-template name="list_in_params"><xsl:with-param name="func" select="refsynopsisdiv/funcsynopsis/funcprototype" /></xsl:call-template>)
+		 			(<xsl:call-template name="list_in_params"><xsl:with-param name="func" select="refsynopsisdiv/funcsynopsis/funcprototype" /></xsl:call-template><xsl:if test=".//paramdef[contains(type,'setof')] or .//paramdef[contains(type,'geography set')] or
+						.//paramdef[contains(type,'raster set')]"><![CDATA[<sup> agg</sup> ]]></xsl:if><xsl:if test=".//paramdef[contains(type,'winset')]"><![CDATA[ <sup>W</sup> ]]></xsl:if>)
 		 		</xsl:if>
-		 		
+
 		 		<![CDATA[&nbsp;&nbsp;]]>
 		 		<xsl:if test="$output_purpose = 'true'"><xsl:value-of select="refnamediv/refpurpose" /></xsl:if>
 		 		<!-- output different proto arg combos -->
-		 		<xsl:if test="count(refsynopsisdiv/funcsynopsis/funcprototype) &gt; 1"><![CDATA[<span class='func_args'><ol>]]><xsl:for-each select="refsynopsisdiv/funcsynopsis/funcprototype"><![CDATA[<li>]]><xsl:call-template name="list_in_params"><xsl:with-param name="func" select="." /></xsl:call-template><![CDATA[</li>]]></xsl:for-each>
+		 		<xsl:if test="count(refsynopsisdiv/funcsynopsis/funcprototype) &gt; 1"><![CDATA[<span class='func_args'><ol>]]><xsl:for-each select="refsynopsisdiv/funcsynopsis/funcprototype"><![CDATA[<li>]]><xsl:call-template name="list_in_params"><xsl:with-param name="func" select="." /></xsl:call-template><xsl:if test=".//paramdef[contains(type,' set')] or .//paramdef[contains(type,'setof')] or .//paramdef[contains(type,'geography set')] or
+						.//paramdef[contains(type,'raster set') ]"><![CDATA[<sup> agg</sup> ]]></xsl:if><xsl:if test=".//paramdef[contains(type,'winset')]"><![CDATA[ <sup>W</sup> ]]></xsl:if><![CDATA[</li>]]></xsl:for-each>
 		 		<![CDATA[</ol></span>]]></xsl:if>
 		 		<![CDATA[</td></tr>]]>
 		 	</xsl:for-each>
@@ -150,7 +152,7 @@ code {font-size: 8pt}
 		 	<![CDATA[</table>]]>
 		</xsl:for-each>
 	</xsl:template>
-	
+
 	 <xsl:template match="sect1[//refentry//refsection/programlisting]">
 	 		<!-- less than needed for converting html tags in listings so they are printable -->
 	 		<xsl:variable name="lt"><xsl:text><![CDATA[<]]></xsl:text></xsl:variable>
@@ -163,7 +165,7 @@ code {font-size: 8pt}
 				<xsl:text><![CDATA[</th></tr>]]></xsl:text>
 				<!--only pull the first example section of each function -->
 			<xsl:for-each select="refentry//refsection[contains(title,'Example')][1]/programlisting[1]">
-				
+
 				 <xsl:variable name='plainlisting'>
 					<xsl:call-template name="globalReplace">
 						<xsl:with-param name="outputString" select="."/>
@@ -171,13 +173,13 @@ code {font-size: 8pt}
 						<xsl:with-param name="replacement" select="'&amp;lt;'"/>
 					</xsl:call-template>
 				</xsl:variable>
-				
+
 				<xsl:variable name='listing'>
 					<xsl:call-template name="break">
 						<xsl:with-param name="text" select="$plainlisting" />
 					</xsl:call-template>
 				</xsl:variable>
-				
+
 
 
 				<!-- add row for each function and alternate colors of rows -->
@@ -187,11 +189,11 @@ code {font-size: 8pt}
 		 	<![CDATA[</table>]]>
 		 	</xsl:if>
 		 	<!--close section -->
-		 
-		
+
+
 	</xsl:template>
-	
-<!--General replace macro hack to make up for the fact xsl 1.0 does not have a built in one.  
+
+<!--General replace macro hack to make up for the fact xsl 1.0 does not have a built in one.
 	Not needed for xsl 2.0 lifted from http://www.xml.com/pub/a/2002/06/05/transforming.html -->
 	<xsl:template name="globalReplace">
 	  <xsl:param name="outputString"/>
@@ -203,10 +205,10 @@ code {font-size: 8pt}
 			"concat(substring-before($outputString,$target),
 				   $replacement)"/>
 		  <xsl:call-template name="globalReplace">
-			<xsl:with-param name="outputString" 
+			<xsl:with-param name="outputString"
 				 select="substring-after($outputString,$target)"/>
 			<xsl:with-param name="target" select="$target"/>
-			<xsl:with-param name="replacement" 
+			<xsl:with-param name="replacement"
 				 select="$replacement"/>
 		  </xsl:call-template>
 		</xsl:when>
@@ -215,7 +217,7 @@ code {font-size: 8pt}
 		</xsl:otherwise>
 	  </xsl:choose>
 	</xsl:template>
-	
+
 <xsl:template name="break">
   <xsl:param name="text" select="."/>
   <xsl:choose>
@@ -223,8 +225,8 @@ code {font-size: 8pt}
       <xsl:value-of select="substring-before($text, '&#xa;')"/>
       <![CDATA[<br/>]]>
       <xsl:call-template name="break">
-        <xsl:with-param 
-          name="text" 
+        <xsl:with-param
+          name="text"
           select="substring-after($text, '&#xa;')"
         />
       </xsl:call-template>
@@ -242,14 +244,14 @@ code {font-size: 8pt}
 		<xsl:if test="count(paramdef/parameter)  &gt; 0"> </xsl:if>
 		<xsl:for-each select="paramdef">
 			<xsl:choose>
-				<xsl:when test="not( contains(parameter, 'OUT') )"> 
+				<xsl:when test="not( contains(parameter, 'OUT') )">
 					<xsl:value-of select="parameter" />
 					<xsl:if test="position()&lt;last()"><xsl:text>, </xsl:text></xsl:if>
 				</xsl:when>
 			</xsl:choose>
-			
+
 		</xsl:for-each>
-	</xsl:for-each>	
+	</xsl:for-each>
 </xsl:template>
 
 </xsl:stylesheet>

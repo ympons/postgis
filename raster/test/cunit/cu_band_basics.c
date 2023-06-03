@@ -2,6 +2,7 @@
  * PostGIS Raster - Raster Types for PostGIS
  * http://trac.osgeo.org/postgis/wiki/WKTRaster
  *
+ * Copyright (C) 2018 Bborie Park <dustymugs@gmail.com>
  * Copyright (C) 2012 Regents of the University of California
  *   <bkpark@ucdavis.edu>
  *
@@ -32,7 +33,7 @@ static void test_band_metadata() {
 	int height = 5;
 	int temp = 0;
 	double val = 0;
-	char *path = "../regress/loader/testraster.tif";
+	char *path = POSTGIS_TOP_SRC_DIR "/raster/test/regress/loader/testraster.tif";
 	uint8_t extband = 0;
 	int x;
 	int y;
@@ -52,6 +53,9 @@ static void test_band_metadata() {
 
 	/* isoffline */
 	CU_ASSERT(!rt_band_is_offline(band));
+
+        CU_ASSERT_EQUAL(rt_band_get_file_size(band), 0);
+        CU_ASSERT_EQUAL(rt_band_get_file_timestamp(band), 0);
 
 	/* data */
 	CU_ASSERT(rt_band_get_data(band) != NULL);
@@ -116,6 +120,9 @@ static void test_band_metadata() {
 
 	/* ext path */
 	CU_ASSERT_STRING_EQUAL(rt_band_get_ext_path(band), path);
+
+        CU_ASSERT_EQUAL(rt_band_get_file_size(band), 13674);
+        CU_ASSERT_NOT_EQUAL(rt_band_get_file_timestamp(band), 0);
 
 	/* ext band number */
 	CU_ASSERT_EQUAL(rt_band_get_ext_band_num(band, &extband), ES_NONE);
@@ -1239,7 +1246,7 @@ static void test_band_get_pixel_line() {
 	CU_ASSERT_EQUAL(nvals, maxX);
 	CU_ASSERT_EQUAL(((int8_t *) vals)[3], 3);
 	rtdealloc(vals);
-	
+
 	err = rt_band_get_pixel_line(band, 4, 4, maxX, &vals, &nvals);
 	CU_ASSERT_EQUAL(err, ES_NONE);
 	CU_ASSERT_EQUAL(nvals, 1);
@@ -1250,6 +1257,42 @@ static void test_band_get_pixel_line() {
 	CU_ASSERT_NOT_EQUAL(err, ES_NONE);
 
 	cu_free_raster(rast);
+}
+
+static void test_band_new_offline_from_path() {
+	rt_band band = NULL;
+	int width = 10;
+	int height = 10;
+	char *path = POSTGIS_TOP_SRC_DIR "/raster/test/regress/loader/testraster.tif";
+	uint8_t extband = 0;
+
+	/* offline band */
+	band = rt_band_new_offline_from_path(
+		width, height,
+		0, 0,
+		2, path,
+		FALSE
+	);
+	CU_ASSERT(band != NULL);
+
+	/* isoffline */
+	CU_ASSERT(rt_band_is_offline(band));
+
+	/* ext path */
+	CU_ASSERT_STRING_EQUAL(rt_band_get_ext_path(band), path);
+
+	/* ext band number */
+	CU_ASSERT_EQUAL(rt_band_get_ext_band_num(band, &extband), ES_NONE);
+	CU_ASSERT_EQUAL(extband, 1);
+
+	/* test rt_band_check_is_nodata */
+	CU_ASSERT_EQUAL(rt_band_check_is_nodata(band), FALSE);
+
+	/* dimensions */
+	CU_ASSERT_EQUAL(rt_band_get_width(band), width);
+	CU_ASSERT_EQUAL(rt_band_get_height(band), height);
+
+	rt_band_destroy(band);
 }
 
 /* register tests */
@@ -1270,5 +1313,6 @@ void band_basics_suite_setup(void)
 	PG_ADD_TEST(suite, test_band_pixtype_32BF);
 	PG_ADD_TEST(suite, test_band_pixtype_64BF);
 	PG_ADD_TEST(suite, test_band_get_pixel_line);
+	PG_ADD_TEST(suite, test_band_new_offline_from_path);
 }
 

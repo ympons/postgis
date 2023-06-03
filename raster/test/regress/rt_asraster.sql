@@ -483,18 +483,24 @@ SELECT
 FROM (
 	SELECT
 		d.rid,
-		(ST_MetaData(d.rast)).*,
-		(ST_SummaryStats(d.rast)).*,
-		(ST_BandMetaData(d.rast)).*,
+		mda.*,
+		ssum.*,
+		bmd.*,
 		CASE
 			WHEN d.rid LIKE '4.%'
 				THEN ST_SameAlignment(ST_Transform(d.rast, 992163), r.rast)
 			ELSE NULL
 		END AS same_alignment
 	FROM raster_asraster_dst d
+		LEFT JOIN LATERAL ST_MetaData(d.rast) AS mda ON true
+		LEFT JOIN LATERAL ST_SummaryStats(d.rast) AS ssum ON true
+		LEFT JOIN LATERAL ST_BandMetaData(d.rast) AS bmd ON true
 	CROSS JOIN raster_asraster_rast r
 	ORDER BY d.rid
 ) foo;
+
+SELECT '#5084' As ticket, count(dp.geom)
+FROM ST_DumpAsPolygons(ST_AsRaster('LINESTRING(986015.7 6720291.2,986024.3 6720347,986028 6720417.4,986025.6 6720474.3)'::geometry, 2::double precision, 2, 0, 0)) AS dp;
 
 DELETE FROM "spatial_ref_sys" WHERE srid = 992163;
 DELETE FROM "spatial_ref_sys" WHERE srid = 993309;

@@ -50,7 +50,6 @@ struct STRTree
 
 static struct STRTree make_strtree(void** geoms, uint32_t num_geoms, char is_lwgeom);
 static void destroy_strtree(struct STRTree * tree);
-static int union_intersecting_pairs(GEOSGeometry** geoms, uint32_t num_geoms, UNIONFIND* uf);
 static int combine_geometries(UNIONFIND* uf, void** geoms, uint32_t num_geoms, void*** clustersGeoms, uint32_t* num_clusters, char is_lwgeom);
 
 /* Make a minimal GEOSGeometry* whose Envelope covers the same 2D extent as
@@ -75,12 +74,16 @@ geos_envelope_surrogate(const LWGEOM* g)
 	}
 }
 
-/** Make a GEOSSTRtree that stores a pointer to a variable containing 
+/** Make a GEOSSTRtree that stores a pointer to a variable containing
  *  the array index of the input geoms */
 static struct STRTree
 make_strtree(void** geoms, uint32_t num_geoms, char is_lwgeom)
 {
 	struct STRTree tree;
+	tree.envelopes = 0;
+	tree.num_geoms = 0;
+	tree.geom_ids = 0;
+
 	tree.tree = GEOSSTRtree_create(STRTREE_NODE_CAPACITY);
 	if (tree.tree == NULL)
 	{
@@ -151,7 +154,7 @@ query_accumulate(void* item, void* userdata)
 }
 
 /* Identify intersecting geometries and mark them as being in the same set */
-static int
+int
 union_intersecting_pairs(GEOSGeometry** geoms, uint32_t num_geoms, UNIONFIND* uf)
 {
 	uint32_t p, i;
@@ -178,7 +181,7 @@ union_intersecting_pairs(GEOSGeometry** geoms, uint32_t num_geoms, UNIONFIND* uf
 	{
 		const GEOSPreparedGeometry* prep = NULL;
 
-		if (GEOSisEmpty(geoms[p]))
+		if (!geoms[p] || GEOSisEmpty(geoms[p]))
 			continue;
 
 		cxt.num_items_found = 0;
@@ -262,6 +265,9 @@ dbscan_update_context(GEOSSTRtree* tree, struct QueryContext* cxt, LWGEOM** geom
 	cxt->num_items_found = 0;
 
 	GEOSGeometry* query_envelope;
+
+	LW_ON_INTERRUPT(return LW_FAILURE);
+
 	if (geoms[p]->type == POINTTYPE)
 	{
 		const POINT2D* pt = getPoint2d_cp(lwgeom_as_lwpoint(geoms[p])->point, 0);
@@ -307,7 +313,7 @@ union_if_available(UNIONFIND* uf, uint32_t p, uint32_t q, char* is_in_core, char
 
 /* An optimized DBSCAN union for the case where min_points == 1.
  * If min_points == 1, then we don't care how many neighbors we find; we can union clusters
- * on the fly, as as we go through the distance calculations.  This potentially allows us
+ * on the fly, as we go through the distance calculations.  This potentially allows us
  * to avoid some distance computations altogether.
  */
 static int
@@ -343,10 +349,16 @@ union_dbscan_minpoints_1(LWGEOM** geoms, uint32_t num_geoms, UNIONFIND* uf, doub
 
 	for (p = 0; p < num_geoms; p++)
 	{
+		int rv = LW_SUCCESS;
 		if (lwgeom_is_empty(geoms[p]))
 			continue;
 
-		dbscan_update_context(tree.tree, &cxt, geoms, p, eps);
+		rv = dbscan_update_context(tree.tree, &cxt, geoms, p, eps);
+		if (rv == LW_FAILURE)
+		{
+			destroy_strtree(&tree);
+			return LW_FAILURE;
+		}
 		for (i = 0; i < cxt.num_items_found; i++)
 		{
 			uint32_t q = *((uint32_t*) cxt.items_found[i]);
@@ -397,7 +409,7 @@ union_dbscan_general(LWGEOM** geoms, uint32_t num_geoms, UNIONFIND* uf, double e
 		*in_a_cluster_ret = in_a_cluster;
 
 	/* Bail if we don't even have enough inputs to make a cluster. */
-	if (num_geoms <= min_points)
+	if (num_geoms < min_points)
 	{
 		if (!in_a_cluster_ret)
 			lwfree(in_a_cluster);
@@ -418,11 +430,17 @@ union_dbscan_general(LWGEOM** geoms, uint32_t num_geoms, UNIONFIND* uf, double e
 	for (p = 0; p < num_geoms; p++)
 	{
 		uint32_t num_neighbors = 0;
+		int rv;
 
 		if (lwgeom_is_empty(geoms[p]))
 			continue;
 
-		dbscan_update_context(tree.tree, &cxt, geoms, p, eps);
+		rv = dbscan_update_context(tree.tree, &cxt, geoms, p, eps);
+		if (rv == LW_FAILURE)
+		{
+			destroy_strtree(&tree);
+			return LW_FAILURE;
+		}
 
 		/* We didn't find enough points to do anything, even if they are all within eps. */
 		if (cxt.num_items_found < min_points)
@@ -570,7 +588,10 @@ combine_geometries(UNIONFIND* uf, void** geoms, uint32_t num_geoms, void*** clus
 			}
 			else
 			{
-				(*clusterGeoms)[k++] = GEOSGeom_createCollection(GEOS_GEOMETRYCOLLECTION, (GEOSGeometry**) geoms_in_cluster, j);
+				int srid = GEOSGetSRID(((GEOSGeometry**) geoms_in_cluster)[0]);
+				GEOSGeometry* combined = GEOSGeom_createCollection(GEOS_GEOMETRYCOLLECTION, (GEOSGeometry**) geoms_in_cluster, j);
+				GEOSSetSRID(combined, srid);
+				(*clusterGeoms)[k++] = combined;
 			}
 			j = 0;
 		}

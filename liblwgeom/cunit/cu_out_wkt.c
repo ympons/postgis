@@ -20,7 +20,7 @@
 /*
 ** Global variable to hold WKT strings
 */
-char *s = NULL;
+static char *s = NULL;
 
 /*
 ** The suite initialization function.
@@ -77,8 +77,17 @@ static void test_wkt_out_point(void)
 
 	CU_ASSERT_STRING_EQUAL(cu_wkt("SRID=100;POINT(100.1 100 12 12)",WKT_SFSQL), "POINT(100.1 100)");
 	CU_ASSERT_STRING_EQUAL(cu_wkt("SRID=100;POINT(100.1 100 12 12)",WKT_EXTENDED), "SRID=100;POINT(100.1 100 12 12)");
-//	printf("%s\n",cu_wkt("SRID=100;POINT(100.1 100 12 12)",WKT_EXTENDED));
 
+	/* Test big numbers */
+	ASSERT_STRING_EQUAL(cu_wkt("POINT(-123456789012345.12345678 -1234567890123458.12345678)", WKT_ISO),
+			    "POINT(-123456789012345.12 -1.23456789e+15)");
+	ASSERT_STRING_EQUAL(
+	    cu_wkt(
+		"POINT( "
+		"9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 "
+		"0.000000000000000000000000000001)",
+		WKT_ISO),
+	    "POINT(1e+100 1e-30)");
 }
 
 static void test_wkt_out_linestring(void)
@@ -101,9 +110,9 @@ static void test_wkt_out_polygon(void)
 }
 static void test_wkt_out_multipoint(void)
 {
-	CU_ASSERT_STRING_EQUAL(cu_wkt("MULTIPOINT(1 2 3 4,5 6 7 8)",WKT_ISO), "MULTIPOINT ZM (1 2 3 4,5 6 7 8)");
-	CU_ASSERT_STRING_EQUAL(cu_wkt("MULTIPOINT(1 2 3,5 6 7)",WKT_ISO), "MULTIPOINT Z (1 2 3,5 6 7)");
-	CU_ASSERT_STRING_EQUAL(cu_wkt("MULTIPOINTM(1 2 3,5 6 7)",WKT_ISO), "MULTIPOINT M (1 2 3,5 6 7)");
+	CU_ASSERT_STRING_EQUAL(cu_wkt("MULTIPOINT(1 2 3 4,5 6 7 8)",WKT_ISO), "MULTIPOINT ZM ((1 2 3 4),(5 6 7 8))");
+	CU_ASSERT_STRING_EQUAL(cu_wkt("MULTIPOINT(1 2 3,5 6 7)",WKT_ISO), "MULTIPOINT Z ((1 2 3),(5 6 7))");
+	CU_ASSERT_STRING_EQUAL(cu_wkt("MULTIPOINTM(1 2 3,5 6 7)",WKT_ISO), "MULTIPOINT M ((1 2 3),(5 6 7))");
 
 }
 
@@ -144,7 +153,7 @@ static void test_wkt_out_collection(void)
 	);
 	CU_ASSERT_STRING_EQUAL(
 	    cu_wkt("GEOMETRYCOLLECTION(MULTIPOLYGON(((100 100 2, 100 200 2, 200 200 2, 200 100 2, 100 100 2))),MULTIPOINT(.5 .5 .5,1 1 1),CURVEPOLYGON((.8 .8 .8,.8 .8 .8,.8 .8 .8)))",WKT_ISO),
-	    "GEOMETRYCOLLECTION Z (MULTIPOLYGON Z (((100 100 2,100 200 2,200 200 2,200 100 2,100 100 2))),MULTIPOINT Z (0.5 0.5 0.5,1 1 1),CURVEPOLYGON Z ((0.8 0.8 0.8,0.8 0.8 0.8,0.8 0.8 0.8)))"
+	    "GEOMETRYCOLLECTION Z (MULTIPOLYGON Z (((100 100 2,100 200 2,200 200 2,200 100 2,100 100 2))),MULTIPOINT Z ((0.5 0.5 0.5),(1 1 1)),CURVEPOLYGON Z ((0.8 0.8 0.8,0.8 0.8 0.8,0.8 0.8 0.8)))"
 	);
 
         /* See http://trac.osgeo.org/postgis/ticket/724 */

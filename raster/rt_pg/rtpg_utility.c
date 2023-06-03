@@ -34,6 +34,9 @@
 #include "../../postgis_config.h"
 #include "lwgeom_pg.h"
 
+#define xstr(s) str(s)
+#define str(s) #s
+
 #include "rtpostgis.h"
 
 Datum RASTER_lib_version(PG_FUNCTION_ARGS);
@@ -47,10 +50,10 @@ Datum RASTER_lib_version(PG_FUNCTION_ARGS)
     char ver[64];
     text *result;
 
-    snprintf(ver, 64, "%s r%d", POSTGIS_LIB_VERSION, POSTGIS_SVN_REVISION);
+    snprintf(ver, 64, "%s %s", POSTGIS_LIB_VERSION, xstr(POSTGIS_REVISION));
     ver[63] = '\0';
 
-    result = cstring2text(ver);
+    result = cstring_to_text(ver);
     PG_RETURN_TEXT_P(result);
 }
 
@@ -74,17 +77,18 @@ Datum RASTER_gdal_version(PG_FUNCTION_ARGS)
 	/* add indicator if GDAL isn't configured right */
 	if (!rt_util_gdal_configured()) {
 		char *rtn = NULL;
-		rtn = palloc(strlen(ver) + strlen(" GDAL_DATA not found") + 1);
+		size_t sz = strlen(ver) + strlen(" GDAL_DATA not found") + 1;
+		rtn = palloc(sz);
 		if (!rtn)
-			result = cstring2text(ver);
+			result = cstring_to_text(ver);
 		else {
-			sprintf(rtn, "%s GDAL_DATA not found", ver);
-			result = cstring2text(rtn);
+			snprintf(rtn, sz, "%s GDAL_DATA not found", ver);
+			result = cstring_to_text(rtn);
 			pfree(rtn);
 		}
 	}
 	else
-		result = cstring2text(ver);
+		result = cstring_to_text(ver);
 
 	PG_RETURN_POINTER(result);
 }
@@ -142,5 +146,4 @@ Datum RASTER_memsize(PG_FUNCTION_ARGS)
   PG_FREE_IF_COPY(detoasted,0);
   PG_RETURN_INT32(size);
 }
-
 

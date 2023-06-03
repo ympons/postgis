@@ -1,21 +1,24 @@
 # SOME DESCRIPTIVE TITLE.
 #
 # Translators:
+# Regina Obe <regina@arrival3d.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PostGIS\n"
-"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2016-07-04 13:02+0000\n"
-"PO-Revision-Date: 2015-09-29 12:22+0000\n"
-"Last-Translator: Sandro Santilli <strk@kbt.io>\n"
-"Language-Team: Polish (http://www.transifex.com/postgis/postgis/language/"
-"pl/)\n"
+"Report-Msgid-Bugs-To: https://bugs.kde.org\n"
+"POT-Creation-Date: 2021-09-11 01:55+0000\n"
+"PO-Revision-Date: 2022-12-20 16:51+0000\n"
+"Last-Translator: Regina Obe <regina@arrival3d.com>\n"
+"Language-Team: Polish <https://weblate.osgeo.org/projects/postgis/"
+"extras_address_standardizerxml/pl/>\n"
 "Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
-"|| n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n"
+"%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n"
+"%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
+"X-Generator: Weblate 4.14.1\n"
 
 #. Tag: title
 #: extras_address_standardizer.xml:3
@@ -46,7 +49,7 @@ msgstr ""
 #: extras_address_standardizer.xml:6
 #, no-c-format
 msgid ""
-"The code is built into a single postgresql extension library called "
+"The code is built into a single PostgreSQL extension library called "
 "<code>address_standardizer</code> which can be installed with <code>CREATE "
 "EXTENSION address_standardizer;</code>. In addition to the "
 "address_standardizer extension, a sample data extension called "
@@ -167,7 +170,7 @@ msgstr ""
 #: extras_address_standardizer.xml:586 extras_address_standardizer.xml:646
 #, no-c-format
 msgid "Description"
-msgstr ""
+msgstr "Opis"
 
 #. Tag: para
 #: extras_address_standardizer.xml:50
@@ -314,7 +317,7 @@ msgstr ""
 #: extras_address_standardizer.xml:95
 #, no-c-format
 msgid ""
-"is text (token number <code>8</code>): RURAL ROUTE . Example <emphasis>8</"
+"is text (token number <code>8</code>): RURAL ROUTE . Example <emphasis>7</"
 "emphasis> in <code>RR 7</code>."
 msgstr ""
 
@@ -701,7 +704,7 @@ msgstr ""
 #: extras_address_standardizer.xml:266
 #, no-c-format
 msgid "DIRECT"
-msgstr ""
+msgstr "BEZPOŚREDNIE"
 
 #. Tag: para
 #: extras_address_standardizer.xml:268
@@ -1078,7 +1081,7 @@ msgstr ""
 #: extras_address_standardizer.xml:448
 #, no-c-format
 msgid ""
-"i(token number <code>14</code>): The <emphasis role=\"bold\">BOX</emphasis> "
+"(token number <code>14</code>): The <emphasis role=\"bold\">BOX</emphasis> "
 "in <code>BOX 3B</code>"
 msgstr ""
 
@@ -1239,7 +1242,7 @@ msgstr ""
 #: extras_address_standardizer.xml:529
 #, no-c-format
 msgid ""
-"A gaz (short for gazeteer) table is used to classify place names and "
+"A gaz (short for gazeteer) table is used to standardize place names and "
 "associate that input with <xref linkend=\"rule_input_tokens\"/> and (b) "
 "standardized representations. For example if you are in US, you may load "
 "these with State Names and associated abbreviations."
@@ -1290,7 +1293,7 @@ msgstr ""
 #: extras_address_standardizer.xml:588
 #, no-c-format
 msgid ""
-"Returns takes as input an address, and returns a record output consisting of "
+"Returns takes an address as input, and returns a record output consisting of "
 "fields <emphasis>num</emphasis>, <emphasis>street</emphasis>, "
 "<emphasis>street2</emphasis>, <emphasis>address1</emphasis>, <emphasis>city</"
 "emphasis>, <emphasis>state</emphasis>, <emphasis>zip</emphasis>, "
@@ -1301,13 +1304,13 @@ msgstr ""
 #: extras_address_standardizer.xml:592 extras_address_standardizer.xml:654
 #, no-c-format
 msgid "Availability: 2.2.0"
-msgstr ""
+msgstr "Dostępność: 2.0.0"
 
 #. Tag: title
 #: extras_address_standardizer.xml:598 extras_address_standardizer.xml:660
 #, no-c-format
 msgid "Examples"
-msgstr ""
+msgstr "Przykłady"
 
 #. Tag: para
 #: extras_address_standardizer.xml:600
@@ -1380,7 +1383,7 @@ msgstr ""
 #: extras_address_standardizer.xml:611 extras_address_standardizer.xml:682
 #, no-c-format
 msgid "See Also"
-msgstr ""
+msgstr "Zobacz także"
 
 #. Tag: refname
 #: extras_address_standardizer.xml:619

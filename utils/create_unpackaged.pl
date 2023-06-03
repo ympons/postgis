@@ -1,10 +1,10 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 #
 # PostGIS - Spatial Types for PostgreSQL
 # http://postgis.net
 #
-# Copyright (C) 2013 Sandro Santilli <strk@kbt.io>
+# Copyright (C) 2013-2022 Sandro Santilli <strk@kbt.io>
 #
 # This is free software; you can redistribute and/or modify it under
 # the terms of the GNU General Public Licence. See the COPYING file.
@@ -24,13 +24,14 @@ die "Usage: perl $0 <extname> [<sql>]\n"
 unless @ARGV;
 
 my $extname = shift(@ARGV);
+my $scriptname = @ARGV ? $ARGV[0] : '-';
 
 # drops are in the following order:
 #	1. Indexing system stuff
 #	2. Meta datatables <not done>
-#	3. Aggregates 
+#	3. Aggregates
 #	3. Casts
-#	4. Operators 
+#	4. Operators
 #	5. Functions
 #	6. Types
 #	7. Tables
@@ -44,6 +45,7 @@ my @ops = ();
 my @opcs = ();
 my @views = ();
 my @tables = ();
+my @sequences = ();
 my @schemas = ();
 
 sub strip_default {
@@ -68,7 +70,19 @@ while( my $line = <>)
 		push (@views, $1);
 	}
 	elsif ($line =~ /^create table \s*([\w\.]+)/i) {
-		push (@tables, $1);
+		#print STDERR "XXX table $1\n";
+		my $fqtn = $1;
+		push (@tables, $fqtn);
+		my $defn = $line;
+		while( not $defn =~ /\)/ ) {
+			#print STDERR "XXX defn $defn\n";
+			if ($defn =~ /([\w]+) serial\b/i) {
+				my $seq = "${fqtn}_$1_seq";
+				#print STDERR "XXX serial field [$seq]\n";
+				push (@sequences, $seq);
+			}
+			$defn = <>;
+		}
 	}
 	elsif ($line =~ /^create schema \s*([\w\.]+)/i) {
 		push (@schemas, $1);
@@ -125,38 +139,85 @@ while( my $line = <>)
 
 #close( INPUT );
 
-my $addprefix = "ALTER EXTENSION $extname ADD";
+sub add_if_not_exists
+{
+  my $obj = shift;
 
-my $time = POSIX::strftime("%c", localtime);
-print "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n";
-print "-- \n";
-print "-- PostGIS - Spatial Types for PostgreSQL \n";
-print "-- http://postgis.net \n";
-print "-- \n";
-print "-- This is free software; you can redistribute and/or modify it under \n";
-print "-- the terms of the GNU General Public Licence. See the COPYING file. \n";
-print "-- \n";
-print "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n";
-print "-- \n";
-print "-- Generated on: " . $time . "\n";
-print "--           by: " . $0 . "\n";
-print "--          for: " . $extname . "\n";
-print "--         from: " . ( @ARGV ? $ARGV[0] : '-' ) . "\n";
-print "-- \n";
-print "-- Do not edit manually, your changes will be lost.\n";
-print "-- \n";
-print "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n";
-print "\n";
+	# Prevent troubles by refusing to accept single quotes
+	# in objects
+	die "Invalid characters in object definition: $obj" if $obj =~ /'/;
 
-print "-- complain if script is sourced in psql\n";
-print '\echo Use "CREATE EXTENSION ' . ${extname} .
-      '" to load this file. \quit';
-print "\n\n";
+	$obj =~ m/([^ ]*) (.*)/s; # can be multiline
+	my $type = $1;
+	my $sig = $2;
+
+
+  print "SELECT _postgis_package_object('$type', '$sig');\n";
+}
+
+my $time = POSIX::strftime("%F %T", gmtime(defined($ENV{SOURCE_DATE_EPOCH}) ? $ENV{SOURCE_DATE_EPOCH} : time));
+print <<"EOF";
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+--
+-- PostGIS - Spatial Types for PostgreSQL
+-- http://postgis.net
+--
+-- This is free software; you can redistribute and/or modify it under
+-- the terms of the GNU General Public Licence. See the COPYING file.
+--
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+--
+-- Generated on: $time
+--           by: $0
+--          for: $extname
+--         from: $scriptname
+--
+-- Do not edit manually, your changes will be lost.
+--
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+
+-- complain if script is sourced in psql
+\\echo Use "CREATE EXTENSION ${extname} to load this file. \\quit
+
+CREATE FUNCTION _postgis_package_object(type text, sig text)
+RETURNS VOID
+AS \$\$
+DECLARE
+	sql text;
+	proc regproc;
+	obj text := format('%s %s', type, sig);
+BEGIN
+
+	sql := format('ALTER EXTENSION ${extname} ADD %s', obj);
+	EXECUTE sql;
+	RAISE NOTICE 'newly registered %', obj;
+
+EXCEPTION
+WHEN object_not_in_prerequisite_state THEN
+  IF SQLERRM ~ '\\m${extname}\\M'
+  THEN
+    RAISE NOTICE '% already registered', obj;
+  ELSE
+    RAISE EXCEPTION '%', SQLERRM;
+  END IF;
+WHEN
+	undefined_function OR
+	undefined_table OR
+	undefined_object
+	-- TODO: handle more exceptions ?
+THEN
+	RAISE NOTICE '% % does not exist yet', type, sig;
+WHEN OTHERS THEN
+	RAISE EXCEPTION 'Trying to add % to ${extname}, got % (%)', obj, SQLERRM, SQLSTATE;
+END;
+\$\$ LANGUAGE 'plpgsql';
+EOF
 
 print "-- Register all views.\n";
 foreach my $view (@views)
 {
-	print "$addprefix VIEW $view;\n";
+	add_if_not_exists("VIEW $view");
 }
 
 print "-- Register all tables.\n";
@@ -165,7 +226,13 @@ print "-- Register all tables.\n";
 @tables = reverse(@tables);
 foreach my $table (@tables)
 {
-	print "$addprefix TABLE $table;\n";
+	add_if_not_exists("TABLE $table");
+}
+
+print "-- Register all sequences.\n";
+foreach my $seq (@sequences)
+{
+	add_if_not_exists("SEQUENCE $seq");
 }
 
 
@@ -174,13 +241,13 @@ foreach my $agg (@aggs)
 {
 	if ( $agg =~ /create aggregate\s*([\w\.]+)\s*\(\s*.*basetype = ([\w\.]+)/ism )
 	{
-		print "$addprefix AGGREGATE $1 ($2);\n";
+		add_if_not_exists("AGGREGATE $1 ($2)");
 	}
 	elsif ( $agg =~ /create aggregate\s*([\w\.]+)\s*\(\s*([\w,\.\s\[\]]+)\s*\)/ism )
 	{
-		print "$addprefix AGGREGATE $1 ($2);\n";
+		add_if_not_exists("AGGREGATE $1 ($2)");
 	}
-	else 
+	else
 	{
 		die "Couldn't parse AGGREGATE line: $agg\n";
 	}
@@ -189,8 +256,8 @@ foreach my $agg (@aggs)
 print "-- Register all operators classes and families.\n";
 foreach my $opc (@opcs)
 {
-	print "$addprefix OPERATOR CLASS $opc;\n";
-	print "$addprefix OPERATOR FAMILY $opc;\n";
+	add_if_not_exists("OPERATOR CLASS $opc");
+	add_if_not_exists("OPERATOR FAMILY $opc");
 }
 
 print "-- Register all operators.\n";
@@ -198,7 +265,7 @@ foreach my $op (@ops)
 {
 	if ($op =~ /create operator ([^(]+)\s*\(.*LEFTARG\s*=\s*(\w+),\s*RIGHTARG\s*=\s*(\w+).*/ism )
 	{
-		print "$addprefix OPERATOR $1 ($2,$3);\n";
+		add_if_not_exists("OPERATOR $1 ($2,$3)");
 	}
 	else
 	{
@@ -206,13 +273,13 @@ foreach my $op (@ops)
 	}
 }
 
-	
+
 print "-- Register all casts.\n";
 foreach my $cast (@casts)
 {
 	if ($cast =~ /create cast\s*\((.+?)\)/i )
 	{
-		print "$addprefix CAST ($1);\n";
+		add_if_not_exists("CAST ($1)");
 	}
 	else
 	{
@@ -220,9 +287,8 @@ foreach my $cast (@casts)
 	}
 }
 
-print "-- Register all functions except " . (keys %type_funcs) . " needed for type definition.\n";
-my @type_funcs= (); # function to drop _after_ type drop
-foreach my $fn (@funcs)
+print "-- Register all functions.\n";
+foreach my $fn ( @funcs )
 {
 	if ($fn =~ /.* function ([^(]+)\((.*)\)/is ) # can be multiline
 	{
@@ -230,14 +296,7 @@ foreach my $fn (@funcs)
 		my $fn_arg = $2;
 
 		$fn_arg = strip_default($fn_arg);
-		if ( ! exists($type_funcs{$fn_nm}) )
-		{
-			print "$addprefix FUNCTION $fn_nm ($fn_arg);\n";
-		} 
-		else
-		{
-			push(@type_funcs, $fn);
-		}
+		add_if_not_exists("FUNCTION $fn_nm ($fn_arg)");
 	}
 	else
 	{
@@ -245,28 +304,10 @@ foreach my $fn (@funcs)
 	}
 }
 
-print "-- Add all functions needed for types definition (needed?).\n";
-foreach my $fn (@type_funcs)
-{
-	if ($fn =~ /.* function ([^(]+)\((.*)\)/i )
-	{
-		my $fn_nm = $1;
-		my $fn_arg = $2;
-
-		$fn_arg =~ s/DEFAULT [\w']+//ig;
-
-		print "$addprefix FUNCTION $fn_nm ($fn_arg);\n";
-	}
-	else
-	{
-		die "Couldn't parse line: $fn\n";
-	}
-}
-
 print "-- Register all types.\n";
 foreach my $type (@types)
 {
-	print "$addprefix TYPE $type;\n";
+	add_if_not_exists("TYPE $type");
 }
 
 
@@ -278,10 +319,47 @@ foreach my $type (@types)
 #{
 #  foreach my $schema (@schemas)
 #  {
-#    print "$addprefix SCHEMA \"$schema\";\n";
+#    add_if_not_exists("SCHEMA \"$schema\"");
 #  }
 #}
 
+
+print <<"EOF";
+DROP FUNCTION _postgis_package_object(text, text);
+
+-- Security checks
+DO LANGUAGE 'plpgsql' \$BODY\$
+DECLARE
+	rec RECORD;
+BEGIN
+
+	-- Check ownership of extension functions
+	-- matches ownership of extension itself
+	FOR rec IN
+		SELECT
+			p.oid,
+			p.proowner,
+			e.extowner
+		FROM pg_catalog.pg_depend AS d
+			INNER JOIN pg_catalog.pg_extension AS e ON (d.refobjid = e.oid)
+			INNER JOIN pg_catalog.pg_proc AS p ON (d.objid = p.oid)
+		WHERE d.refclassid = 'pg_catalog.pg_extension'::pg_catalog.regclass
+		AND deptype = 'e'
+		AND e.extname = '${extname}'
+		AND d.classid = 'pg_catalog.pg_proc'::pg_catalog.regclass
+		AND p.proowner != e.extowner
+	LOOP
+		RAISE EXCEPTION 'Function % is owned by % but extension is owned by %',
+				rec.oid::regprocedure, rec.proowner::regrole, rec.extowner::regrole;
+	END LOOP;
+
+	-- TODO: check ownership of more objects ?
+
+END;
+\$BODY\$;
+
+
+EOF
 
 print "\n";
 

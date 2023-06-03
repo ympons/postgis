@@ -2,6 +2,8 @@
 # *
 # * PostGIS - Spatial Types for PostgreSQL
 # * http://postgis.net
+# *
+# * Copyright 2022 Sandro Santilli <strk@kbt.io>
 # * Copyright 2008 Paul Ramsey, Mark Cave-Ayland
 # *
 # * This is free software; you can redistribute and/or modify it under
@@ -10,13 +12,22 @@
 # **********************************************************************
 
 top_builddir = @top_builddir@
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+
 CC=@CC@
-CFLAGS=@CFLAGS@ @WARNFLAGS@
+CFLAGS=@CFLAGS@
 SHELL = @SHELL@
 LIBTOOL = @LIBTOOL@
 
 CUNIT_LDFLAGS=@CUNIT_LDFLAGS@
-CUNIT_CPPFLAGS=@CUNIT_CPPFLAGS@ -I..
+CUNIT_CPPFLAGS = \
+	-I$(srcdir)/.. \
+	-I$(top_builddir)/liblwgeom \
+	-I$(top_srcdir)/liblwgeom \
+	-I.. \
+	@CUNIT_CPPFLAGS@ \
+	@CPPFLAGS@
 
 # GTK includes and libraries
 GTK_CFLAGS = @GTK_CFLAGS@ @IGE_MAC_CFLAGS@
@@ -28,7 +39,7 @@ PGSQL_FE_CPPFLAGS=@PGSQL_FE_CPPFLAGS@
 PGSQL_FE_LDFLAGS=@PGSQL_FE_LDFLAGS@
 
 # liblwgeom
-LIBLWGEOM=../../liblwgeom/.libs/liblwgeom.la
+LIBLWGEOM = $(top_builddir)/liblwgeom/.libs/liblwgeom.la
 
 # iconv flags
 ICONV_LDFLAGS=@ICONV_LDFLAGS@
@@ -38,11 +49,17 @@ ICONV_CFLAGS=@ICONV_CFLAGS@
 GETTEXT_CFLAGS = @GETTEXT_CFLAGS@
 GETTEXT_LDFLAGS = @GETTEXT_LDFLAGS@ @LIBINTL@
 
+# Proj flags
+PROJ_CFLAGS=@PROJ_CPPFLAGS@
+PROJ_LDFLAGS=@PROJ_LDFLAGS@
+
 # Built out CFLAGS with ICONV and GETTEXT
-CFLAGS += $(GETTEXT_CFLAGS) $(ICONV_CFLAGS)
+CFLAGS += $(GETTEXT_CFLAGS) $(ICONV_CFLAGS) $(PROJ_CFLAGS)
 
 # Build full linking line
-LDFLAGS = -lm $(GEOS_LDFLAGS) $(GETTEXT_LDFLAGS) $(PGSQL_FE_LDFLAGS) $(ICONV_LDFLAGS) $(CUNIT_LDFLAGS)
+LDFLAGS = $(GEOS_LDFLAGS) $(GETTEXT_LDFLAGS) $(PGSQL_FE_LDFLAGS) $(ICONV_LDFLAGS) $(CUNIT_LDFLAGS) $(PROJ_LDFLAGS)
+
+VPATH = $(srcdir)
 
 # Object files
 OBJS=	\
@@ -78,9 +95,9 @@ check: cu_tester
 endif
 
 # Build the main unit test executable
-cu_tester: $(LOADER_OBJS) $(OBJS) 
+cu_tester: $(LOADER_OBJS) $(OBJS)
 	$(LIBTOOL) --mode=link \
-	$(CC)  $^ -o $@ $(LIBLWGEOM) $(LDFLAGS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBLWGEOM) $(LDFLAGS)
 
 # Command to build each of the .o files
 $(OBJS): %.o: %.c
@@ -89,7 +106,7 @@ $(OBJS): %.o: %.c
 # Clean target
 clean:
 	rm -f $(OBJS)
-	rm -f cu_tester.exe
+	rm -f cu_tester
 
 distclean: clean
 	rm -f Makefile

@@ -31,7 +31,7 @@
 -- This section is take add / drop things like CASTS, TYPES etc. that have changed
 -- Since these are normally excluded from sed upgrade generator
 -- they must be explicitly added
--- So that they can immediately be recreated. 
+-- So that they can immediately be recreated.
 -- It is not run thru the sed processor to prevent it from being stripped
 -- Note: We put these in separate file from drop since the extension module has
 -- to add additional logic to drop them from the extension as well
@@ -94,11 +94,11 @@ BEGIN
 	IF NOT EXISTS (
 			SELECT
 				proname
-			FROM pg_proc f
-			JOIN pg_type r
+			FROM pg_catalog.pg_proc f
+			JOIN pg_catalog.pg_type r
 				ON r.typname = 'raster'
 					AND (f.proargtypes::oid[])[0] = r.oid
-			JOIN pg_type g
+			JOIN pg_catalog.pg_type g
 				ON g.typname = 'geometry'
 					AND (f.proargtypes::oid[])[1] = g.oid
 			WHERE proname = 'raster_contained_by_geometry'
@@ -117,11 +117,11 @@ BEGIN
 	IF NOT EXISTS (
 			SELECT
 				proname
-			FROM pg_proc f
-			JOIN pg_type r
+			FROM pg_catalog.pg_proc f
+			JOIN pg_catalog.pg_type r
 				ON r.typname = 'raster'
 					AND (f.proargtypes::oid[])[1] = r.oid
-			JOIN pg_type g
+			JOIN pg_catalog.pg_type g
 				ON g.typname = 'geometry'
 					AND (f.proargtypes::oid[])[0] = g.oid
 			WHERE proname = 'geometry_contained_by_raster'
@@ -143,23 +143,21 @@ $$;
 DROP FUNCTION IF EXISTS ST_MapAlgebra(raster, integer, text, text, nodatavaluerepl text);
 DROP FUNCTION IF EXISTS ST_MapAlgebra(raster, pixeltype text, expression text, nodatavaluerepl text);
 
-
 --signatures or arg names changed
 DROP FUNCTION IF EXISTS ST_MapAlgebraExpr(raster, integer, text, text, text);
 DROP FUNCTION IF EXISTS ST_MapAlgebraExpr(raster, text, text, text);
 DROP FUNCTION IF EXISTS ST_MapalgebraFct(raster, regprocedure);
-DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, text, regprocedure, VARIADIC text[]); 
-DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, text, regprocedure); 
+DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, text, regprocedure, VARIADIC text[]);
+DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, text, regprocedure);
 DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, regprocedure, VARIADIC text[]);
 DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, integer, regprocedure, variadic text[]);
-DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, integer, text, regprocedure, VARIADIC text[]); 
-DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, integer, text, regprocedure); 
+DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, integer, text, regprocedure, VARIADIC text[]);
+DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, integer, text, regprocedure);
 DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, integer, regprocedure, variadic text[]);
 DROP FUNCTION IF EXISTS ST_MapalgebraFct(raster, integer, regprocedure);
 DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, raster, regprocedure, text, text, VARIADIC text[]);
 DROP FUNCTION IF EXISTS ST_MapAlgebraFct(raster, integer, raster, integer, regprocedure, text, text, VARIADIC text[]);
 DROP FUNCTION IF EXISTS ST_MapAlgebraFctNgb(raster, integer, text, integer, integer, regprocedure, text,  VARIADIC text[]);
-
 
 --dropped functions
 DROP FUNCTION IF EXISTS  ST_MapAlgebraFct(raster, raster, regprocedure, VARIADIC text[]);
@@ -248,7 +246,6 @@ DROP FUNCTION IF EXISTS st_bandpixeltype(raster);
 -- signature changed
 DROP FUNCTION IF EXISTS st_bandpixeltype(raster, integer);
 
-
 -- function no longer exists
 DROP FUNCTION IF EXISTS st_value(raster, integer, integer, integer);
 DROP FUNCTION IF EXISTS st_value(raster, integer, integer);
@@ -274,7 +271,7 @@ DROP FUNCTION IF EXISTS dumpaswktpolygons(raster, integer);
 DROP FUNCTION IF EXISTS st_bandmetadata(raster, VARIADIC int[]);
 
 --change to use default parameters
-DROP FUNCTION IF EXISTS ST_PixelAsPolygons(raster); 
+DROP FUNCTION IF EXISTS ST_PixelAsPolygons(raster);
 DROP FUNCTION IF EXISTS ST_PixelAsPolygons(raster,integer);
 
 -- TYPE summarystats removed in version 2.1.0
@@ -577,6 +574,9 @@ DROP FUNCTION IF EXISTS _st_aspect4ma(float8[], text, text[]);
 DROP FUNCTION IF EXISTS _st_hillshade4ma(float8[], text, text[]);
 DROP FUNCTION IF EXISTS _st_slope4ma(float8[], text, text[]);
 
+-- function signature changed
+DROP FUNCTION IF EXISTS st_gdaldrivers();
+
 -- function signature change
 -- return value changed
 DO LANGUAGE 'plpgsql' $$
@@ -589,7 +589,7 @@ BEGIN
 	FROM pg_proc f
 	JOIN pg_type t
 		ON f.prorettype = t.oid
-	WHERE lower(f.proname) = '_raster_constraint_nodata_values'
+	WHERE pg_catalog.lower(f.proname) = '_raster_constraint_nodata_values'
 		AND f.pronargs = 1
 		AND t.typname = '_float8'; -- array form
 
@@ -599,3 +599,7 @@ BEGIN
 	END IF;
 END;
 $$;
+
+-- 2.5.0 signature changed
+DROP FUNCTION IF EXISTS st_bandmetadata(raster, int[]);
+DROP FUNCTION IF EXISTS st_bandmetadata(raster, int);

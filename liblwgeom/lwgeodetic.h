@@ -37,6 +37,12 @@
 #define NAN 0.0/0.0
 #endif
 
+/* Override tolerance for geodetic */
+#ifdef FP_TOLERANCE
+#undef FP_TOLERANCE
+#define FP_TOLERANCE 5e-14
+#endif
+
 extern int gbox_geocentric_slow;
 
 #define POW2(x) ((x)*(x))
@@ -74,11 +80,6 @@ typedef struct
 #define deg2rad(d) (M_PI * (d) / 180.0)
 #define rad2deg(r) (180.0 * (r) / M_PI)
 
-/**
-* Ape a java function
-*/
-#define signum(a) ((a) < 0 ? -1 : ((a) > 0 ? 1 : (a)))
-
 
 /**
 * Bitmask elements for edge_intersects() return value.
@@ -113,13 +114,19 @@ int sphere_project(const GEOGRAPHIC_POINT *r, double distance, double azimuth, G
 int edge_calculate_gbox_slow(const GEOGRAPHIC_EDGE *e, GBOX *gbox);
 int edge_calculate_gbox(const POINT3D *A1, const POINT3D *A2, GBOX *gbox);
 int edge_intersection(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e2, GEOGRAPHIC_POINT *g);
-int edge_intersects(const POINT3D *A1, const POINT3D *A2, const POINT3D *B1, const POINT3D *B2);
+uint32_t edge_intersects(const POINT3D *A1, const POINT3D *A2, const POINT3D *B1, const POINT3D *B2);
 double edge_distance_to_point(const GEOGRAPHIC_EDGE *e, const GEOGRAPHIC_POINT *gp, GEOGRAPHIC_POINT *closest);
 double edge_distance_to_edge(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_EDGE *e2, GEOGRAPHIC_POINT *closest1, GEOGRAPHIC_POINT *closest2);
 void geographic_point_init(double lon, double lat, GEOGRAPHIC_POINT *g);
 int ptarray_contains_point_sphere(const POINTARRAY *pa, const POINT2D *pt_outside, const POINT2D *pt_to_test);
 int lwpoly_covers_point2d(const LWPOLY *poly, const POINT2D *pt_to_test);
-void lwpoly_pt_outside(const LWPOLY *poly, POINT2D *pt_outside);
+int lwpoly_covers_lwpoly(const LWPOLY *lwpoly1, const LWPOLY *lwpoly2);
+int lwpoly_covers_pointarray(const LWPOLY* lwpoly, const POINTARRAY* pta);
+int lwpoly_covers_lwline(const LWPOLY *poly, const LWLINE *line);
+int lwline_covers_lwline(const LWLINE* lwline1, const LWLINE* lwline2);
+int lwline_covers_lwpoint(const LWLINE* lwline, const LWPOINT* lwpoint);
+int lwpoly_intersects_line(const LWPOLY* lwpoly, const POINTARRAY* line);
+int lwpoly_pt_outside(const LWPOLY *poly, POINT2D *pt_outside);
 int ptarray_point_in_ring(const POINTARRAY *pa, const POINT2D *pt_outside, const POINT2D *pt_to_test);
 double ptarray_area_sphere(const POINTARRAY *pa);
 double latitude_degrees_normalize(double lat);
@@ -131,6 +138,7 @@ void point_shift(GEOGRAPHIC_POINT *p, double shift);
 double longitude_radians_normalize(double lon);
 double latitude_radians_normalize(double lat);
 void vector_sum(const POINT3D *a, const POINT3D *b, POINT3D *n);
+void vector_scale(POINT3D *a, double s);
 double vector_angle(const POINT3D* v1, const POINT3D* v2);
 void vector_rotate(const POINT3D* v1, const POINT3D* v2, double angle, POINT3D* n);
 void normalize(POINT3D *p);

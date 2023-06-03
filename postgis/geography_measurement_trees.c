@@ -33,13 +33,8 @@
 * liblwgeom, where most of the circtree logic lives.
 */
 typedef struct {
-	int                     type;       // <GeomCache>
-	GSERIALIZED*                geom1;      //
-	GSERIALIZED*                geom2;      //
-	size_t                      geom1_size; //
-	size_t                      geom2_size; //
-	int32                       argnum;     // </GeomCache>
-	CIRC_NODE*                  index;
+	GeomCache    gcache;
+	CIRC_NODE*   index;
 } CircTreeGeomCache;
 
 
@@ -60,7 +55,7 @@ CircTreeBuilder(const LWGEOM* lwgeom, GeomCache* cache)
 	}
 	if ( ! tree )
 		return LW_FAILURE;
-	
+
 	circ_cache->index = tree;
 	return LW_SUCCESS;
 }
@@ -73,7 +68,7 @@ CircTreeFreer(GeomCache* cache)
 	{
 		circ_tree_free(circ_cache->index);
 		circ_cache->index = 0;
-		circ_cache->argnum = 0;
+		circ_cache->gcache.argnum = 0;
 	}
 	return LW_SUCCESS;
 }
@@ -94,12 +89,11 @@ static GeomCacheMethods CircTreeCacheMethods =
 	CircTreeAllocator
 };
 
-static CircTreeGeomCache*
-GetCircTreeGeomCache(FunctionCallInfoData* fcinfo, const GSERIALIZED* g1, const GSERIALIZED* g2)
+static CircTreeGeomCache *
+GetCircTreeGeomCache(FunctionCallInfo fcinfo, SHARED_GSERIALIZED *g1, SHARED_GSERIALIZED *g2)
 {
 	return (CircTreeGeomCache*)GetGeomCache(fcinfo, &CircTreeCacheMethods, g1, g2);
 }
-
 
 static int
 CircTreePIP(const CIRC_NODE* tree1, const GSERIALIZED* g1, const POINT4D* in_point)
@@ -123,11 +117,11 @@ CircTreePIP(const CIRC_NODE* tree1, const GSERIALIZED* g1, const POINT4D* in_poi
 			lwgeom_calculate_gbox_geodetic(lwgeom1, &gbox1);
 			lwgeom_free(lwgeom1);
 		}
-			
+
 		/* Flip the candidate point into geographics */
 		geographic_point_init(in_point->x, in_point->y, &in_gpoint);
 		geog2cart(&in_gpoint, &in_point3d);
-		
+
 		/* If the candidate isn't in the tree box, it's not in the tree area */
 		if ( ! gbox_contains_point3d(&gbox1, &in_point3d) )
 		{
@@ -142,41 +136,50 @@ CircTreePIP(const CIRC_NODE* tree1, const GSERIALIZED* g1, const POINT4D* in_poi
 			pt2d_inside.x = in_point->x;
 			pt2d_inside.y = in_point->y;
 			/* Calculate a definitive outside point */
-			gbox_pt_outside(&gbox1, &pt2d_outside);
+			if (gbox_pt_outside(&gbox1, &pt2d_outside) == LW_FAILURE)
+				if (circ_tree_get_point_outside(tree1, &pt2d_outside) == LW_FAILURE)
+					lwpgerror("%s: Unable to generate outside point!", __func__);
+
 			POSTGIS_DEBUGF(3, "p2d_inside=POINT(%g %g) p2d_outside=POINT(%g %g)", pt2d_inside.x, pt2d_inside.y, pt2d_outside.x, pt2d_outside.y);
 			/* Test the candidate point for strict containment */
 			POSTGIS_DEBUG(3, "calling circ_tree_contains_point for PiP test");
-			return circ_tree_contains_point(tree1, &pt2d_inside, &pt2d_outside, NULL);
+			return circ_tree_contains_point(tree1, &pt2d_inside, &pt2d_outside, 0, NULL);
 		}
 	}
 	else
 	{
 		POSTGIS_DEBUG(3, "tree1 not polygonal, so CircTreePIP returning FALSE");
 		return LW_FALSE;
-	}		
+	}
 }
 
-
 static int
-geography_distance_cache_tolerance(FunctionCallInfoData* fcinfo, const GSERIALIZED* g1, const GSERIALIZED* g2, const SPHEROID* s, double tolerance, double* distance)
+geography_distance_cache_tolerance(FunctionCallInfo fcinfo,
+				   SHARED_GSERIALIZED *shared_g1,
+				   SHARED_GSERIALIZED *shared_g2,
+				   const SPHEROID *s,
+				   double tolerance,
+				   double *distance)
 {
+	const GSERIALIZED *g1 = shared_gserialized_get(shared_g1);
+	const GSERIALIZED *g2 = shared_gserialized_get(shared_g2);
 	CircTreeGeomCache* tree_cache = NULL;
 
 	int type1 = gserialized_get_type(g1);
 	int type2 = gserialized_get_type(g2);
-	
+
 	Assert(distance);
-	
+
 	/* Two points? Get outa here... */
 	if ( type1 == POINTTYPE && type2 == POINTTYPE )
 		return LW_FAILURE;
 
 	/* Fetch/build our cache, if appropriate, etc... */
-	tree_cache = GetCircTreeGeomCache(fcinfo, g1, g2);
-	
+	tree_cache = GetCircTreeGeomCache(fcinfo, shared_g1, shared_g2);
+
 	/* OK, we have an index at the ready! Use it for the one tree argument and */
 	/* fill in the other tree argument */
-	if ( tree_cache && tree_cache->argnum && tree_cache->index )
+	if ( tree_cache && tree_cache->gcache.argnum && tree_cache->index )
 	{
 		CIRC_NODE* circtree_cached = tree_cache->index;
 		CIRC_NODE* circtree = NULL;
@@ -186,16 +189,16 @@ geography_distance_cache_tolerance(FunctionCallInfoData* fcinfo, const GSERIALIZ
 		int geomtype_cached;
 		int geomtype;
 		POINT4D p4d;
-		
+
 		/* We need to dynamically build a tree for the uncached side of the function call */
-		if ( tree_cache->argnum == 1 )
+		if ( tree_cache->gcache.argnum == 1 )
 		{
 			g_cached = g1;
 			g = g2;
 			geomtype_cached = type1;
 			geomtype = type2;
 		}
-		else if ( tree_cache->argnum == 2 )
+		else if ( tree_cache->gcache.argnum == 2 )
 		{
 			g_cached = g2;
 			g = g1;
@@ -207,7 +210,7 @@ geography_distance_cache_tolerance(FunctionCallInfoData* fcinfo, const GSERIALIZ
 			lwpgerror("geography_distance_cache this cannot happen!");
 			return LW_FAILURE;
 		}
-		
+
 		lwgeom = lwgeom_from_gserialized(g);
 		if ( geomtype_cached == POLYGONTYPE || geomtype_cached == MULTIPOLYGONTYPE )
 		{
@@ -219,7 +222,7 @@ geography_distance_cache_tolerance(FunctionCallInfoData* fcinfo, const GSERIALIZ
 				return LW_SUCCESS;
 			}
 		}
-		
+
 		circtree = lwgeom_calculate_circ_tree(lwgeom);
 		if ( geomtype == POLYGONTYPE || geomtype == MULTIPOLYGONTYPE )
 		{
@@ -238,7 +241,7 @@ geography_distance_cache_tolerance(FunctionCallInfoData* fcinfo, const GSERIALIZ
 
 		*distance = circ_tree_distance_tree(circtree_cached, circtree, s, tolerance);
 		circ_tree_free(circtree);
-		lwgeom_free(lwgeom);	
+		lwgeom_free(lwgeom);
 		return LW_SUCCESS;
 	}
 	else
@@ -247,15 +250,23 @@ geography_distance_cache_tolerance(FunctionCallInfoData* fcinfo, const GSERIALIZ
 	}
 }
 
-
 int
-geography_distance_cache(FunctionCallInfoData* fcinfo, const GSERIALIZED* g1, const GSERIALIZED* g2, const SPHEROID* s, double* distance)
+geography_distance_cache(FunctionCallInfo fcinfo,
+			 SHARED_GSERIALIZED *g1,
+			 SHARED_GSERIALIZED *g2,
+			 const SPHEROID *s,
+			 double *distance)
 {
 	return geography_distance_cache_tolerance(fcinfo, g1, g2, s, FP_TOLERANCE, distance);
 }
 
 int
-geography_dwithin_cache(FunctionCallInfoData* fcinfo, const GSERIALIZED* g1, const GSERIALIZED* g2, const SPHEROID* s, double tolerance, int* dwithin)
+geography_dwithin_cache(FunctionCallInfo fcinfo,
+			SHARED_GSERIALIZED *g1,
+			SHARED_GSERIALIZED *g2,
+			const SPHEROID *s,
+			double tolerance,
+			int *dwithin)
 {
 	double distance;
 	/* Ticket #2422, difference between sphere and spheroid distance can trip up the */
@@ -271,7 +282,7 @@ geography_dwithin_cache(FunctionCallInfoData* fcinfo, const GSERIALIZED* g1, con
 	}
 	return LW_FAILURE;
 }
-	
+
 int
 geography_tree_distance(const GSERIALIZED* g1, const GSERIALIZED* g2, const SPHEROID* s, double tolerance, double* distance)
 {
@@ -280,14 +291,14 @@ geography_tree_distance(const GSERIALIZED* g1, const GSERIALIZED* g2, const SPHE
 	LWGEOM* lwgeom1 = NULL;
 	LWGEOM* lwgeom2 = NULL;
 	POINT4D pt1, pt2;
-	
+
 	lwgeom1 = lwgeom_from_gserialized(g1);
 	lwgeom2 = lwgeom_from_gserialized(g2);
 	circ_tree1 = lwgeom_calculate_circ_tree(lwgeom1);
 	circ_tree2 = lwgeom_calculate_circ_tree(lwgeom2);
 	lwgeom_startpoint(lwgeom1, &pt1);
 	lwgeom_startpoint(lwgeom2, &pt2);
-	
+
 	if ( CircTreePIP(circ_tree1, g1, &pt2) || CircTreePIP(circ_tree2, g2, &pt1) )
 	{
 		*distance = 0.0;
@@ -297,7 +308,7 @@ geography_tree_distance(const GSERIALIZED* g1, const GSERIALIZED* g2, const SPHE
 		/* Calculate tree/tree distance */
 		*distance = circ_tree_distance_tree(circ_tree1, circ_tree2, s, tolerance);
 	}
-	
+
 	circ_tree_free(circ_tree1);
 	circ_tree_free(circ_tree2);
 	lwgeom_free(lwgeom1);

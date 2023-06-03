@@ -2,20 +2,23 @@
 #
 # Translators:
 # Kwon.Yongchan <ruvyn@naver.com>, 2016
+# Kwon.Yongchan <ruvyn@naver.com>, 2016
+# Regina Obe <regina@arrival3d.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PostGIS\n"
-"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2016-07-04 13:02+0000\n"
-"PO-Revision-Date: 2016-07-20 06:56+0000\n"
-"Last-Translator: Kwon.Yongchan <ruvyn@naver.com>\n"
-"Language-Team: Korean (Korea) (http://www.transifex.com/postgis/postgis/"
-"language/ko_KR/)\n"
+"Report-Msgid-Bugs-To: https://bugs.kde.org\n"
+"POT-Creation-Date: 2021-09-11 01:55+0000\n"
+"PO-Revision-Date: 2022-05-07 19:23+0000\n"
+"Last-Translator: Regina Obe <regina@arrival3d.com>\n"
+"Language-Team: Korean <https://weblate.osgeo.org/projects/postgis/"
+"extras_address_standardizerxml/ko/>\n"
 "Language: ko_KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 4.11.2\n"
 
 #. Tag: title
 #: extras_address_standardizer.xml:3
@@ -53,9 +56,9 @@ msgstr ""
 
 #. Tag: para
 #: extras_address_standardizer.xml:6
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"The code is built into a single postgresql extension library called "
+"The code is built into a single PostgreSQL extension library called "
 "<code>address_standardizer</code> which can be installed with <code>CREATE "
 "EXTENSION address_standardizer;</code>. In addition to the "
 "address_standardizer extension, a sample data extension called "
@@ -376,11 +379,9 @@ msgstr "ruralroute"
 #: extras_address_standardizer.xml:95
 #, no-c-format
 msgid ""
-"is text (token number <code>8</code>): RURAL ROUTE . Example <emphasis>8</"
+"is text (token number <code>8</code>): RURAL ROUTE . Example <emphasis>7</"
 "emphasis> in <code>RR 7</code>."
 msgstr ""
-"문자형(토큰 번호 <code>8</code>)입니다: 지방 우편물 배달 노선(RURAL ROUTE)입"
-"니다. 예: <code>RR 7</code> 에서 <emphasis>7</emphasis>"
 
 #. Tag: term
 #: extras_address_standardizer.xml:98
@@ -1239,11 +1240,9 @@ msgstr "(토큰 번호 <code>0</code>): 파싱되지 않은 건물 식별자 및
 #: extras_address_standardizer.xml:448
 #, no-c-format
 msgid ""
-"i(token number <code>14</code>): The <emphasis role=\"bold\">BOX</emphasis> "
+"(token number <code>14</code>): The <emphasis role=\"bold\">BOX</emphasis> "
 "in <code>BOX 3B</code>"
 msgstr ""
-"(토큰 번호 <code>14</code>): <code>BOX 3B</code> 에서 <emphasis role=\"bold"
-"\">BOX</emphasis>"
 
 #. Tag: term
 #: extras_address_standardizer.xml:451
@@ -1425,15 +1424,11 @@ msgstr ""
 #: extras_address_standardizer.xml:529
 #, no-c-format
 msgid ""
-"A gaz (short for gazeteer) table is used to classify place names and "
+"A gaz (short for gazeteer) table is used to standardize place names and "
 "associate that input with <xref linkend=\"rule_input_tokens\"/> and (b) "
 "standardized representations. For example if you are in US, you may load "
 "these with State Names and associated abbreviations."
 msgstr ""
-"지명 색인(gazetteer) 테이블은 지명을 표준화하고, 해당 입력을 (1) 입력 토큰"
-"(<xref linkend=\"rule_input_tokens\"/> 참조) 및 (2) 표준화된 표현식과 연관짓"
-"는 데 쓰입니다. 예를 들어, 미국의 경우, 주명(州名) 및 관련 약어를 가진 테이블"
-"을 로드할 수도 있습니다."
 
 #. Tag: para
 #: extras_address_standardizer.xml:531
@@ -1484,17 +1479,12 @@ msgstr ""
 #: extras_address_standardizer.xml:588
 #, no-c-format
 msgid ""
-"Returns takes as input an address, and returns a record output consisting of "
+"Returns takes an address as input, and returns a record output consisting of "
 "fields <emphasis>num</emphasis>, <emphasis>street</emphasis>, "
 "<emphasis>street2</emphasis>, <emphasis>address1</emphasis>, <emphasis>city</"
 "emphasis>, <emphasis>state</emphasis>, <emphasis>zip</emphasis>, "
 "<emphasis>zipplus</emphasis>, <emphasis>country</emphasis>."
 msgstr ""
-"주소를 입력받아 <emphasis>num</emphasis>, <emphasis>street</emphasis>, "
-"<emphasis>street2</emphasis>, <emphasis>address1</emphasis>, <emphasis>city</"
-"emphasis>, <emphasis>state</emphasis>, <emphasis>zip</emphasis>, "
-"<emphasis>zipplus</emphasis>, <emphasis>country</emphasis> 항목들로 구성된 출"
-"력 레코드를 반환합니다."
 
 #. Tag: para
 #: extras_address_standardizer.xml:592 extras_address_standardizer.xml:654
@@ -1685,10 +1675,10 @@ msgid ""
 "street</code>, and a macro consisting of standard postal second line of an "
 "address e.g <code>city, state postal_code country</code>."
 msgstr ""
-"변종 2: 주소를 두 부분으로 입력받습니다.  <code>house_num street</code> 같은 "
+"변종 2: 주소를 두 부분으로 입력받습니다. <code>house_num street</code> 같은 "
 "우편 주소의 표준 첫 번째 행으로 이루어진 <varname>micro</varname> 절과,  "
-"<code>city, state postal_code country</code> 같은 우편 주소의 표준 두 번째 행"
-"으로 이루어진 <varname>macro</varname> 절입니다."
+"<code>city, state postal_code country</code> 같은 우편 주소의 표준 두 번째 "
+"행으로 이루어진 <varname>macro</varname> 절입니다."
 
 #. Tag: para
 #: extras_address_standardizer.xml:661

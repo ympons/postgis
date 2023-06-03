@@ -24,8 +24,9 @@
 
 #include <math.h>
 #include "geobuf.h"
+#include "pgsql_compat.h"
 
-#ifdef HAVE_LIBPROTOBUF
+#if defined HAVE_LIBPROTOBUF
 
 #define FEATURES_CAPACITY_INITIAL 50
 #define MAX_PRECISION 1e6
@@ -52,21 +53,31 @@ static TupleDesc get_tuple_desc(struct geobuf_agg_context *ctx)
 static void encode_keys(struct geobuf_agg_context *ctx)
 {
 	TupleDesc tupdesc = get_tuple_desc(ctx);
-	int natts = tupdesc->natts;
+	uint32_t natts = (uint32_t) tupdesc->natts;
 	char **keys = palloc(natts * sizeof(*keys));
 	uint32_t i, k = 0;
-	bool geom_name_found = false;
+	bool geom_found = false;
 	for (i = 0; i < natts; i++) {
-		char *key = tupdesc->attrs[i]->attname.data;
-		if (strcmp(key, ctx->geom_name) == 0) {
-			ctx->geom_index = i;
-			geom_name_found = true;
-			continue;
+		Oid typoid = getBaseType(TupleDescAttr(tupdesc, i)->atttypid);
+		char *tkey = TupleDescAttr(tupdesc, i)->attname.data;
+		char *key = pstrdup(tkey);
+		if (ctx->geom_name == NULL) {
+			if (!geom_found && typoid == postgis_oid(GEOMETRYOID)) {
+				ctx->geom_index = i;
+				geom_found = 1;
+				continue;
+			}
+		} else {
+			if (!geom_found && strcmp(key, ctx->geom_name) == 0) {
+				ctx->geom_index = i;
+				geom_found = 1;
+				continue;
+			}
 		}
 		keys[k++] = key;
 	}
-	if (!geom_name_found)
-		lwerror("encode_keys: no column with specificed geom_name found");
+	if (!geom_found)
+		elog(ERROR, "encode_keys: no geometry column found");
 	ctx->data->n_keys = k;
 	ctx->data->keys = keys;
 	ReleaseTupleDesc(tupdesc);
@@ -76,10 +87,10 @@ static void encode_keys(struct geobuf_agg_context *ctx)
 static void set_int_value(Data__Value *value, int64 intval) {
 	if (intval >= 0) {
 		value->value_type_case = DATA__VALUE__VALUE_TYPE_POS_INT_VALUE;
-		value->pos_int_value = intval;
+		value->pos_int_value = (uint64_t) intval;
 	} else {
 		value->value_type_case = DATA__VALUE__VALUE_TYPE_NEG_INT_VALUE;
-		value->neg_int_value = abs(intval);
+		value->neg_int_value = (uint64_t)llabs(intval);
 	}
 }
 
@@ -90,21 +101,20 @@ static void encode_properties(struct geobuf_agg_context *ctx,
 	Data__Value **values;
 	uint32_t i, k = 0, c = 0;
 	TupleDesc tupdesc = get_tuple_desc(ctx);
-	int natts = tupdesc->natts;
+	uint32_t natts = (uint32_t) tupdesc->natts;
 	properties = palloc(sizeof (*properties) * (natts - 1) * 2);
 	values = palloc (sizeof (*values) * (natts - 1));
 
 	for (i = 0; i < natts; i++) {
 		Data__Value *value;
-		char *type, *string_value, *key;
+		char *type, *string_value;
 		Datum datum;
 		bool isnull;
+		Oid typoid;
 
 		if (i == ctx->geom_index)
 			continue;
 		k++;
-
-		key = tupdesc->attrs[i]->attname.data;
 
 		value = palloc (sizeof (*value));
 		data__value__init(value);
@@ -113,7 +123,9 @@ static void encode_properties(struct geobuf_agg_context *ctx,
 		datum = GetAttributeByNum(ctx->row, i + 1, &isnull);
 		if (isnull)
 			continue;
-		Oid typoid = getBaseType(tupdesc->attrs[i]->atttypid);
+
+		typoid = getBaseType(TupleDescAttr(tupdesc, i)->atttypid);
+
 		if (strcmp(type, "int2") == 0) {
 			set_int_value(value, DatumGetInt16(datum));
 		} else if (strcmp(type, "int4") == 0) {
@@ -163,12 +175,12 @@ static int64_t *encode_coords(struct geobuf_agg_context *ctx, POINTARRAY *pa,
 	c = offset;
 	for (i = 0; i < len; i++) {
 		getPoint4d_p(pa, i, &pt);
-		sum[0] += coords[c++] = ceil(pt.x * ctx->e) - sum[0];
-		sum[1] += coords[c++] = ceil(pt.y * ctx->e) - sum[1];
+		sum[0] += coords[c++] = (int64_t) (ceil(pt.x * ctx->e) - sum[0]);
+		sum[1] += coords[c++] = (int64_t) (ceil(pt.y * ctx->e) - sum[1]);
 		if (ctx->dimensions == 3)
-			sum[2] += coords[c++] = ceil(pt.z * ctx->e) - sum[2];
+			sum[2] += coords[c++] = (int64_t) (ceil(pt.z * ctx->e) - sum[2]);
 		else if (ctx->dimensions == 4)
-			sum[3] += coords[c++] = ceil(pt.m * ctx->e) - sum[3];
+			sum[3] += coords[c++] = (int64_t) (ceil(pt.m * ctx->e) - sum[3]);
 	}
 	return coords;
 }
@@ -237,6 +249,23 @@ static Data__Geometry *encode_line(struct geobuf_agg_context *ctx,
 
 	geometry->n_coords = pa->npoints * ctx->dimensions;
 	geometry->coords = encode_coords(ctx, pa, NULL, pa->npoints, 0);
+
+	return geometry;
+}
+
+static Data__Geometry *
+encode_triangle(struct geobuf_agg_context *ctx, LWTRIANGLE *lwtri)
+{
+	Data__Geometry *geometry = galloc(DATA__GEOMETRY__TYPE__POLYGON);
+	POINTARRAY *pa = lwtri->points;
+	uint32_t len;
+
+	if (pa->npoints == 0)
+		return geometry;
+
+	len = pa->npoints - 1;
+	geometry->n_coords = len * ctx->dimensions;
+	geometry->coords = encode_coords(ctx, pa, NULL, len, 0);
 
 	return geometry;
 }
@@ -403,6 +432,8 @@ static Data__Geometry *encode_geometry(struct geobuf_agg_context *ctx,
 		return encode_point(ctx, (LWPOINT*)lwgeom);
 	case LINETYPE:
 		return encode_line(ctx, (LWLINE*)lwgeom);
+	case TRIANGLETYPE:
+		return encode_triangle(ctx, (LWTRIANGLE *)lwgeom);
 	case POLYGONTYPE:
 		return encode_poly(ctx, (LWPOLY*)lwgeom);
 	case MULTIPOINTTYPE:
@@ -412,9 +443,10 @@ static Data__Geometry *encode_geometry(struct geobuf_agg_context *ctx,
 	case MULTIPOLYGONTYPE:
 		return encode_mpoly(ctx, (LWMPOLY*)lwgeom);
 	case COLLECTIONTYPE:
+	case TINTYPE:
 		return encode_collection(ctx, (LWCOLLECTION*)lwgeom);
 	default:
-		lwerror("encode_geometry: '%s' geometry type not supported",
+		elog(ERROR, "encode_geometry: '%s' geometry type not supported",
 				lwtype_name(type));
 	}
 	return NULL;
@@ -422,13 +454,14 @@ static Data__Geometry *encode_geometry(struct geobuf_agg_context *ctx,
 
 static void analyze_val(struct geobuf_agg_context *ctx, double val)
 {
-	if (ceil(val * ctx->e) / ctx->e != val && ctx->e < MAX_PRECISION)
+	if (fabs((round(val * ctx->e) / ctx->e) - val) >= EPSILON &&
+		ctx->e < MAX_PRECISION)
 		ctx->e *= 10;
 }
 
 static void analyze_pa(struct geobuf_agg_context *ctx, POINTARRAY *pa)
 {
-	int i;
+	uint32_t i;
 	POINT4D pt;
 	for (i = 0; i < pa->npoints; i++) {
 		getPoint4d_p(pa, i, &pt);
@@ -436,14 +469,14 @@ static void analyze_pa(struct geobuf_agg_context *ctx, POINTARRAY *pa)
 		analyze_val(ctx, pt.y);
 		if (ctx->dimensions == 3)
 			analyze_val(ctx, pt.z);
-		else if (ctx->dimensions == 4)
+		if (ctx->dimensions == 4)
 			analyze_val(ctx, pt.m);
 	}
 }
 
 static void analyze_geometry(struct geobuf_agg_context *ctx, LWGEOM *lwgeom)
 {
-	int i, type;
+	uint32_t i, type;
 	LWLINE *lwline;
 	LWPOLY *lwpoly;
 	LWCOLLECTION *lwcollection;
@@ -452,6 +485,7 @@ static void analyze_geometry(struct geobuf_agg_context *ctx, LWGEOM *lwgeom)
 	{
 	case POINTTYPE:
 	case LINETYPE:
+	case TRIANGLETYPE:
 		lwline = (LWLINE*) lwgeom;
 		analyze_pa(ctx, lwline->points);
 		break;
@@ -464,12 +498,13 @@ static void analyze_geometry(struct geobuf_agg_context *ctx, LWGEOM *lwgeom)
 	case MULTILINETYPE:
 	case MULTIPOLYGONTYPE:
 	case COLLECTIONTYPE:
+	case TINTYPE:
 		lwcollection = (LWCOLLECTION*) lwgeom;
 		for (i = 0; i < lwcollection->ngeoms; i++)
 			analyze_geometry(ctx, lwcollection->geoms[i]);
 		break;
 	default:
-		lwerror("analyze_geometry: '%s' geometry type not supported",
+		elog(ERROR, "analyze_geometry: '%s' geometry type not supported",
 			lwtype_name(type));
 	}
 }
@@ -477,11 +512,12 @@ static void analyze_geometry(struct geobuf_agg_context *ctx, LWGEOM *lwgeom)
 static void analyze_geometry_flags(struct geobuf_agg_context *ctx,
 	LWGEOM *lwgeom)
 {
-	if (!ctx->has_dimensions) {
-		if (FLAGS_GET_Z(lwgeom->flags) || FLAGS_GET_M(lwgeom->flags))
-			ctx->dimensions = 3;
-		else if (FLAGS_GET_ZM(lwgeom->flags))
+	if (!ctx->has_dimensions)
+	{
+		if (lwgeom_has_z(lwgeom) && lwgeom_has_m(lwgeom))
 			ctx->dimensions = 4;
+		else if (lwgeom_has_z(lwgeom) || lwgeom_has_m(lwgeom))
+			ctx->dimensions = 3;
 		else
 			ctx->dimensions = 2;
 		ctx->has_dimensions = 1;
@@ -542,10 +578,10 @@ void geobuf_agg_init_context(struct geobuf_agg_context *ctx)
 void geobuf_agg_transfn(struct geobuf_agg_context *ctx)
 {
 	LWGEOM *lwgeom;
-	bool isnull;
+	bool isnull = false;
 	Datum datum;
 	Data__FeatureCollection *fc = ctx->data->feature_collection;
-	Data__Feature **features = fc->features;
+/*	Data__Feature **features = fc->features; */
 	Data__Feature *feature;
 	GSERIALIZED *gs;
 	if (fc->n_features >= ctx->features_capacity) {
@@ -562,8 +598,9 @@ void geobuf_agg_transfn(struct geobuf_agg_context *ctx)
 		encode_keys(ctx);
 
 	datum = GetAttributeByNum(ctx->row, ctx->geom_index + 1, &isnull);
-	if (!datum)
-		lwerror("geobuf_agg_transfn: geometry column cannot be null");
+	if (isnull)
+		return;
+
 	gs = (GSERIALIZED *) PG_DETOAST_DATUM_COPY(datum);
 	lwgeom = lwgeom_from_gserialized(gs);
 
@@ -586,9 +623,10 @@ void geobuf_agg_transfn(struct geobuf_agg_context *ctx)
  */
 uint8_t *geobuf_agg_finalfn(struct geobuf_agg_context *ctx)
 {
-	int i;
+	size_t i, len;
 	Data *data;
 	Data__FeatureCollection *fc;
+	uint8_t *buf;
 
 	data = ctx->data;
 	fc = data->feature_collection;
@@ -609,11 +647,10 @@ uint8_t *geobuf_agg_finalfn(struct geobuf_agg_context *ctx)
 	}
 
 	for (i = 0; i < fc->n_features; i++)
-		fc->features[i]->geometry = encode_geometry(ctx,
-			ctx->lwgeoms[i]);
+		fc->features[i]->geometry = encode_geometry(ctx, ctx->lwgeoms[i]);
 
-	size_t len = data__get_packed_size(data);
-	uint8_t *buf = palloc(sizeof(*buf) * (len + VARHDRSZ));
+	len = data__get_packed_size(data);
+	buf = palloc(sizeof(*buf) * (len + VARHDRSZ));
 	data__pack(data, buf + VARHDRSZ);
 
 	SET_VARSIZE(buf, VARHDRSZ + len);

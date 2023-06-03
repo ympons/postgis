@@ -21,8 +21,8 @@
 /*
 ** Global variable to hold hex TWKB strings
 */
-char *s;
-char *w;
+static char *s;
+static char *w;
 
 /*
 ** The suite initialization function.
@@ -55,13 +55,11 @@ static int clean_twkb_out_suite(void)
 static void cu_twkb(char *wkt, int8_t prec_xy, int8_t prec_z, int8_t prec_m, uint8_t variant)
 {
 	LWGEOM *g = lwgeom_from_wkt(wkt, LW_PARSER_CHECK_NONE);
-	size_t twkb_size;
-	uint8_t *twkb;
 	if ( ! g )  lwnotice("input wkt is invalid: %s", wkt);
-	twkb = lwgeom_to_twkb(g, variant, prec_xy,  prec_z, prec_m, &twkb_size);
+	lwvarlena_t *twkb = lwgeom_to_twkb(g, variant, prec_xy, prec_z, prec_m);
 	lwgeom_free(g);
 	if ( s ) free(s);
-	s = hexbytes_from_bytes(twkb, twkb_size);
+	s = hexbytes_from_bytes((uint8_t *)twkb->data, LWSIZE_GET(twkb->size) - LWVARHDRSZ);
 	free(twkb);
 }
 
@@ -73,15 +71,13 @@ static void cu_twkb_idlist(char *wkt, int64_t *idlist, int8_t prec_xy, int8_t pr
 {
 	LWGEOM *g = lwgeom_from_wkt(wkt, LW_PARSER_CHECK_NONE);
 	LWGEOM *g_b;
-	size_t twkb_size;
-	uint8_t *twkb;
 	if ( ! g )  lwnotice("input wkt is invalid: %s", wkt);
-	twkb = lwgeom_to_twkb_with_idlist(g, idlist, variant, prec_xy,  prec_z, prec_m, &twkb_size);
+	lwvarlena_t *twkb = lwgeom_to_twkb_with_idlist(g, idlist, variant, prec_xy, prec_z, prec_m);
 	lwgeom_free(g);
 	if ( s ) free(s);
 	if ( w ) free(w);
-	s = hexbytes_from_bytes(twkb, twkb_size);
-	g_b = lwgeom_from_twkb(twkb, twkb_size, LW_PARSER_CHECK_NONE);
+	s = hexbytes_from_bytes((uint8_t *)twkb->data, LWSIZE_GET(twkb->size) - LWVARHDRSZ);
+	g_b = lwgeom_from_twkb((uint8_t *)twkb->data, LWSIZE_GET(twkb->size) - LWVARHDRSZ, LW_PARSER_CHECK_NONE);
 	w = lwgeom_to_ewkt(g_b);
 	lwgeom_free(g_b);
 	free(twkb);
@@ -206,8 +202,8 @@ static void test_twkb_out_idlist(void)
 	cu_twkb_idlist("MULTIPOINT(1 1, 0 0)",idlist, 0, 0, 0, 0);
 	// printf("TWKB: %s\n",s);
 	// printf("WKT: %s\n",w);
-	CU_ASSERT_STRING_EQUAL(s,"040402040802020101");		
-	CU_ASSERT_STRING_EQUAL(w,"MULTIPOINT(1 1,0 0)");		
+	CU_ASSERT_STRING_EQUAL(s,"040402040802020101");
+	CU_ASSERT_STRING_EQUAL(w,"MULTIPOINT(1 1,0 0)");
 
 	/*
 	04 06 multipoint, size/idlist
@@ -222,8 +218,8 @@ static void test_twkb_out_idlist(void)
 	cu_twkb_idlist("MULTIPOINT(1 1, 0 0)",idlist, 0, 0, 0, TWKB_SIZE);
 	// printf("TWKB: %s\n",s);
 	// printf("WKT: %s\n",w);
-	CU_ASSERT_STRING_EQUAL(s,"04060702040802020101");		
-	CU_ASSERT_STRING_EQUAL(w,"MULTIPOINT(1 1,0 0)");		
+	CU_ASSERT_STRING_EQUAL(s,"04060702040802020101");
+	CU_ASSERT_STRING_EQUAL(w,"MULTIPOINT(1 1,0 0)");
 
 	/*
 	04 07 multipoint, bbox/size/idlist
@@ -239,8 +235,8 @@ static void test_twkb_out_idlist(void)
 	cu_twkb_idlist("MULTIPOINT(1 1, 0 0)",idlist, 0, 0, 0, TWKB_SIZE | TWKB_BBOX);
 	// printf("TWKB: %s\n",s);
 	// printf("WKT: %s\n",w);
-	CU_ASSERT_STRING_EQUAL(s,"04070B0002000202040802020101");		
-	CU_ASSERT_STRING_EQUAL(w,"MULTIPOINT(1 1,0 0)");		
+	CU_ASSERT_STRING_EQUAL(s,"04070B0002000202040802020101");
+	CU_ASSERT_STRING_EQUAL(w,"MULTIPOINT(1 1,0 0)");
 
 	/*
 	0704 geometrycollection, idlist
@@ -248,13 +244,13 @@ static void test_twkb_out_idlist(void)
 	0408 idlist (2,4)
 	01000202 first point (type, meta, x, y)
 	01000000 second point (type, meta, x, y)
-	*/		
+	*/
 	idlist[0] = 2;
 	idlist[1] = 4;
 	cu_twkb_idlist("GEOMETRYCOLLECTION(POINT(1 1),POINT(0 0))",idlist, 0, 0, 0, 0);
 	// printf("TWKB: %s\n",s);
 	CU_ASSERT_STRING_EQUAL(s,"07040204080100020201000000");
-	CU_ASSERT_STRING_EQUAL(w,"GEOMETRYCOLLECTION(POINT(1 1),POINT(0 0))");		
+	CU_ASSERT_STRING_EQUAL(w,"GEOMETRYCOLLECTION(POINT(1 1),POINT(0 0))");
 
 	/*
 	0706 geometrycollection, size/idlist
@@ -269,7 +265,7 @@ static void test_twkb_out_idlist(void)
 	cu_twkb_idlist("GEOMETRYCOLLECTION(POINT(1 1),POINT(0 0))",idlist, 0, 0, 0, TWKB_SIZE);
 	// printf("TWKB: %s\n",s);
 	CU_ASSERT_STRING_EQUAL(s,"07060D02040801020202020102020000");
-	CU_ASSERT_STRING_EQUAL(w,"GEOMETRYCOLLECTION(POINT(1 1),POINT(0 0))");		
+	CU_ASSERT_STRING_EQUAL(w,"GEOMETRYCOLLECTION(POINT(1 1),POINT(0 0))");
 
 }
 

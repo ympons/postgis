@@ -13,6 +13,10 @@
 
 /* This file contains functions that are shared between the loader and dumper */
 
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -166,24 +170,26 @@ colmap_init(colmap *map)
 void
 colmap_clean(colmap *map)
 {
-  int i;
-  if (map->size)
-  {
-    for (i = 0; i < map->size; i++)
-    {
-      if (map->pgfieldnames[i]) free(map->pgfieldnames[i]);
-      if (map->dbffieldnames[i]) free(map->dbffieldnames[i]);
-    }
-    free(map->pgfieldnames);
-    free(map->dbffieldnames);
-  }
+	int i;
+	if (map != NULL){
+		if (map->size)
+		{
+			for (i = 0; i < map->size; i++)
+			{
+				if (map->pgfieldnames[i]) free(map->pgfieldnames[i]);
+				if (map->dbffieldnames[i]) free(map->dbffieldnames[i]);
+			}
+			free(map->pgfieldnames);
+			free(map->dbffieldnames);
+		}
+	}
 }
 
 const char *
 colmap_dbf_by_pg(colmap *map, const char *pgname)
 {
   int i;
-  for (i=0; i<map->size; ++i)
+  for (i=0; i<map->size; i++)
   {
     if (!strcasecmp(map->pgfieldnames[i], pgname))
     {
@@ -197,7 +203,7 @@ const char *
 colmap_pg_by_dbf(colmap *map, const char *dbfname)
 {
   int i;
-  for (i=0; i<map->size; ++i)
+  for (i=0; i<map->size; i++)
   {
     if (!strcasecmp(map->dbffieldnames[i], dbfname))
     {

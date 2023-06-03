@@ -1,3 +1,4 @@
+include @srcdir@/../upgradeable_versions.mk
 OBJS = \
     address_parser.o \
     address_standardizer.o \
@@ -29,81 +30,112 @@ POSTGIS_PGSQL_VERSION=@POSTGIS_PGSQL_VERSION@
 # SQL preprocessor
 SQLPP = @SQLPP@
 GREP=@GREP@
-PERL=@PERL@
-EXTVERSION    = @POSTGIS_LIB_VERSION@
-MINORVERSION  = @POSTGIS_MAJOR_VERSION@.@POSTGIS_MINOR_VERSION@
+EXTVERSION = @POSTGIS_LIB_VERSION@
+MODULE_big = address_standardizer-@POSTGIS_MAJOR_VERSION@
+MODULEPATH    = $$libdir/address_standardizer-@POSTGIS_MAJOR_VERSION@
+ifeq (@LIBINCLUDEMINORVERSION@,yes)
 MODULE_big = address_standardizer-@POSTGIS_MAJOR_VERSION@.@POSTGIS_MINOR_VERSION@
+MODULEPATH    = $$libdir/address_standardizer-@POSTGIS_MAJOR_VERSION@.@POSTGIS_MINOR_VERSION@
+endif
 EXTENSION = address_standardizer
-DATA = address_standardizer_data_us.control sql/$(EXTENSION).sql sql/$(EXTENSION)_data_us.sql
+EXTENSION_SCRIPTS = \
+ 		sql/address_standardizer_types.sql \
+    sql/address_standardizer_functions.sql
 
-all:  sql/address_standardizer.sql sql/address_standardizer--1.0--$(EXTVERSION).sql sql/address_standardizer--$(EXTVERSION).sql sql/address_standardizer--$(EXTVERSION)--$(EXTVERSION)next.sql sql/address_standardizer--$(EXTVERSION)next--$(EXTVERSION).sql \
+DATA_built = \
+	$(EXTENSION).control \
+	$(EXTENSION)_data_us.control \
+	$(NULL)
+
+all:  sql/address_standardizer_pre.sql sql/address_standardizer.sql sql/address_standardizer--1.0--$(EXTVERSION).sql sql/$(EXTENSION)--$(EXTVERSION).sql sql/$(EXTENSION)--ANY--$(EXTVERSION).sql \
  sql/$(EXTENSION)_data_us.sql sql/address_standardizer--@POSTGIS_LIB_VERSION@.sql sql/$(EXTENSION)_data_us--@POSTGIS_LIB_VERSION@.sql  sql/$(EXTENSION)_data_us--$(EXTVERSION)--$(EXTVERSION)next.sql \
-sql/$(EXTENSION)_data_us--$(EXTVERSION)next--$(EXTVERSION).sql \
+sql/$(EXTENSION)_data_us--$(EXTVERSION)next--$(EXTVERSION).sql sql/$(EXTENSION)_data_us--ANY--$(EXTVERSION).sql \
 sql/test-init-extensions.sql sql/test-parseaddress.sql sql/test-standardize_address_1.sql sql/test-standardize_address_2.sql
 
-EXTRA_CLEAN += sql/*.sql
-
-
-
 DOCS = README.address_standardizer
-PG_CPPFLAGS = @CPPFLAGS@ -g -O0
+PG_CPPFLAGS = @CFLAGS@ @CPPFLAGS@ -DPCRE_VERSION=@PCRE_VERSION@
 
-SHLIB_LINK = @SHLIB_LINK@ -lpcre
-EXTRA_CLEAN = usps-st-city-name.txt mk-st-regexp mk-city-regex test_main
+SHLIB_LINK = @SHLIB_LINK@ @PCRE_LDFLAGS@
+EXTRA_CLEAN = sql/ usps-st-city-name.txt mk-st-regexp mk-city-regex test_main
 REGRESS = test-init-extensions test-parseaddress test-standardize_address_1 test-standardize_address_2
 
-# PGXS information
-PG_CONFIG = @PG_CONFIG@
-
-PGVER := $(shell $(PG_CONFIG) --version)
-
-
-# Set PERL _after_ the include of PGXS
-PERL=@PERL@
+sql:
+	mkdir -p $@
 
 # Borrow the $libdir substitution from PGXS but customise by running the preprocessor
 # and adding the version number
-sql/%.sql: %.sql.in
-	mkdir -p sql
-	$(SQLPP) -I../libpgcommon $< | grep -v '^#' | \
-	$(PERL) -lpe "s'MODULE_PATHNAME'\$$libdir/${EXTENSION}-${MINORVERSION}'g" > $@
-	
-sql/address_standardizer--@POSTGIS_LIB_VERSION@.sql: sql/address_standardizer_types.sql \
-    sql/address_standardizer_functions.sql
-	cat $^ > $@
-	
-sql/address_standardizer.sql: sql/address_standardizer_types.sql \
-    sql/address_standardizer_functions.sql
-	cat $^ > $@
-	
-sql/address_standardizer--1.0--$(EXTVERSION).sql:  sql/address_standardizer_functions.sql
-	cat $^ > $@
-	
-# upgrade logic for us data extension (to go to next cludge for dev upgrading)
-sql/$(EXTENSION)--$(EXTVERSION)--$(EXTVERSION)next.sql: sql/address_standardizer_functions.sql
+sql/%.sql: %.sql.in | sql
+	$(SQLPP) -I@buiddir@/../libpgcommon $< > $@.tmp
+	grep -v '^#' $@.tmp | \
+	$(PERL) -lpe "s'MODULE_PATHNAME'\$(MODULEPATH)'g" > $@
+	rm -f $@.tmp
+
+%.control: %.control.in Makefile
+	cat $< \
+		| $(PERL) -lpe "s'@EXTVERSION@'$(EXTVERSION)'g" \
+		> $@
+
+sql/address_standardizer_pre.sql: $(EXTENSION_SCRIPTS) | sql
 	cat $^ > $@
 
+sql/address_standardizer--$(EXTVERSION).sql: sql/address_standardizer_pre.sql ../../utils/create_or_replace_to_create.pl | sql
+	cat $< \
+		| $(PERL) @top_srcdir@/utils/create_or_replace_to_create.pl sql/address_standardizer_pre.sql \
+		> $@
+
+sql/address_standardizer.sql: sql/address_standardizer_pre.sql ../../utils/create_or_replace_to_create.pl | sql
+	cat $< \
+		| $(PERL) @top_srcdir@/utils/create_or_replace_to_create.pl sql/address_standardizer_pre.sql \
+		> $@
+
+EXTENSION_UPGRADE_SCRIPTS = sql/address_standardizer_functions.sql
+
 # upgrade logic for us data extension (to go to original round-robin yoyo cludge for dev upgrading)
-sql/$(EXTENSION)--$(EXTVERSION)next--$(EXTVERSION).sql: sql/address_standardizer_functions.sql
-	cat $^ > $@		
-	
+sql/$(EXTENSION)--1.0--$(EXTVERSION).sql: sql/address_standardizer_functions.sql | sql
+	cat $^ > $@
+
+sql/$(EXTENSION)--$(EXTVERSION)next--$(EXTVERSION).sql: sql/address_standardizer_functions.sql | sql
+	cat $^ > $@
+
 # build us data extension
-sql/$(EXTENSION)_data_us--$(EXTVERSION).sql: us_lex.sql us_gaz.sql us_rules.sql sql_bits/address_standardizer_data_us_mark_editable_objects.sql.in
-	mkdir -p sql
+sql/$(EXTENSION)_data_us--$(EXTVERSION).sql: us_lex.sql us_gaz.sql us_rules.sql sql_bits/address_standardizer_data_us_mark_editable_objects.sql.in | sql
 	cat $^ > $@
-	
-sql/$(EXTENSION)_data_us.sql: us_lex.sql us_gaz.sql us_rules.sql sql_bits/address_standardizer_data_us_mark_editable_objects.sql.in
-	mkdir -p sql
+
+sql/$(EXTENSION)_data_us.sql: us_lex.sql us_gaz.sql us_rules.sql sql_bits/address_standardizer_data_us_mark_editable_objects.sql.in | sql
 	cat $^ > $@
-	
+
 # upgrade logic for us data extension (to go to next cludge for dev upgrading)
-sql/$(EXTENSION)_data_us--$(EXTVERSION)--$(EXTVERSION)next.sql: sql/$(EXTENSION)_data_us--$(EXTVERSION).sql
+sql/$(EXTENSION)_data_us--$(EXTVERSION)--$(EXTVERSION)next.sql: sql/$(EXTENSION)_data_us--$(EXTVERSION).sql | sql
 	cat $^ > $@
 
 # upgrade logic for us data extension (to go to original round-robin yoyo cludge for dev upgrading)
-sql/$(EXTENSION)_data_us--$(EXTVERSION)next--$(EXTVERSION).sql: sql/$(EXTENSION)_data_us--$(EXTVERSION).sql
-	cat $^ > $@	
-	
+sql/$(EXTENSION)_data_us--$(EXTVERSION)next--$(EXTVERSION).sql: sql/$(EXTENSION)_data_us--$(EXTVERSION).sql | sql
+	cat $^ > $@
+
+
+sql/$(EXTENSION)--ANY--$(EXTVERSION).sql: $(EXTENSION_UPGRADE_SCRIPTS)
+	cat $(EXTENSION_UPGRADE_SCRIPTS) > $@
+
+sql/$(EXTENSION)_data_us--ANY--$(EXTVERSION).sql: sql/$(EXTENSION)_data_us--$(EXTVERSION).sql | sql
+	cat $^ > $@
+
+include @srcdir@/../upgrade-paths-rules.mk
+
+# TODO: fix this by moving data in their own directories
+ifeq ($(EXTENSION_DATA_INSTALL),)
+LANGUAGES = us
+install-upgrade-paths: install-upgrade-paths-data
+install-extension-upgrades-from-known-versions: install-extension-upgrades-from-known-versions-data
+install-upgrade-paths-data install-extension-upgrades-from-known-versions-data:
+	TARGET=`echo $@ | sed 's/-data$$//'`; \
+	for lang in $(LANGUAGES); do \
+		EXTENSION_DATA_INSTALL=1 \
+		$(MAKE) $${TARGET} \
+		EXTENSION=$(EXTENSION)_data_$${lang} \
+		|| exit 1; \
+	done
+endif
+
 mk-st-regexp: mk-st-regexp.pl
 	$(PERL) -c mk-st-regexp.pl
 	rm -f mk-st-regexp
@@ -162,12 +194,41 @@ tokenize.o: tokenize.c pagc_api.h
 
 std_pg_hash.o: std_pg_hash.c std_pg_hash.h pagc_api.h pagc_std_api.h
 
-#only extension files	
-DATA += $(wildcard sql/*--*.sql)
+#only extension files
+DATA_built += $(wildcard sql/*--*.sql)
 EXTRA_CLEAN += $(wildcard expected/*--*.out)
-EXTRA_CLEAN += sql/$(EXTENSION)--$(EXTVERSION).sql sql/$(EXTENSION)--unpackaged--$(EXTVERSION).sql
-EXTRA_CLEAN += sql/$(EXTENSION)--$(EXTVERSION).sql sql/$(EXTENSION)--unpackaged--$(EXTVERSION).sql *.a *.so *.dll
+EXTRA_CLEAN += *.a *.so *.dll
 
+distclean: clean
+	rm Makefile
+
+PG_CONFIG := @PG_CONFIG@
 PGXS := @PGXS@
 include $(PGXS)
 PERL = @PERL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+top_builddir = @top_builddir@
+abs_topbuilddir=$(abspath $(top_builddir))
+
+VPATH = $(srcdir)
+
+INSTALLED_UPGRADE_SCRIPTS +=  \
+	$(wildcard $(EXTDIR)/$(EXTENSION)_data_us--*--$(EXTVERSION).sql) \
+	$(wildcard $(EXTDIR)/$(EXTENSION)_data_us--*--ANY.sql) \
+	$(NULL)
+
+install: all installdirs
+	$(INSTALL_DATA) $(addprefix $(srcdir)/, $(DATA)) $(DATA_built) '$(DESTDIR)$(datadir)/$(datamoduledir)/'
+ifdef DOCS
+ifdef docdir
+	$(INSTALL_DATA) $(addprefix $(srcdir)/, $(DOCS)) '$(DESTDIR)$(docdir)/$(docmoduledir)/'
+endif # docdir
+endif # DOCS
+ifdef MODULE_big
+ifeq ($(with_llvm), yes)
+	$(call install_llvm_module,$(MODULE_big),$(OBJS))
+endif # with_llvm
+install: install-lib
+endif # MODULE_big

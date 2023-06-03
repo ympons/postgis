@@ -57,10 +57,11 @@ lwpoint_summary(LWPOINT *point, int offset)
 	char *result;
 	char *pad="";
 	char *zmflags = lwgeom_flagchars((LWGEOM*)point);
+	size_t sz = 128+offset;
 
-	result = (char *)lwalloc(128+offset);
+	result = (char *)lwalloc(sz);
 
-	sprintf(result, "%*.s%s[%s]",
+	snprintf(result, sz, "%*.s%s[%s]",
 	        offset, pad, lwtype_name(point->type),
 	        zmflags);
 	return result;
@@ -72,10 +73,11 @@ lwline_summary(LWLINE *line, int offset)
 	char *result;
 	char *pad="";
 	char *zmflags = lwgeom_flagchars((LWGEOM*)line);
+	size_t sz = 128+offset;
 
-	result = (char *)lwalloc(128+offset);
+	result = (char *)lwalloc(sz);
 
-	sprintf(result, "%*.s%s[%s] with %d points",
+	snprintf(result, sz, "%*.s%s[%s] with %d points",
 	        offset, pad, lwtype_name(line->type),
 	        zmflags,
 	        line->points->npoints);
@@ -89,7 +91,7 @@ lwcollection_summary(LWCOLLECTION *col, int offset)
 	size_t size = 128;
 	char *result;
 	char *tmp;
-	int i;
+	uint32_t i;
 	static char *nl = "\n";
 	char *pad="";
 	char *zmflags = lwgeom_flagchars((LWGEOM*)col);
@@ -98,10 +100,13 @@ lwcollection_summary(LWCOLLECTION *col, int offset)
 
 	result = (char *)lwalloc(size);
 
-	sprintf(result, "%*.s%s[%s] with %d elements\n",
+	snprintf(result, size, "%*.s%s[%s] with %d element%s",
 	        offset, pad, lwtype_name(col->type),
 	        zmflags,
-	        col->ngeoms);
+	        col->ngeoms,
+					col->ngeoms ?
+						( col->ngeoms > 1 ? "s:\n" : ":\n")
+						: "s");
 
 	for (i=0; i<col->ngeoms; i++)
 	{
@@ -127,7 +132,7 @@ lwpoly_summary(LWPOLY *poly, int offset)
 	char tmp[256];
 	size_t size = 64*(poly->nrings+1)+128;
 	char *result;
-	int i;
+	uint32_t i;
 	char *pad="";
 	static char *nl = "\n";
 	char *zmflags = lwgeom_flagchars((LWGEOM*)poly);
@@ -136,14 +141,17 @@ lwpoly_summary(LWPOLY *poly, int offset)
 
 	result = (char *)lwalloc(size);
 
-	sprintf(result, "%*.s%s[%s] with %i rings\n",
+	snprintf(result, size, "%*.s%s[%s] with %i ring%s",
 	        offset, pad, lwtype_name(poly->type),
 	        zmflags,
-	        poly->nrings);
+	        poly->nrings,
+					poly->nrings ?
+						( poly->nrings > 1 ? "s:\n" : ":\n")
+						: "s");
 
 	for (i=0; i<poly->nrings; i++)
 	{
-		sprintf(tmp,"%s   ring %i has %i points",
+		snprintf(tmp, sizeof(tmp), "%s   ring %i has %i points",
 		        pad, i, poly->rings[i]->npoints);
 		if ( i > 0 ) strcat(result,nl);
 		strcat(result,tmp);
@@ -184,7 +192,7 @@ lwgeom_summary(const LWGEOM *lwgeom, int offset)
 		return lwcollection_summary((LWCOLLECTION *)lwgeom, offset);
 	default:
 		result = (char *)lwalloc(256);
-		sprintf(result, "Object is of unknown type: %d",
+		snprintf(result, 256, "Object is of unknown type: %d",
 		        lwgeom->type);
 		return result;
 	}

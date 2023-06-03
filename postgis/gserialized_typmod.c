@@ -35,14 +35,13 @@
 
 #include "utils/elog.h"
 #include "utils/array.h"
-#include "utils/builtins.h"  /* for pg_atoi */
+#include "utils/builtins.h"  /* for cstring_to_text */
 #include "lib/stringinfo.h"  /* For binary input */
 #include "catalog/pg_type.h" /* for CSTRINGOID */
 
 #include "liblwgeom.h"         /* For standard geometry types. */
 #include "lwgeom_pg.h"       /* For debugging macros. */
 #include "geography.h"	     /* For utility functions. */
-#include "lwgeom_export.h"   /* For export functions. */
 #include "lwgeom_transform.h" /* for srid_is_latlon */
 
 
@@ -62,53 +61,45 @@ Datum geometry_enforce_typmod(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(postgis_typmod_out);
 Datum postgis_typmod_out(PG_FUNCTION_ARGS)
 {
-	char *s = (char*)palloc(64);
-	char *str = s;
-	uint32 typmod = PG_GETARG_INT32(0);
-	uint32 srid = TYPMOD_GET_SRID(typmod);
-	uint32 type = TYPMOD_GET_TYPE(typmod);
-	uint32 hasz = TYPMOD_GET_Z(typmod);
-	uint32 hasm = TYPMOD_GET_M(typmod);
+	StringInfoData si;
+	// char *s = (char*)palloc(64);
+	int32 typmod = PG_GETARG_INT32(0);
+	int32 srid = TYPMOD_GET_SRID(typmod);
+	int32 type = TYPMOD_GET_TYPE(typmod);
+	int32 hasz = TYPMOD_GET_Z(typmod);
+	int32 hasm = TYPMOD_GET_M(typmod);
 
 	POSTGIS_DEBUGF(3, "Got typmod(srid = %d, type = %d, hasz = %d, hasm = %d)", srid, type, hasz, hasm);
 
 	/* No SRID or type or dimensionality? Then no typmod at all. Return empty string. */
-	if ( ! ( srid || type || hasz || hasm ) )
+	if (!(srid || type || hasz || hasm) || typmod < 0)
 	{
-		*str = '\0';
-		PG_RETURN_CSTRING(str);
+		PG_RETURN_CSTRING(pstrdup(""));
 	}
 
 	/* Opening bracket. */
-	str += sprintf(str, "(");
+	initStringInfo(&si);
+	appendStringInfoChar(&si, '(');
 
 	/* Has type? */
-	if ( type )
-		str += sprintf(str, "%s", lwtype_name(type));
-  else if ( (!type) &&  ( srid || hasz || hasm ) )
-    str += sprintf(str, "Geometry");
+	if (type)
+		appendStringInfo(&si, "%s", lwtype_name(type));
+	else if (srid || hasz || hasm)
+		appendStringInfoString(&si, "Geometry");
 
 	/* Has Z? */
-	if ( hasz )
-		str += sprintf(str, "%s", "Z");
+	if (hasz) appendStringInfoString(&si, "Z");
 
 	/* Has M? */
-	if ( hasm )
-		str += sprintf(str, "%s", "M");
-
-	/* Comma? */
-	if ( srid )
-		str += sprintf(str, ",");
+	if (hasm) appendStringInfoString(&si, "M");
 
 	/* Has SRID? */
-	if ( srid )
-		str += sprintf(str, "%d", srid);
+	if (srid) appendStringInfo(&si, ",%d", srid);
 
 	/* Closing bracket. */
-	str += sprintf(str, ")");
+	appendStringInfoChar(&si, ')');
 
-	PG_RETURN_CSTRING(s);
-
+	PG_RETURN_CSTRING(si.data);
 }
 
 
@@ -156,12 +147,36 @@ GSERIALIZED* postgis_valid_typmod(GSERIALIZED *gser, int32_t typmod)
 			gser = geometry_serialize(lwpoint_as_lwgeom(empty_point));
 	}
 
+	/* Typmod has a preference for SRID, but geometry does not? Harmonize the geometry SRID. */
+	if ( typmod_srid > 0 && geom_srid == 0 )
+	{
+		gserialized_set_srid(gser, typmod_srid);
+		geom_srid = typmod_srid;
+	}
+
 	/* Typmod has a preference for SRID? Geometry SRID had better match. */
 	if ( typmod_srid > 0 && typmod_srid != geom_srid )
 	{
 		ereport(ERROR, (
 		            errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 		            errmsg("Geometry SRID (%d) does not match column SRID (%d)", geom_srid, typmod_srid) ));
+	}
+
+	/* Typmod has a preference for MULTI* geometry type */
+	/* and geometry is the singleton type. */
+	if ( typmod_type > 0 && typmod_type == lwtype_multitype(geom_type) )
+	{
+		/* Promote the singleton to equivalent multi */
+		LWGEOM *geom = lwgeom_from_gserialized(gser);
+		LWGEOM *mgeom = lwgeom_as_multi(geom);
+		GSERIALIZED *mgser = gserialized_is_geodetic(gser) ?
+		                     geography_serialize(mgeom) :
+		                     geometry_serialize(mgeom);
+		/* Count on caller memory context cleaning up dangling gserialized */
+		gser = mgser;
+		geom_type = gserialized_get_type(gser);
+		lwgeom_free(geom);
+		lwgeom_free(mgeom);
 	}
 
 	/* Typmod has a preference for geometry type. */
@@ -210,15 +225,15 @@ GSERIALIZED* postgis_valid_typmod(GSERIALIZED *gser, int32_t typmod)
 		            errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 		            errmsg("Geometry has M dimension but column does not" )));
 	}
-	
+
 	return gser;
-	
+
 }
 
 
 static uint32 gserialized_typmod_in(ArrayType *arr, int is_geography)
 {
-	uint32 typmod = 0;
+	int32 typmod = 0;
 	Datum *elem_values;
 	int n = 0;
 	int	i = 0;
@@ -243,7 +258,7 @@ static uint32 gserialized_typmod_in(ArrayType *arr, int is_geography)
 	                  &elem_values, NULL, &n);
 
 	/* Set the SRID to the default value first */
-	if ( is_geography)
+	if (is_geography)
 	    TYPMOD_SET_SRID(typmod, SRID_DEFAULT);
 	else
 	    TYPMOD_SET_SRID(typmod, SRID_UNKNOWN);
@@ -274,9 +289,33 @@ static uint32 gserialized_typmod_in(ArrayType *arr, int is_geography)
 		}
 		if ( i == 1 ) /* SRID */
 		{
-			int srid = pg_atoi(DatumGetCString(elem_values[i]),
-			                   sizeof(int32), '\0');
-			srid = clamp_srid(srid);
+			char *int_string = DatumGetCString(elem_values[i]);
+			char *endp;
+			long l;
+			int32_t srid;
+
+			errno = 0;
+			l = strtol(int_string, &endp, 10);
+
+			if (int_string == endp)
+				ereport(ERROR,
+						(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+						 errmsg("invalid input syntax for type %s: \"%s\"",
+								"integer", int_string)));
+
+			if (errno == ERANGE || l < INT_MIN || l > INT_MAX)
+				ereport(ERROR,
+						(errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+						 errmsg("value \"%s\" is out of range for type %s", int_string,
+								"integer")));
+
+			if (*endp != '\0')
+				ereport(ERROR,
+						(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+						 errmsg("invalid input syntax for type %s: \"%s\"",
+								"integer", int_string)));
+
+			srid = clamp_srid(l);
 			POSTGIS_DEBUGF(3, "srid: %d", srid);
 			if ( srid != SRID_UNKNOWN )
 			{
@@ -299,11 +338,11 @@ PG_FUNCTION_INFO_V1(geography_typmod_in);
 Datum geography_typmod_in(PG_FUNCTION_ARGS)
 {
 	ArrayType *arr = (ArrayType *) DatumGetPointer(PG_GETARG_DATUM(0));
-	uint32 typmod = gserialized_typmod_in(arr, LW_TRUE);
-	int srid = TYPMOD_GET_SRID(typmod);
+	int32 typmod = gserialized_typmod_in(arr, LW_TRUE);
+	int32_t srid = TYPMOD_GET_SRID(typmod);
 	/* Check the SRID is legal (geographic coordinates) */
-	srid_is_latlong(fcinfo, srid);
-	
+	srid_check_latlong(srid);
+
 	PG_RETURN_INT32(typmod);
 }
 
@@ -386,7 +425,7 @@ Datum postgis_typmod_type(PG_FUNCTION_ARGS)
 	if ( typmod >= 0 && TYPMOD_GET_M(typmod) )
 		ptr += sprintf(ptr, "%s", "M");
 
-	stext = cstring2text(s);
+	stext = cstring_to_text(s);
 	pfree(s);
 	PG_RETURN_TEXT_P(stext);
 }

@@ -23,8 +23,6 @@
  *
  **********************************************************************/
 
-
-
 #include "liblwgeom_internal.h"
 #include "stringbuffer.h"
 
@@ -57,6 +55,15 @@ stringbuffer_init(stringbuffer_t *s)
 {
 	stringbuffer_init_with_size(s, STRINGBUFFER_STARTSIZE);
 }
+
+void
+stringbuffer_init_varlena(stringbuffer_t *s)
+{
+	stringbuffer_init_with_size(s, STRINGBUFFER_STARTSIZE + LWVARHDRSZ);
+	/* Zero out LWVARHDRSZ bytes at the front of the buffer */
+	stringbuffer_append_len(s, "\0\0\0\0\0\0\0\0", LWVARHDRSZ);
+}
+
 
 /**
 * Allocate a new stringbuffer_t. Use stringbuffer_destroy to free.
@@ -94,28 +101,6 @@ stringbuffer_clear(stringbuffer_t *s)
 }
 
 /**
-* If necessary, expand the stringbuffer_t internal buffer to accomodate the
-* specified additional size.
-*/
-static inline void
-stringbuffer_makeroom(stringbuffer_t *s, size_t size_to_add)
-{
-	size_t current_size = (s->str_end - s->str_start);
-	size_t capacity = s->capacity;
-	size_t required_size = current_size + size_to_add;
-
-	while (capacity < required_size)
-		capacity *= 2;
-
-	if ( capacity > s->capacity )
-	{
-		s->str_start = lwrealloc(s->str_start, capacity);
-		s->capacity = capacity;
-		s->str_end = s->str_start + current_size;
-	}
-}
-
-/**
 * Return the last character in the buffer.
 */
 char
@@ -123,22 +108,10 @@ stringbuffer_lastchar(stringbuffer_t *s)
 {
 	if( s->str_end == s->str_start )
 		return 0;
-	
+
 	return *(s->str_end - 1);
 }
 
-/**
-* Append the specified string to the stringbuffer_t.
-*/
-void
-stringbuffer_append(stringbuffer_t *s, const char *a)
-{
-	int alen = strlen(a); /* Length of string to append */
-	int alen0 = alen + 1; /* Length including null terminator */
-	stringbuffer_makeroom(s, alen0);
-	memcpy(s->str_end, a, alen0);
-	s->str_end += alen;
-}
 
 /**
 * Returns a reference to the internal string being managed by
@@ -164,6 +137,25 @@ stringbuffer_getstringcopy(stringbuffer_t *s)
 	memcpy(str, s->str_start, size);
 	str[size - 1] = '\0';
 	return str;
+}
+
+lwvarlena_t *
+stringbuffer_getvarlena(stringbuffer_t *s)
+{
+	lwvarlena_t *output = (lwvarlena_t *)(s->str_start);
+	LWSIZE_SET(output->size, (s->str_end - s->str_start));
+	return output;
+}
+
+lwvarlena_t *
+stringbuffer_getvarlenacopy(stringbuffer_t *s)
+{
+	size_t size = (s->str_end - s->str_start);
+	lwvarlena_t *output = (lwvarlena_t *)lwalloc(size + LWVARHDRSZ);
+	LWSIZE_SET(output->size, size + LWVARHDRSZ);
+
+	memcpy(output->data, s->str_start, size);
+	return output;
 }
 
 /**
@@ -216,7 +208,9 @@ stringbuffer_avprintf(stringbuffer_t *s, const char *fmt, va_list ap)
 	/* Propogate errors up */
 	if ( len < 0 )
 		#if defined(__MINGW64_VERSION_MAJOR)
+		va_copy(ap2, ap);
 		len = _vscprintf(fmt, ap2);/**Assume windows flaky vsnprintf that returns -1 if initial buffer to small and add more space **/
+		va_end(ap2);
 		#else
 		return len;
 		#endif
@@ -269,10 +263,10 @@ stringbuffer_trim_trailing_white(stringbuffer_t *s)
 {
 	char *ptr = s->str_end;
 	int dist = 0;
-	
+
 	/* Roll backwards until we hit a non-space. */
 	while( ptr > s->str_start )
-	{	
+	{
 		ptr--;
 		if( (*ptr == ' ') || (*ptr == '\t') )
 		{
@@ -287,7 +281,7 @@ stringbuffer_trim_trailing_white(stringbuffer_t *s)
 			return dist;
 		}
 	}
-	return dist;	
+	return dist;
 }
 
 /**
@@ -306,13 +300,13 @@ stringbuffer_trim_trailing_zeroes(stringbuffer_t *s)
 	char *ptr = s->str_end;
 	char *decimal_ptr = NULL;
 	int dist;
-	
+
 	if ( s->str_end - s->str_start < 2)
 		return 0;
 
 	/* Roll backwards to find the decimal for this number */
 	while( ptr > s->str_start )
-	{	
+	{
 		ptr--;
 		if ( *ptr == '.' )
 		{
@@ -328,9 +322,9 @@ stringbuffer_trim_trailing_zeroes(stringbuffer_t *s)
 	/* No decimal? Nothing to trim! */
 	if ( ! decimal_ptr )
 		return 0;
-	
+
 	ptr = s->str_end;
-	
+
 	/* Roll backwards again, with the decimal as stop point, trimming contiguous zeroes */
 	while( ptr >= decimal_ptr )
 	{
@@ -340,7 +334,7 @@ stringbuffer_trim_trailing_zeroes(stringbuffer_t *s)
 		else
 			break;
 	}
-	
+
 	/* Huh, we get anywhere. Must not have trimmed anything. */
 	if ( ptr == s->str_end )
 		return 0;

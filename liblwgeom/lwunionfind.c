@@ -26,6 +26,7 @@
 #include "liblwgeom.h"
 #include "lwunionfind.h"
 #include <string.h>
+#include <stdlib.h>
 
 static int cmp_int(const void *a, const void *b);
 static int cmp_int_ptr(const void *a, const void *b);
@@ -149,7 +150,7 @@ UF_get_collapsed_cluster_ids(UNIONFIND* uf, const char* is_in_cluster)
 	uint32_t last_old_id, current_new_id, i;
 	char encountered_cluster = LW_FALSE;
 
-	current_new_id = 0;
+	current_new_id = 0; last_old_id = 0;
 	for (i = 0; i < uf->N; i++)
 	{
 		uint32_t j = ordered_components[i];

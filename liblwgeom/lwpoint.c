@@ -39,24 +39,24 @@
 int
 lwpoint_getPoint2d_p(const LWPOINT *point, POINT2D *out)
 {
-	return getPoint2d_p(point->point, 0, out);
+	return lwpoint_is_empty(point) ? 0 : getPoint2d_p(point->point, 0, out);
 }
 
 /* convenience functions to hide the POINTARRAY */
 int
 lwpoint_getPoint3dz_p(const LWPOINT *point, POINT3DZ *out)
 {
-	return getPoint3dz_p(point->point,0,out);
+	return lwpoint_is_empty(point) ? 0 : getPoint3dz_p(point->point,0,out);
 }
 int
 lwpoint_getPoint3dm_p(const LWPOINT *point, POINT3DM *out)
 {
-	return getPoint3dm_p(point->point,0,out);
+	return lwpoint_is_empty(point) ? 0 : getPoint3dm_p(point->point,0,out);
 }
 int
 lwpoint_getPoint4d_p(const LWPOINT *point, POINT4D *out)
 {
-	return getPoint4d_p(point->point,0,out);
+	return lwpoint_is_empty(point) ? 0 : getPoint4d_p(point->point,0,out);
 }
 
 double
@@ -64,7 +64,10 @@ lwpoint_get_x(const LWPOINT *point)
 {
 	POINT4D pt;
 	if ( lwpoint_is_empty(point) )
+	{
 		lwerror("lwpoint_get_x called with empty geometry");
+		return 0;
+	}
 	getPoint4d_p(point->point, 0, &pt);
 	return pt.x;
 }
@@ -74,7 +77,10 @@ lwpoint_get_y(const LWPOINT *point)
 {
 	POINT4D pt;
 	if ( lwpoint_is_empty(point) )
+	{
 		lwerror("lwpoint_get_y called with empty geometry");
+		return 0;
+	}
 	getPoint4d_p(point->point, 0, &pt);
 	return pt.y;
 }
@@ -84,9 +90,15 @@ lwpoint_get_z(const LWPOINT *point)
 {
 	POINT4D pt;
 	if ( lwpoint_is_empty(point) )
+	{
 		lwerror("lwpoint_get_z called with empty geometry");
+		return 0;
+	}
 	if ( ! FLAGS_GET_Z(point->flags) )
+	{
 		lwerror("lwpoint_get_z called without z dimension");
+		return 0;
+	}
 	getPoint4d_p(point->point, 0, &pt);
 	return pt.z;
 }
@@ -96,9 +108,15 @@ lwpoint_get_m(const LWPOINT *point)
 {
 	POINT4D pt;
 	if ( lwpoint_is_empty(point) )
+	{
 		lwerror("lwpoint_get_m called with empty geometry");
+		return 0;
+	}
 	if ( ! FLAGS_GET_M(point->flags) )
+	{
 		lwerror("lwpoint_get_m called without m dimension");
+		return 0;
+	}
 	getPoint4d_p(point->point, 0, &pt);
 	return pt.m;
 }
@@ -108,10 +126,10 @@ lwpoint_get_m(const LWPOINT *point)
  * use SRID=SRID_UNKNOWN for unknown SRID (will have 8bit type's S = 0)
  */
 LWPOINT *
-lwpoint_construct(int srid, GBOX *bbox, POINTARRAY *point)
+lwpoint_construct(int32_t srid, GBOX *bbox, POINTARRAY *point)
 {
 	LWPOINT *result;
-	uint8_t flags = 0;
+	lwflags_t flags = 0;
 
 	if (point == NULL)
 		return NULL; /* error */
@@ -130,11 +148,11 @@ lwpoint_construct(int srid, GBOX *bbox, POINTARRAY *point)
 }
 
 LWPOINT *
-lwpoint_construct_empty(int srid, char hasz, char hasm)
+lwpoint_construct_empty(int32_t srid, char hasz, char hasm)
 {
 	LWPOINT *result = lwalloc(sizeof(LWPOINT));
 	result->type = POINTTYPE;
-	result->flags = gflags(hasz, hasm, 0);
+	result->flags = lwflags(hasz, hasm, 0);
 	result->srid = srid;
 	result->point = ptarray_construct(hasz, hasm, 0);
 	result->bbox = NULL;
@@ -142,7 +160,7 @@ lwpoint_construct_empty(int srid, char hasz, char hasm)
 }
 
 LWPOINT *
-lwpoint_make2d(int srid, double x, double y)
+lwpoint_make2d(int32_t srid, double x, double y)
 {
 	POINT4D p = {x, y, 0.0, 0.0};
 	POINTARRAY *pa = ptarray_construct_empty(0, 0, 1);
@@ -152,7 +170,7 @@ lwpoint_make2d(int srid, double x, double y)
 }
 
 LWPOINT *
-lwpoint_make3dz(int srid, double x, double y, double z)
+lwpoint_make3dz(int32_t srid, double x, double y, double z)
 {
 	POINT4D p = {x, y, z, 0.0};
 	POINTARRAY *pa = ptarray_construct_empty(1, 0, 1);
@@ -163,7 +181,7 @@ lwpoint_make3dz(int srid, double x, double y, double z)
 }
 
 LWPOINT *
-lwpoint_make3dm(int srid, double x, double y, double m)
+lwpoint_make3dm(int32_t srid, double x, double y, double m)
 {
 	POINT4D p = {x, y, 0.0, m};
 	POINTARRAY *pa = ptarray_construct_empty(0, 1, 1);
@@ -174,7 +192,7 @@ lwpoint_make3dm(int srid, double x, double y, double m)
 }
 
 LWPOINT *
-lwpoint_make4d(int srid, double x, double y, double z, double m)
+lwpoint_make4d(int32_t srid, double x, double y, double z, double m)
 {
 	POINT4D p = {x, y, z, m};
 	POINTARRAY *pa = ptarray_construct_empty(1, 1, 1);
@@ -185,7 +203,7 @@ lwpoint_make4d(int srid, double x, double y, double z, double m)
 }
 
 LWPOINT *
-lwpoint_make(int srid, int hasz, int hasm, const POINT4D *p)
+lwpoint_make(int32_t srid, int hasz, int hasm, const POINT4D *p)
 {
 	POINTARRAY *pa = ptarray_construct_empty(hasz, hasm, 1);
 	ptarray_append_point(pa, p, LW_TRUE);
@@ -195,7 +213,7 @@ lwpoint_make(int srid, int hasz, int hasm, const POINT4D *p)
 void lwpoint_free(LWPOINT *pt)
 {
 	if ( ! pt ) return;
-	
+
 	if ( pt->bbox )
 		lwfree(pt->bbox);
 	if ( pt->point )
@@ -250,11 +268,11 @@ lwpoint_same(const LWPOINT *p1, const LWPOINT *p2)
 
 
 LWPOINT*
-lwpoint_force_dims(const LWPOINT *point, int hasz, int hasm)
+lwpoint_force_dims(const LWPOINT *point, int hasz, int hasm, double zval, double mval)
 {
 	POINTARRAY *pdims = NULL;
 	LWPOINT *pointout;
-	
+
 	/* Return 2D empty */
 	if( lwpoint_is_empty(point) )
 	{
@@ -263,25 +281,11 @@ lwpoint_force_dims(const LWPOINT *point, int hasz, int hasm)
 	else
 	{
 		/* Always we duplicate the ptarray and return */
-		pdims = ptarray_force_dims(point->point, hasz, hasm);
+		pdims = ptarray_force_dims(point->point, hasz, hasm, zval, mval);
 		pointout = lwpoint_construct(point->srid, NULL, pdims);
 	}
 	pointout->type = point->type;
 	return pointout;
 }
 
-int lwpoint_is_empty(const LWPOINT *point)
-{
-	if ( ! point->point || point->point->npoints < 1 )
-		return LW_TRUE;
-	return LW_FALSE;
-}
-
-
-LWPOINT *
-lwpoint_grid(const LWPOINT *point, const gridspec *grid)
-{
-	POINTARRAY *opa = ptarray_grid(point->point, grid);
-	return lwpoint_construct(point->srid, NULL, opa);
-}
 

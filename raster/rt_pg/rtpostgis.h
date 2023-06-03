@@ -28,7 +28,19 @@
 #ifndef RTPOSTGIS_H_INCLUDED
 #define RTPOSTGIS_H_INCLUDED
 
+/* Quiet build noise by stripping duplicate MACRO defns */
+/* coming from include files */
+#undef PACKAGE_BUGREPORT
+#undef PACKAGE_NAME
+#undef PACKAGE_STRING
+#undef PACKAGE_TARNAME
+#undef PACKAGE_VERSION
+
 #include "librtcore.h"
+
+#if POSTGIS_PGSQL_VERSION > 150
+#include "varatt.h"
+#endif
 
 /* Debugging macros */
 #if POSTGIS_DEBUG_LEVEL > 0
@@ -66,5 +78,6 @@ typedef struct rt_raster_serialized_t rt_pgraster;
 /* maximum char length required to hold any double or long long value */
 #define MAX_DBL_CHARLEN (3 + DBL_MANT_DIG - DBL_MIN_EXP)
 #define MAX_INT_CHARLEN 32
+
 
 #endif /* RTPOSTGIS_H_INCLUDED */

@@ -101,7 +101,7 @@ typedef struct shp_loader_config
 
 	/* 0 = MULTIPOLYGON/MULTILINESTRING, 1 = force to POLYGON/LINESTRING */
 	int simple_geometries;
-	
+
 	/* 0 = geometry, 1 = geography */
 	int geography;
 
@@ -113,6 +113,9 @@ typedef struct shp_loader_config
 
 	/* 0 = no index, 1 = create index after load */
 	int createindex;
+
+    /* 0 = don't analyze tables , 1 = analyze tables */
+	int analyze;
 
 	/* 0 = load DBF file only, 1 = load everything */
 	int readshape;
@@ -143,7 +146,7 @@ typedef struct shp_loader_config
 
 	/* whether to do a single transaction or run each statement on its own */
 	int usetransaction;
-	
+
 	/* Name of the column map file if specified */
 	char *column_map_filename;
 
@@ -160,7 +163,7 @@ typedef struct shp_loader_state
 
 	/* Shapefile handle */
 	SHPHandle hSHPHandle;
-	
+
 	/* Shapefile type */
 	int shpfiletype;
 
@@ -188,8 +191,8 @@ typedef struct shp_loader_state
 
 	/* Pointer to an array of PostgreSQL field types */
 	char **pgfieldtypes;
-	
-	/* String containing colume name list in the form "(col1, col2, col3 ... , colN)" */
+
+	/* String containing colume name list in the form "col1, col2, col3 ... , colN" */
 	char *col_names;
 
 	/* String containing the PostGIS geometry type, e.g. POINT, POLYGON etc. */
@@ -216,7 +219,7 @@ typedef struct shp_loader_state
 	/* geometry/geography column name to use.  Will be set to the default if the config did
 	   not specify a column name. */
 	char *geo_col;
-	
+
 	/* Column map */
   colmap column_map;
 

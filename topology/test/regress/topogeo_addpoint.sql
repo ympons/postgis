@@ -1,12 +1,16 @@
 \set VERBOSITY terse
 set client_min_messages to ERROR;
 
-\i load_topology.sql
+\i :top_builddir/topology/test/load_topology.sql
 
 -- Invalid calls
 SELECT 'invalid', TopoGeo_addPoint('city_data', 'LINESTRING(36 26, 38 30)');
 SELECT 'invalid', TopoGeo_addPoint('city_data', 'MULTIPOINT((36 26))');
 SELECT 'invalid', TopoGeo_addPoint('invalid', 'POINT(36 26)');
+-- See #4722
+SELECT 'invalid', TopoGeo_addPoint(null::varchar, null::geometry, null::float8);
+SELECT 'invalid', TopoGeo_addPoint(null::varchar, 'POINT(36 36)'::geometry, null::float8);
+SELECT 'invalid', TopoGeo_addPoint('city_data', null::geometry, null::float8);
 
 -- Save max node id
 select 'node'::text as what, max(node_id) INTO city_data.limits FROM city_data.node;
@@ -60,3 +64,10 @@ SELECT 'tt2033', 'N' || topogeo_addpoint('t', 'POINT(0.2 1 1)', 0.5);
 SELECT 'tt2033', 'NC', node_id, ST_AsText(geom) FROM t.node ORDER BY node_id;
 SELECT 'tt2033.end' || DropTopology('t');
 
+-- See https://trac.osgeo.org/postgis/ticket/5394
+SELECT NULL FROM CreateTopology ('t');
+SELECT 'tt5394', 'E1', TopoGeo_addLinestring('t', 'LINESTRING(5.803580945500557 59.26346622,5.8035802635 59.263465501)' );
+SELECT 'tt5394', 'E2', TopoGeo_addLinestring('t', 'LINESTRING(5.8035802635 59.263465501,5.8035809455 59.26346622,5.803580945500557 59.26346622)' );
+SELECT 'tt5394', 'V', * FROM ValidateTopology('t');
+SELECT 'tt5394', 'N', TopoGeo_addPoint( 't', 'POINT(5.803646305 59.263416658000004)' );
+SELECT NULL FROM DropTopology('t');

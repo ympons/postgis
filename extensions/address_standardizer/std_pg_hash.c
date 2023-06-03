@@ -14,7 +14,7 @@
 /* standardizer headers */
 #undef DEBUG
 //#define DEBUG 1
-
+#include "../../postgis_config.h"
 #include "pagc_api.h"
 #include "pagc_std_api.h"
 #include "std_pg_hash.h"
@@ -23,7 +23,6 @@
 #include <sys/time.h>
 #include <string.h>
 #include <stdio.h>
-#include <errno.h>
 
 #ifdef DEBUG
 #define SET_TIME(a) gettimeofday(&(a), NULL)
@@ -91,15 +90,6 @@ static void AddStdHashEntry(MemoryContext mcxt, STANDARDIZER *std);
 static StdHashEntry *GetStdHashEntry(MemoryContext mcxt);
 static void DeleteStdHashEntry(MemoryContext mcxt);
 
-/* Memory context cache function prototypes */
-static void StdCacheInit(MemoryContext context);
-static void StdCacheReset(MemoryContext context);
-static void StdCacheDelete(MemoryContext context);
-static bool StdCacheIsEmpty(MemoryContext context);
-static void StdCacheStats(MemoryContext context, int level);
-#ifdef MEMORY_CONTEXT_CHECKING
-static void StdCacheCheck(MemoryContext context);
-#endif
 
 static bool IsInStdPortalCache(StdPortalCache *STDCache,  char *lextab, char *gaztab, char *rultab);
 static STANDARDIZER *GetStdFromPortalCache(StdPortalCache *STDCache,  char *lextab, char *gaztab, char *rultab);
@@ -118,41 +108,13 @@ static int fetch_rules_columns(SPITupleTable *tuptable, rules_columns_t *rules_c
 static int load_rules(RULES *rules, char *tabname);
 
 
-/* Memory context definition must match the current version of PostgreSQL */
-static MemoryContextMethods StdCacheContextMethods =
-{
-    NULL,
-    NULL,
-    NULL,
-    StdCacheInit,
-    StdCacheReset,
-    StdCacheDelete,
-    NULL,
-    StdCacheIsEmpty,
-    StdCacheStats
-#ifdef MEMORY_CONTEXT_CHECKING
-    , StdCacheCheck
-#endif
-};
+
 
 
 static void
-StdCacheInit(MemoryContext context)
+StdCacheDelete(void *ptr)
 {
-    /* NOP - initialized when first used. */
-}
-
-
-static void
-StdCacheReset(MemoryContext context)
-{
-    // NOP - Seems to be a required function
-}
-
-
-static void
-StdCacheDelete(MemoryContext context)
-{
+	MemoryContext context = (MemoryContext)ptr;
     StdHashEntry *she;
 
     DBG("Enter: StdCacheDelete");
@@ -170,32 +132,6 @@ StdCacheDelete(MemoryContext context)
 
     DeleteStdHashEntry(context);
 }
-
-
-static bool
-StdCacheIsEmpty(MemoryContext context)
-{
-    // always return false - another required function
-    return FALSE;
-}
-
-
-static void
-StdCacheStats(MemoryContext context, int level)
-{
-    // another required function
-    fprintf(stderr, "%s: STANDARDIZER context\n", context->name);
-}
-
-
-#ifdef MEMORY_CONTEXT_CHECKING
-static void
-StdCacheCheck(MemoryContext context)
-{
-    // NOP - another reuired function
-}
-#endif
-
 
 uint32
 mcxt_ptr_hash_std(const void *key, Size keysize)
@@ -290,8 +226,8 @@ IsInStdPortalCache(StdPortalCache *STDCache,  char *lextab, char *gaztab, char *
     for (i=0; i<STD_CACHE_ITEMS; i++) {
         StdCacheItem *ci = &STDCache->StdCache[i];
         if (ci->lextab && !strcmp(ci->lextab, lextab) &&
-            ci->lextab && !strcmp(ci->gaztab, gaztab) &&
-            ci->lextab && !strcmp(ci->rultab, rultab))
+            ci->gaztab && !strcmp(ci->gaztab, gaztab) &&
+            ci->rultab && !strcmp(ci->rultab, rultab))
                 return TRUE;
     }
 
@@ -364,6 +300,7 @@ AddToStdPortalCache(StdPortalCache *STDCache, char *lextab, char *gaztab, char *
     MemoryContext STDMemoryContext;
     MemoryContext old_context;
     STANDARDIZER *std = NULL;
+    MemoryContextCallback *callback;
 
     DBG("Enter: AddToStdPortalCache");
     std = CreateStd(lextab, gaztab, rultab);
@@ -382,10 +319,20 @@ AddToStdPortalCache(StdPortalCache *STDCache, char *lextab, char *gaztab, char *
 
     DBG("Adding item to STD cache ('%s', '%s', '%s') index %d", lextab, gaztab, rultab, STDCache->NextSlot);
 
-    STDMemoryContext = MemoryContextCreate(T_AllocSetContext, 8192,
-                                           &StdCacheContextMethods,
-                                           STDCache->StdCacheContext,
-                                           "PAGC STD Memory Context");
+
+	STDMemoryContext =  AllocSetContextCreate(STDCache->StdCacheContext,
+	                                          "PAGC STD Memory Context",
+	                                          ALLOCSET_SMALL_SIZES);
+
+	/* PgSQL comments suggest allocating callback in the context */
+	/* being managed, so that the callback object gets cleaned along with */
+	/* the context */
+	callback = MemoryContextAlloc(STDMemoryContext, sizeof(MemoryContextCallback));
+	callback->arg = (void*)(STDMemoryContext);
+	callback->func = StdCacheDelete;
+	MemoryContextRegisterResetCallback(STDMemoryContext, callback);
+
+
 
     /* Create the backend hash if it doesn't already exist */
     DBG("Check if StdHash exists (%p)", StdHash);
@@ -618,7 +565,7 @@ static int parse_rule(char *buf, int *rule)
     TRGT = DatumGetInt32(binval);
 
 #define GET_TEXT_FROM_TUPLE(TRGT,WHICH) \
-    TRGT = DatumGetCString(SPI_getvalue(tuple, tupdesc, WHICH));
+    TRGT = SPI_getvalue(tuple, tupdesc, WHICH);
 
 
 static int fetch_lex_columns(SPITupleTable *tuptable, lex_columns_t *lex_cols)
@@ -670,7 +617,7 @@ static int load_lex(LEXICON *lex, char *tab)
     int ntuples;
     int total_tuples = 0;
 
-    lex_columns_t lex_columns = {seq: -1, word: -1, stdword: -1, token: -1};
+    lex_columns_t lex_columns = {.seq = -1, .word = -1, .stdword = -1, .token = -1};
 
     int seq;
     char *word;
@@ -760,6 +707,9 @@ static int load_lex(LEXICON *lex, char *tab)
     ELAPSED_T(t1, t2);
     DBG("Time to read %i lexicon records: %.1f ms.", total_tuples, elapsed);
 
+    (void) total_tuples; // avoid an unused variable warning.
+                         // must be after declaration to pet -Werror=declaration-after-statement
+
     return 0;
 }
 
@@ -796,7 +746,7 @@ static int load_rules(RULES *rules, char *tab)
     int ntuples;
     int total_tuples = 0;
 
-    rules_columns_t rules_columns = {rule: -1};
+    rules_columns_t rules_columns = {.rule = -1};
 
     char *rule;
 
@@ -889,6 +839,8 @@ static int load_rules(RULES *rules, char *tab)
     ELAPSED_T(t1, t2);
     DBG("Time to read %i rule records: %.1f ms.", total_tuples, elapsed);
 
+    (void) total_tuples; // avoid an unused variable warning.
+                         // must be after declaration to pet -Werror=declaration-after-statement
     return 0;
 }
 

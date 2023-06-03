@@ -27,7 +27,6 @@
 #include <float.h>
 #include <string.h>
 #include <stdio.h>
-#include <errno.h>
 #include <assert.h>
 
 #include "postgres.h"
@@ -48,7 +47,7 @@ Datum ST_Subdivide(PG_FUNCTION_ARGS);
 
 typedef struct GEOMDUMPNODE_T
 {
-	int idx;
+	uint32_t idx;
 	LWGEOM *geom;
 }
 GEOMDUMPNODE;
@@ -83,7 +82,7 @@ Datum LWGEOM_dump(PG_FUNCTION_ARGS)
 	Datum result;
 	char address[256];
 	char *ptr;
-	uint32 i;
+	int i;
 	char *values[2];
 
 	if (SRF_IS_FIRSTCALL())
@@ -118,7 +117,8 @@ Datum LWGEOM_dump(PG_FUNCTION_ARGS)
 		 * Build a tuple description for an
 		 * geometry_dump tuple
 		 */
-		tupdesc = RelationNameGetTupleDesc("geometry_dump");
+		get_call_result_type(fcinfo, 0, &tupdesc);
+		BlessTupleDesc(tupdesc);
 
 		/*
 		 * generate attribute metadata needed later to produce
@@ -144,7 +144,7 @@ Datum LWGEOM_dump(PG_FUNCTION_ARGS)
 	if ( ! lwgeom_is_collection(state->root) )
 	{
 		values[0] = "{}";
-		values[1] = lwgeom_to_hexwkb(state->root, WKB_EXTENDED, 0);
+		values[1] = lwgeom_to_hexwkb_buffer(state->root, WKB_EXTENDED);
 		tuple = BuildTupleFromCStrings(funcctx->attinmeta, values);
 		result = HeapTupleGetDatum(tuple);
 
@@ -201,7 +201,7 @@ Datum LWGEOM_dump(PG_FUNCTION_ARGS)
 	lwgeom->srid = state->root->srid;
 
 	values[0] = address;
-	values[1] = lwgeom_to_hexwkb(lwgeom, WKB_EXTENDED, 0);
+	values[1] = lwgeom_to_hexwkb_buffer(lwgeom, WKB_EXTENDED);
 	tuple = BuildTupleFromCStrings(funcctx->attinmeta, values);
 	result = TupleGetDatum(funcctx->slot, tuple);
 	node->idx++;
@@ -210,7 +210,7 @@ Datum LWGEOM_dump(PG_FUNCTION_ARGS)
 
 struct POLYDUMPSTATE
 {
-	int ringnum;
+	uint32_t ringnum;
 	LWPOLY *poly;
 };
 
@@ -256,7 +256,8 @@ Datum LWGEOM_dump_rings(PG_FUNCTION_ARGS)
 		 * Build a tuple description for an
 		 * geometry_dump tuple
 		 */
-		tupdesc = RelationNameGetTupleDesc("geometry_dump");
+		get_call_result_type(fcinfo, 0, &tupdesc);
+		BlessTupleDesc(tupdesc);
 
 		/*
 		 * generate attribute metadata needed later to produce
@@ -300,7 +301,7 @@ Datum LWGEOM_dump_rings(PG_FUNCTION_ARGS)
 		sprintf(address, "{%d}", state->ringnum);
 
 		values[0] = address;
-		values[1] = lwgeom_to_hexwkb(ringgeom, WKB_EXTENDED, 0);
+		values[1] = lwgeom_to_hexwkb_buffer(ringgeom, WKB_EXTENDED);
 
 		MemoryContextSwitchTo(oldcontext);
 
@@ -327,16 +328,6 @@ struct FLATCOLLECTIONDUMPSTATE
 PG_FUNCTION_INFO_V1(ST_Subdivide);
 Datum ST_Subdivide(PG_FUNCTION_ARGS)
 {
-#if POSTGIS_GEOS_VERSION < 35
-
-	elog(ERROR, "The GEOS version this PostGIS binary "
-	        "was compiled against (%d) doesn't support "
-	        "'%s' function (3.5.0+ required)",
-	        POSTGIS_GEOS_VERSION, __func__);
-	PG_RETURN_NULL();
-
-#else /* POSTGIS_GEOS_VERSION >= 35 */
-
 	typedef struct
 	{
 		int nextgeom;
@@ -354,7 +345,9 @@ Datum ST_Subdivide(PG_FUNCTION_ARGS)
 		GSERIALIZED *gser;
 		LWGEOM *geom;
 		LWCOLLECTION *col;
-		int maxvertices = 256;
+		/* default to maxvertices < page size */
+		int maxvertices = 128;
+		double gridSize = -1;
 
 		/* create a function context for cross-call persistence */
 		funcctx = SRF_FIRSTCALL_INIT();
@@ -369,18 +362,24 @@ Datum ST_Subdivide(PG_FUNCTION_ARGS)
 		*/
 		gser = PG_GETARG_GSERIALIZED_P(0);
 		geom = lwgeom_from_gserialized(gser);
-		
+
 		/*
 		* Get the max vertices value
 		*/
 		if ( PG_NARGS() > 1 && ! PG_ARGISNULL(1) )
 			maxvertices = PG_GETARG_INT32(1);
-		
+
+		/*
+		* Get the gridSize value
+		*/
+		if ( PG_NARGS() > 2 && ! PG_ARGISNULL(2) )
+			gridSize = PG_GETARG_FLOAT8(2);
+
 		/*
 		* Compute the subdivision of the geometry
 		*/
-		col = lwgeom_subdivide(geom, maxvertices);
-		
+		col = lwgeom_subdivide_prec(geom, maxvertices, gridSize);
+
 		if ( ! col )
 			SRF_RETURN_DONE(funcctx);
 
@@ -412,7 +411,5 @@ Datum ST_Subdivide(PG_FUNCTION_ARGS)
 		/* do when there is no more left */
 		SRF_RETURN_DONE(funcctx);
 	}
-	
-#endif /* POSTGIS_GEOS_VERSION >= 35 */
 }
 

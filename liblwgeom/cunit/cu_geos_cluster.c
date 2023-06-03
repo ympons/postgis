@@ -10,6 +10,8 @@
  *
  **********************************************************************/
 
+#include <stdlib.h>
+
 #include "CUnit/Basic.h"
 
 #include "../lwgeom_log.h"
@@ -352,7 +354,7 @@ static void dbscan_test_3612c(void)
 {
 	struct dbscan_test_info test;
 	char* wkt_inputs[] = { "POLYGONM((-71.1319 42.2503 1,-71.132 42.2502 3,-71.1323 42.2504 -2,-71.1322 42.2505 1,-71.1319 42.2503 0))",
-						   "POLYGONM((-71.1319 42.2512 0,-71.1318 42.2511 20,-71.1317 42.2511 -20,-71.1317 42.251 5,-71.1317 42.2509 4,-71.132 42.2511 6,-71.1319 42.2512 30))" }; 
+						   "POLYGONM((-71.1319 42.2512 0,-71.1318 42.2511 20,-71.1317 42.2511 -20,-71.1317 42.251 5,-71.1317 42.2509 4,-71.132 42.2511 6,-71.1319 42.2512 30))" };
 	test.eps = 20.1;
 	test.min_points = 5;
 	uint32_t expected_ids[]   = { rand(), rand() };
@@ -368,7 +370,7 @@ static void dbscan_test_3612c(void)
 void geos_cluster_suite_setup(void);
 void geos_cluster_suite_setup(void)
 {
-	CU_pSuite suite = CU_add_suite("Clustering", init_geos_cluster_suite, clean_geos_cluster_suite);
+	CU_pSuite suite = CU_add_suite("clustering", init_geos_cluster_suite, clean_geos_cluster_suite);
 	PG_ADD_TEST(suite, basic_test);
 	PG_ADD_TEST(suite, nonsequential_test);
 	PG_ADD_TEST(suite, basic_distance_test);

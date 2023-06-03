@@ -35,7 +35,7 @@
 */
 
 GSERIALIZED *GEOS2POSTGIS(GEOSGeom geom, char want3d);
-GEOSGeometry * POSTGIS2GEOS(GSERIALIZED *g);
+GEOSGeometry *POSTGIS2GEOS(const GSERIALIZED *g);
 GEOSGeometry** ARRAY2GEOS(ArrayType* array, uint32_t nelems, int* is3d, int* srid);
 LWGEOM** ARRAY2LWGEOM(ArrayType* array, uint32_t nelems, int* is3d, int* srid);
 
@@ -45,9 +45,21 @@ Datum geos_difference(PG_FUNCTION_ARGS);
 Datum geos_geomunion(PG_FUNCTION_ARGS);
 Datum LWGEOM_area_polygon(PG_FUNCTION_ARGS);
 Datum LWGEOM_mindistance2d(PG_FUNCTION_ARGS);
-Datum LWGEOM_mindistance3d(PG_FUNCTION_ARGS);
+Datum ST_3DDistance(PG_FUNCTION_ARGS);
 
-void errorIfGeometryCollection(GSERIALIZED *g1, GSERIALIZED *g2);
 uint32_t array_nelems_not_null(ArrayType* array);
+
+
+/* Return NULL on GEOS error
+ *
+ * Prints error message only if it was not for interruption, in which
+ * case we let PostgreSQL deal with the error.
+ */
+#define HANDLE_GEOS_ERROR(label) \
+	{ \
+		if (!strstr(lwgeom_geos_errmsg, "InterruptedException")) \
+			lwpgerror("%s: %s", (label), lwgeom_geos_errmsg); \
+		PG_RETURN_NULL(); \
+	}
 
 #endif /* LWGEOM_GEOS_H_ */

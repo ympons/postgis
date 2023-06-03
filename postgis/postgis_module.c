@@ -25,6 +25,7 @@
 
 #include "postgres.h"
 #include "fmgr.h"
+#include "executor/executor.h"
 #include "utils/elog.h"
 #include "utils/guc.h"
 #include "libpq/pqsignal.h"
@@ -34,7 +35,10 @@
 #include "lwgeom_log.h"
 #include "lwgeom_pg.h"
 #include "geos_c.h"
-#include "lwgeom_backend_api.h"
+
+#ifdef HAVE_LIBPROTOBUF
+#include "lwgeom_wagyu.h"
+#endif
 
 /*
  * This is required for builds against pgsql
@@ -51,6 +55,24 @@ static void interruptCallback() {
 }
 #endif
 
+static ExecutorStart_hook_type onExecutorStartPrev = NULL;
+static void onExecutorStart(QueryDesc *queryDesc, int eflags);
+
+/*
+* Pass proj error message out via the PostgreSQL logging
+* system instead of letting them default into the
+* stderr.
+*/
+#if POSTGIS_PROJ_VERSION > 60
+#include "proj.h"
+
+static void
+pjLogFunction(void* data, int logLevel, const char* message)
+{
+	elog(DEBUG1, "libproj threw an exception (%d): %s", logLevel, message);
+}
+#endif
+
 /*
  * Module load callback
  */
@@ -58,58 +80,24 @@ void _PG_init(void);
 void
 _PG_init(void)
 {
-
   coreIntHandler = pqsignal(SIGINT, handleInterrupt);
 
 #ifdef WIN32
-#if POSTGIS_GEOS_VERSION >= 34
   GEOS_interruptRegisterCallback(interruptCallback);
-#endif
   lwgeom_register_interrupt_callback(interruptCallback);
 #endif
 
-#if 0
-  /* Define custom GUC variables. */
-  DefineCustomIntVariable(
-    "postgis.debug.level", /* name */
-    "Sets the debugging level of PostGIS.", /* short_desc */
-    "This is an experimental configuration.", /* long_desc */
-    &postgis_debug_level, /* valueAddr */
-    0, 8, /* min-max */
-    0, /* bootValue */
-    PGC_SUSET, /* GucContext context */
-    GUC_UNIT_MS, /* int flags */
-#if POSTGIS_PGSQL_VERSION >= 91
-    NULL, /* GucStringCheckHook check_hook */
-#endif
-    NULL, /* GucStringAssignHook assign_hook */
-    NULL  /* GucShowHook show_hook */
-   );
+  /* install PostgreSQL handlers */
+  pg_install_lwgeom_handlers();
+
+  /* pass proj messages through the pgsql error handler */
+#if POSTGIS_PROJ_VERSION > 60
+  proj_log_func(NULL, NULL, pjLogFunction);
 #endif
 
-#if 0
-  /* Define custom GUC variables. */
-  DefineCustomStringVariable(
-    "postgis.greeting.string", /* name */
-    "Sets the greeting string used on postgis module load.", /* short_desc */
-    "This is an experimental configuration.", /* long_desc */
-    &greeting, /* valueAddr */
-    "Welcome to PostGIS " POSTGIS_VERSION, /* bootValue */
-    PGC_SUSET, /* GucContext context */
-    GUC_UNIT_MS, /* int flags */
-#if POSTGIS_PGSQL_VERSION >= 91
-    NULL, /* GucStringCheckHook check_hook */
-#endif
-    NULL, /* GucStringAssignHook assign_hook */
-    NULL  /* GucShowHook show_hook */
-   );
-#endif
-
-    /* install PostgreSQL handlers */
-    pg_install_lwgeom_handlers();
-
-    /* initialize geometry backend */
-    lwgeom_init_backend();
+  /* setup hooks */
+  onExecutorStartPrev = ExecutorStart_hook;
+  ExecutorStart_hook = onExecutorStart;
 }
 
 /*
@@ -121,6 +109,9 @@ _PG_fini(void)
 {
   elog(NOTICE, "Goodbye from PostGIS %s", POSTGIS_VERSION);
   pqsignal(SIGINT, coreIntHandler);
+
+  /* restore original hooks */
+  ExecutorStart_hook = onExecutorStartPrev;
 }
 
 
@@ -134,8 +125,10 @@ handleInterrupt(int sig)
    */
   /* printf("Interrupt requested\n"); fflush(stdout); */
 
-#if POSTGIS_GEOS_VERSION >= 34
   GEOS_interruptRequest();
+
+#ifdef HAVE_LIBPROTOBUF
+  lwgeom_wagyu_interruptRequest();
 #endif
 
   /* request interruption of liblwgeom as well */
@@ -144,4 +137,22 @@ handleInterrupt(int sig)
   if ( coreIntHandler ) {
     (*coreIntHandler)(sig);
   }
+}
+
+static void onExecutorStart(QueryDesc *queryDesc, int eflags) {
+    /* cancel interrupt requests */
+
+    GEOS_interruptCancel();
+
+#ifdef HAVE_LIBPROTOBUF
+    lwgeom_wagyu_interruptReset();
+#endif
+
+    lwgeom_cancel_interrupt();
+
+    if (onExecutorStartPrev) {
+        (*onExecutorStartPrev)(queryDesc, eflags);
+    } else {
+        standard_ExecutorStart(queryDesc, eflags);
+    }
 }

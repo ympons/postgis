@@ -54,7 +54,7 @@ _rti_raster_get_band_perimeter(rt_band band, uint16_t *trim) {
 
 	width = rt_band_get_width(band);
 	height = rt_band_get_height(band);
-		
+
 	/* top */
 	for (y = 0; y < height; y++) {
 		for (offset = 0; offset < 3; offset++) {
@@ -192,7 +192,7 @@ rt_errorstate rt_raster_get_perimeter(
 	uint16_t trim[4] = {0}; /* top, right, bottom, left */
 	int isset[4] = {0};
 	double gt[6] = {0.0};
-	int srid = SRID_UNKNOWN;
+	int32_t srid = SRID_UNKNOWN;
 
 	POINTARRAY *pts = NULL;
 	POINT4D p4d;
@@ -225,7 +225,7 @@ rt_errorstate rt_raster_get_perimeter(
 	}
 	else
 		nband = -1;
-	
+
 	RASTER_DEBUGF(3, "rt_raster_get_perimeter: nband, numband = %d, %d", nband, numband);
 
 	_nband = rtalloc(sizeof(uint16_t) * numband);
@@ -433,9 +433,6 @@ rt_errorstate rt_raster_surface(rt_raster raster, int nband, LWMPOLY **surface) 
 		return ES_NONE;
 	}
 
-	/* initialize GEOS */
-	initGEOS(rtinfo, lwgeom_geos_error);
-
 	/* use gdal polygonize */
 	gv = rt_raster_gdal_polygonize(raster, nband, 1, &gvcount);
 	/* no polygons returned */
@@ -612,7 +609,7 @@ rt_raster_pixel_as_polygon(rt_raster rast, int x, int y)
     double scale_x, scale_y;
     double skew_x, skew_y;
     double ul_x, ul_y;
-    int srid;
+    int32_t srid;
     POINTARRAY **points;
     POINT4D p, p0;
     LWPOLY *poly;
@@ -655,6 +652,44 @@ rt_raster_pixel_as_polygon(rt_raster rast, int x, int y)
 }
 
 /******************************************************************************
+* rt_raster_pixel_as_centroid_point()
+******************************************************************************/
+
+/**
+ * Get a raster pixel centroid point.
+ *
+ * @param raster : the raster to get pixel from
+ * @param x : the column number
+ * @param y : the row number
+ *
+ * @return the pixel centroid point, or NULL on error.
+ */
+LWPOINT*
+rt_raster_pixel_as_centroid_point(rt_raster rast, int x, int y)
+{
+    double scale_x, scale_y;
+    double skew_x, skew_y;
+    double ul_x, ul_y;
+    int32_t srid;
+    double center_x, center_y;
+    LWPOINT* point;
+
+    scale_x = rt_raster_get_x_scale(rast);
+    scale_y = rt_raster_get_y_scale(rast);
+    skew_x = rt_raster_get_x_skew(rast);
+    skew_y = rt_raster_get_y_skew(rast);
+    ul_x = rt_raster_get_x_offset(rast);
+    ul_y = rt_raster_get_y_offset(rast);
+    srid = rt_raster_get_srid(rast);
+
+    center_x = scale_x * x + skew_x * y + ul_x + (scale_x + skew_x) * 0.5;
+    center_y = scale_y * y + skew_y * x + ul_y + (scale_y + skew_y) * 0.5;
+    point = lwpoint_make2d(srid, center_x, center_y);
+
+    return point;
+}
+
+/******************************************************************************
 * rt_raster_get_envelope_geom()
 ******************************************************************************/
 
@@ -669,7 +704,7 @@ rt_raster_pixel_as_polygon(rt_raster rast, int x, int y)
 rt_errorstate
 rt_raster_get_envelope_geom(rt_raster raster, LWGEOM **env) {
 	double gt[6] = {0.0};
-	int srid = SRID_UNKNOWN;
+	int32_t srid = SRID_UNKNOWN;
 
 	POINTARRAY *pts = NULL;
 	POINT4D p4d;
@@ -802,7 +837,7 @@ rt_raster_get_envelope_geom(rt_raster raster, LWGEOM **env) {
 rt_errorstate
 rt_raster_get_convex_hull(rt_raster raster, LWGEOM **hull) {
 	double gt[6] = {0.0};
-	int srid = SRID_UNKNOWN;
+	int32_t srid = SRID_UNKNOWN;
 
 	POINTARRAY *pts = NULL;
 	POINT4D p4d;
@@ -966,11 +1001,6 @@ rt_raster_gdal_polygonize(
 	int iBandHasNodataValue = FALSE;
 	double dBandNoData = 0.0;
 
-	/* for checking that a geometry is valid */
-	GEOSGeometry *ggeom = NULL;
-	int isValid;
-	LWGEOM *lwgeomValid = NULL;
-
 	uint32_t bandNums[1] = {nband};
 	int excludeNodataValues[1] = {exclude_nodata_value};
 
@@ -1102,18 +1132,12 @@ rt_raster_gdal_polygonize(
 		OGR_Fld_Destroy(hFldDfn);
 		OGR_DS_DeleteLayer(memdatasource, 0);
 		OGRReleaseDataSource(memdatasource);
-		
+
 		return NULL;
 	}
 
-	/**
-	 * We don't need a raster mask band. Each band has a nodata value.
-	 **/
-#ifdef GDALFPOLYGONIZE
+	/* We don't need a raster mask band. Each band has a nodata value. */
 	cplerr = GDALFPolygonize(gdal_band, NULL, hLayer, iPixVal, NULL, NULL, NULL);
-#else
-	cplerr = GDALPolygonize(gdal_band, NULL, hLayer, iPixVal, NULL, NULL, NULL);
-#endif
 
 	if (cplerr != CE_None) {
 		rterror("rt_raster_gdal_polygonize: Could not polygonize GDAL band");
@@ -1134,8 +1158,9 @@ rt_raster_gdal_polygonize(
 	 * Thanks to David Zwarg.
 	 **/
 	if (iBandHasNodataValue) {
-		pszQuery = (char *) rtalloc(50 * sizeof (char));
-		sprintf(pszQuery, "PixelValue != %f", dBandNoData );
+		size_t sz = 50 * sizeof (char);
+		pszQuery = (char *) rtalloc(sz);
+		snprintf(pszQuery, sz, "PixelValue != %f", dBandNoData );
 		OGRErr e = OGR_L_SetAttributeFilter(hLayer, pszQuery);
 		if (e != OGRERR_NONE) {
 			rtwarn("Error filtering NODATA values for band. All values will be treated as data values");
@@ -1229,40 +1254,6 @@ rt_raster_gdal_polygonize(
 		/* specify SRID */
 		lwgeom_set_srid(lwgeom, rt_raster_get_srid(raster));
 
-		/*
-			is geometry valid?
-			if not, try to make valid
-		*/
-		do {
-			ggeom = (GEOSGeometry *) LWGEOM2GEOS(lwgeom, 0);
-			if (ggeom == NULL) {
-				rtwarn("Cannot test geometry for validity");
-				break;
-			}
-
-			isValid = GEOSisValid(ggeom);
-
-			GEOSGeom_destroy(ggeom);
-			ggeom = NULL;
-
-			/* geometry is valid */
-			if (isValid)
-				break;
-
-			RASTER_DEBUG(3, "fixing invalid geometry");
-
-			/* make geometry valid */
-			lwgeomValid = lwgeom_make_valid(lwgeom);
-			if (lwgeomValid == NULL) {
-				rtwarn("Cannot fix invalid geometry");
-				break;
-			}
-
-			lwgeom_free(lwgeom);
-			lwgeom = lwgeomValid;
-		}
-		while (0);
-
 		/* save lwgeom */
 		pols[j].geom = lwgeom_as_lwpoly(lwgeom);
 
@@ -1272,10 +1263,10 @@ rt_raster_gdal_polygonize(
 			RASTER_DEBUGF(4, "LWGEOM wkt = %s", wkt);
 			rtdealloc(wkt);
 
-			size_t lwwkbsize = 0;
-			uint8_t *lwwkb = lwgeom_to_wkb(lwgeom, WKB_ISO | WKB_NDR, &lwwkbsize);
+			lwvarlena_t *lwwkb = lwgeom_to_wkb_varlena(lwgeom, WKB_ISO | WKB_NDR);
+			size_t lwwkbsize = LWSIZE_GET(lwwkb->size) - LWVARHDRSZ;
 			if (lwwkbsize) {
-				d_print_binary_hex("LWGEOM wkb", lwwkb, lwwkbsize);
+				d_print_binary_hex("LWGEOM wkb", (const uint8_t *)lwwkb->data, lwwkbsize);
 				rtdealloc(lwwkb);
 			}
 		}

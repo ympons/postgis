@@ -1,21 +1,56 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
-#winnie passed in variables
-#export OS_BUILD=64
-#export GCC_TYPE=gcc48
-#export PG_VER=9.3
-#export PROJ_VER=4.8.0
-#export PROJSO=libproj-0.dll
-#export POSTGIS_MAJOR_VERSION=2
-#export POSTGIS_MINOR_VERSION=2
-#export POSTGIS_MICRO_VERSION=0dev
+if  [[ "${OVERRIDE}" == '' ]] ; then
+	export GEOS_VER=3.11.0
+	export GDAL_VER=3.4.2
+	export PROJ_VER=7.2.1
+	export SFCGAL_VER=1.4.1
+	export CGAL_VER=5.3
+	export ICON_VER=1.16
+	export ZLIB_VER=1.2.11
+  export PROTOBUF_VER=3.2.0
+	export PROTOBUFC_VER=1.2.1
+	export JSON_VER=0.12
+	export PROJSO=libproj-19.dll
+fi;
+
+export PROTOBUF_VER=3.2.0
+export PROTOBUFC_VER=1.2.1
+export JSON_VER=0.12
+export PCRE_VER=8.33
+
+if  [[ "${ICON_VER}" == '' ]] ; then
+  export ICON_VER=1.16
+fi;
+
+echo "ICON_VER ${ICON_VER}"
+
+#set to something even if override is on but not set
+if  [[ "${ZLIB_VER}" == '' ]] ; then
+  export ZLIB_VER=1.2.11
+fi;
 
 
+#set to something even if override is on but not set
+if  [[ "${LIBXML_VER}" == '' ]] ; then
+  export LIBXML_VER=2.9.9
+fi;
+
+#set to something even if override is on but not set
+if  [[ "${CGAL_VER}" == '' ]] ; then
+  export CGAL_VER=5.3
+fi;
+
+echo "ZLIB_VER $ZLIB_VER"
+echo "PROJ_VER $PROJ_VER"
+echo "LIBXML_VER $LIBXML_VER"
+echo "CGAL_VER $CGAL_VER"
+echo "ZLIB_VER $ZLIB_VER"
+echo "PROJ_VER $PROJ_VER"
+echo "LIBXML_VER $LIBXML_VER"
 export PROJECTS=/projects
 export MINGPROJECTS=/projects
 export PATHOLD=$PATH
-export PROTOBUF_VER=3.2.0
-
 
 if [ "$OS_BUILD" == "64" ] ; then
 	export MINGHOST=x86_64-w64-mingw32
@@ -23,7 +58,7 @@ else
 	export MINGHOST=i686-w64-mingw32
 fi;
 
-export PATHOLD="/mingw/bin:/mingw/include:/mingw/lib:/c/Windows/system32:/c/Windows:.:/bin:/include:/usr/local/bin:/c/ming${OS_BUILD}/svn"
+echo PATH AFTER: $PATH
 #export PG_VER=9.2beta2
 export PGWINVER=${PG_VER}edb
 export WORKSPACE=`pwd`
@@ -40,25 +75,44 @@ export PGPATHEDB=${PROJECTS}/postgresql/rel/pg${PG_VER}w${OS_BUILD}${GCC_TYPE}ed
 
 export POSTGIS_VER=${POSTGIS_MAJOR_VERSION}.${POSTGIS_MINOR_VERSION}
 export POSTGIS_MICRO_VER=${POSTGIS_MAJOR_VERSION}.${POSTGIS_MINOR_VERSION}.${POSTGIS_MICRO_VERSION}
-if [[ "$POSTGIS_MICRO_VERSION"  == *SVN* || "$POSTGIS_MICRO_VERSION"  == *dev* ]] ; then
-	export POSTGIS_SRC=${PROJECTS}/postgis/branches/${POSTGIS_VER}
+
+if [ -n "$SOURCE_FOLDER" ]; then
+  export POSTGIS_SRC=${PROJECTS}/postgis/$SOURCE_FOLDER
+	cd $POSTGIS_SRC
 else
-	#tagged version -- official release
-	export POSTGIS_SRC=${PROJECTS}/postgis/tags/${POSTGIS_VER}.${POSTGIS_MICRO_VERSION}
+  if [[ "$POSTGIS_MICRO_VERSION"  == *SVN* || "$POSTGIS_MICRO_VERSION"  == *dev* ]] ; then
+    export POSTGIS_SRC=${PROJECTS}/postgis/branches/${POSTGIS_VER}
+  else
+    #tagged version -- official release
+    export POSTGIS_SRC=${PROJECTS}/postgis/tags/${POSTGIS_VER}.${POSTGIS_MICRO_VERSION}
+  fi;
 fi;
-export LIBXML_VER=2.7.8
+
+export POSTGIS_MAJOR_VERSION=`grep ^POSTGIS_MAJOR_VERSION Version.config | cut -d= -f2`
+export POSTGIS_MINOR_VERSION=`grep ^POSTGIS_MINOR_VERSION Version.config | cut -d= -f2`
+export POSTGIS_MICRO_VERSION=`grep ^POSTGIS_MICRO_VERSION Version.config | cut -d= -f2`
+echo "Version ${POSTGIS_MAJOR_VERSION}.${POSTGIS_MINOR_VERSION}.${POSTGIS_MICRO_VERSION}"
+
 #export POSTGIS_SRC=${PROJECTS}/postgis/trunk
 export GDAL_DATA="${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/share/gdal"
 
 export RELVERDIR=postgis-pg${REL_PGVER}-binaries-${POSTGIS_MICRO_VER}w${OS_BUILD}
 
 export PATH="${PATHOLD}:${PGPATH}/bin:${PGPATH}/lib"
-#PATH="${MINGPROJECTS}/gettext/rel-gettext-0.18.1/bin:${MINGPROJECTS}/xsltproc:${MINGPROJECTS}/gtk/bin:${PROJECTS}/geos/rel-${GEOS_VER}w${OS_BUILD}/bin:${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}/bin:${MINGPROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}/include:${MINGPROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}/bin:${MINGPROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}/bin:${MINGPROJECTS}/libxml/rel-libxml2-${LIBXML_VER}w${OS_BUILD}/bin:${PATH}"
-PATH="${MINGPROJECTS}/xsltproc:${MINGPROJECTS}/gtkw${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/geos/rel-${GEOS_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/bin:${MINGPROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE}/lib:${MINGPROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE}/include:${MINGPROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE}/bin:${MINGPROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}${GCC_TYPE}/bin:${MINGPROJECTS}/libxml/rel-libxml2-${LIBXML_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PATH}"
+export PATH="${PROJECTS}/xsltproc:${PROJECTS}/gtkw${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/geos/rel-${GEOS_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE}/lib:${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE}/include:${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/proj/rel-proj-${PROJ_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/libxml/rel-libxml2-${LIBXML_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/zlib/rel-zlib-${ZLIB_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/zlib/rel-zlib-${ZLIB_VER}w${OS_BUILD}${GCC_TYPE}/lib:${PATH}"
+export PKG_CONFIG_PATH="${PROJECTS}/sqlite/rel-sqlite3w${OS_BUILD}${GCC_TYPE}/lib/pkgconfig:${PROJECTS}/zlib/rel-zlib-${ZLIB_VER}w${OS_BUILD}${GCC_TYPE}/lib:${PROJECTS}/protobuf/rel-${PROTOBUF_VER}w${OS_BUILD}${GCC_TYPE}/lib/pkgconfig:${PROJECTS}/json-c/rel-${JSON_VER}w${OS_BUILD}${GCC_TYPE}/lib/pkgconfig:${PROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}${GCC_TYPE}/lib/pkgconfig:${PROJECTS}/proj/rel-proj-${PROJ_VER}w${OS_BUILD}${GCC_TYPE}/lib/pkgconfig:${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/lib/pkgconfig:${PROJECTS}/pcre/rel-${PCRE_VER}w${OS_BUILD}${GCC_TYPE}/lib/pkgconfig:${PROJECTS}/zlib/rel-zlib-${ZLIB_VER}w${OS_BUILD}${GCC_TYPE}/lib/pkgconfig:${PROJECTS}/gtkw${OS_BUILD}${GCC_TYPE}/lib/pkgconfig:/mingw/${MINGHOST}/lib/pkgconfig"
+export SHLIB_LINK="-static-libstdc++ -lstdc++ -Wl,-Bdynamic -lm"
+CPPFLAGS="-I${PGPATH}/include -I${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE}/include"
+
+#needed for proj.db to be found during cunit - for some reason on winnie it doesn't set
+if [ -d "${PROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}${GCC_TYPE}/share/proj" ]; then
+export PROJ_LIB=${PROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}${GCC_TYPE}/share/proj
+else
+export PROJ_LIB=${PROJECTS}/proj/rel-proj-${PROJ_VER}w${OS_BUILD}${GCC_TYPE}/share/proj
+fi
 
 #add protobuf
 export PATH="${PROJECTS}/protobuf/rel-${PROTOBUF_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/protobuf/rel-${PROTOBUF_VER}w${OS_BUILD}${GCC_TYPE}/lib:${PATH}"
-export PKG_CONFIG_PATH=${PROJECTS}/protobuf/rel-${PROTOBUF_VER}w${OS_BUILD}${GCC_TYPE}/lib/pkgconfig;
 
 echo PATH AFTER: $PATH
 
@@ -85,65 +139,51 @@ if [ -n "$PCRE_VER" ]; then
     export PATH="${PROJECTS}/pcre/rel-${PCRE_VER}w${OS_BUILD}${GCC_TYPE}/include:${PROJECTS}/pcre/rel-${PCRE_VER}w${OS_BUILD}${GCC_TYPE}/lib:${PATH}"
 fi
 
+
+
 if [ -n "$SFCGAL_VER" ]; then
 	##hard code versions of cgal etc. for now
-	export CGAL_VER=4.2
-	BOOST_VER=1.53.0
+	#export CGAL_VER=4.11
+	BOOST_VER=1.78.0
 	#BOOST_VER_WU=1_49_0
-	export BOOST_VER_WU=1_53_0
-	export PATH="${PROJECTS}/CGAL/rel-cgal-${CGAL_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/boost/rel-${BOOST_VER_WU}w${OS_BUILD}${GCC_TYPE}/lib:${PATH}"
-	
-CPPFLAGS="-I${PGPATH}/include -I${MINGPROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE}/include" \
-LDFLAGS="-L${PGPATH}/lib -L${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/lib -L${MINGPROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE}/lib" ./configure \
-  --host=${MINGHOST} --with-xml2config=${PROJECTS}/libxml/rel-libxml2-${LIBXML_VER}w${OS_BUILD}${GCC_TYPE}/bin/xml2-config \
+	export BOOST_VER_WU=1_78_0
+	export PATH="${PROJECTS}/CGAL/rel-cgal-${CGAL_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/CGAL/rel-sfcgal-${SFCGAL_VER}w${OS_BUILD}${GCC_TYPE}/bin:${PROJECTS}/boost/rel-${BOOST_VER_WU}w${OS_BUILD}${GCC_TYPE}/lib:${PATH}"
+
+
+#CPPFLAGS="-I${PGPATH}/include -I${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE}/include" \
+#CFLAGS="-Wall -fno-omit-frame-pointer"
+
+#LDFLAGS="-Wl,--enable-auto-import -L${PGPATH}/lib -L${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/lib -L${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE}/lib" \
+
+LDFLAGS="-Wl,--enable-auto-import -L${PGPATH}/lib -L${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE}/lib -L${PROJECTS}/zlib/rel-zlib-${ZLIB_VER}w${OS_BUILD}${GCC_TYPE}/lib" \
+./configure \
+  --host=${MINGHOST} --with-xml2config=${PROJECTS}/libxml/rel-libxml2-${LIBXML_VER}w${OS_BUILD}${GCC_TYPE}/bin/xml2-config  \
   --with-pgconfig=${PGPATH}/bin/pg_config \
   --with-geosconfig=${PROJECTS}/geos/rel-${GEOS_VER}w${OS_BUILD}${GCC_TYPE}/bin/geos-config \
-  --with-projdir=${MINGPROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}${GCC_TYPE} \
-  --with-gdalconfig=${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/bin/gdal-config \
-  --with-jsondir=${MINGPROJECTS}/json-c/rel-${JSON_VER}w${OS_BUILD}${GCC_TYPE} \
-  --with-libiconv=${PROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE} \
+  --with-libiconv=${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE} \
   --with-xsldir=${PROJECTS}/docbook/docbook-xsl-1.76.1 \
   --with-gui --with-gettext=no \
-  --with-protobufdir=${PROJECTS}/protobuf/rel-${PROTOBUF_VER}w${OS_BUILD}${GCC_TYPE} \
   --with-sfcgal=${PROJECTS}/CGAL/rel-sfcgal-${SFCGAL_VER}w${OS_BUILD}${GCC_TYPE}/bin/sfcgal-config \
-  --with-pcredir=${PROJECTS}/pcre/rel-${PCRE_VER}w${OS_BUILD}${GCC_TYPE}
-elif [ "$POSTGIS_MAJOR_VERSION" == "2" ] ; then
-CPPFLAGS="-I${PGPATH}/include -I${MINGPROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE}/include" \
-LDFLAGS="-L${PGPATH}/lib -L${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/lib -L${MINGPROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE}/lib" ./configure \
-  --host=${MINGHOST} --with-xml2config=${PROJECTS}/libxml/rel-libxml2-${LIBXML_VER}w${OS_BUILD}${GCC_TYPE}/bin/xml2-config \
-  --with-pgconfig=${PGPATH}/bin/pg_config \
-  --with-geosconfig=${PROJECTS}/geos/rel-${GEOS_VER}w${OS_BUILD}${GCC_TYPE}/bin/geos-config \
-  --with-projdir=${MINGPROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}${GCC_TYPE} \
-  --with-gdalconfig=${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/bin/gdal-config \
-  --with-gui --with-gettext=no \
-  --with-protobufdir=${PROJECTS}/protobuf/rel-${PROTOBUF_VER}w${OS_BUILD}${GCC_TYPE} \
-  --with-jsondir=${MINGPROJECTS}/json-c/rel-${JSON_VER}w${OS_BUILD}${GCC_TYPE} \
-  --with-libiconv=${PROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE} \
-  --with-xsldir=${PROJECTS}/docbook/docbook-xsl-1.76.1 \
+  --prefix=${PROJECTS}/postgis/liblwgeom-${POSTGIS_VER}w${OS_BUILD}${GCC_TYPE} --with-library-minor-version
+  #exit
 else
-CPPFLAGS="-I${PGPATH}/include  -I${MINGPROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE}/include" \
-    LDFLAGS="-L${PGPATH}/lib -L${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/lib -L${MINGPROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE}/lib" ./configure \
+CPPFLAGS="-I${PGPATH}/include -I${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE}/include" \
+CFLAGS="-Wall -fno-omit-frame-pointer" \
+LDFLAGS="-L${PGPATH}/lib -L${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/lib -L${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE}/lib" ./configure \
   --host=${MINGHOST} --with-xml2config=${PROJECTS}/libxml/rel-libxml2-${LIBXML_VER}w${OS_BUILD}${GCC_TYPE}/bin/xml2-config \
   --with-pgconfig=${PGPATH}/bin/pg_config \
   --with-geosconfig=${PROJECTS}/geos/rel-${GEOS_VER}w${OS_BUILD}${GCC_TYPE}/bin/geos-config \
-  --with-projdir=${MINGPROJECTS}/proj/rel-${PROJ_VER}w${OS_BUILD}${GCC_TYPE} \
-  --with-gdalconfig=${PROJECTS}/gdal/rel-${GDAL_VER}w${OS_BUILD}${GCC_TYPE}/bin/gdal-config \
-  --with-jsondir=${MINGPROJECTS}/json-c/rel-${JSON_VER}w${OS_BUILD}${GCC_TYPE} \
-  --with-libiconv=${PROJECTS}/rel-libiconv-1.13.1w${OS_BUILD}${GCC_TYPE} \
+  --with-gui --with-gettext=no \
+  --with-libiconv=${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE} \
   --with-xsldir=${PROJECTS}/docbook/docbook-xsl-1.76.1 \
-  --with-gettext=no
+  --prefix=${PROJECTS}/postgis/liblwgeom-${POSTGIS_VER}w${OS_BUILD}${GCC_TYPE} --with-library-minor-version
 fi;
 
-make clean
 
-##hack to get around boolean incompatibility
-##hack to get around boolean incompatibility now only needed for 2.0 (no longer for 2.1)
-if [ "$POSTGIS_MINOR_VERSION" == "0" ] ; then
-cp ${MINGPROJECTS}/json-c/rel-${JSON_VER}w${OS_BUILD}${GCC_TYPE}/include/json/json_object.h.for_compile ${MINGPROJECTS}/json-c/rel-${JSON_VER}w${OS_BUILD}${GCC_TYPE}/include/json/json_object.h
-fi;
+#make distclean
 
 #patch liblwgeom generated make to get rid of dynamic linking
-sed -i 's/LDFLAGS += -no-undefined//g' liblwgeom/Makefile
+#sed -i 's/LDFLAGS += -no-undefined//g' liblwgeom/Makefile
 
 make
 make install
@@ -155,31 +195,68 @@ if [ "$MAKE_EXTENSION" == "1" ]; then
  cd ${POSTGIS_SRC}
  echo "Postgis src dir is ${POSTGIS_SRC}"
  strip postgis/postgis-*.dll
- strip raster/rt_pg/rtpostgis-*.dll
+ strip raster/rt_pg/postgis_raster-*.dll
+ strip sfcgal/*.dll
  cp topology/*.dll ${PGPATHEDB}/lib
  cp postgis/postgis*.dll ${PGPATHEDB}/lib
- cp raster/rt_pg/rtpostgis-*.dll ${PGPATHEDB}/lib
- cp -r extensions/*/sql/* ${PGPATHEDB}/share/extension
+ cp sfcgal/*.dll ${PGPATHEDB}/lib
+ cp raster/rt_pg/postgis_raster-*.dll ${PGPATHEDB}/lib
+
+export POSTGIS_MINOR_VER=${POSTGIS_MAJOR_VERSION}.${POSTGIS_MINOR_VERSION}
+export POSTGIS_MINOR_MAX_VER="ANY"
+export POSTGIS_MICRO_VER=${POSTGIS_MAJOR_VERSION}.${POSTGIS_MINOR_VERSION}.${POSTGIS_MICRO_VERSION}
+
+#export UPGRADE_VER_FILE="extensions/upgradeable_versions.mk"
+value=$(<extensions/upgradeable_versions.mk)
+export value=${value//\\/}
+value=${value//UPGRADEABLE_VERSIONS = /}
+#echo $value
+export UPGRADEABLE_VERSIONS=$value
+export WIN_RELEASED_VERSIONS="2.0.0 2.0.1 2.0.3 2.0.4 2.0.6 2.1.4 2.1.7 2.1.8 2.2.0 2.2.3 2.3.0 2.3.7 2.4.0 2.4.4"
+#echo "Versions are:  $UPGRADEABLE_VERSIONS"
+for EXTNAME in postgis postgis_raster postgis_topology postgis_sfcgal postgis_tiger_geocoder address_standardizer; do
+	cp extensions/$EXTNAME/sql/*  ${PGPATHEDB}/share/extension
+	cp extensions/$EXTNAME/sql/$EXTNAME--TEMPLATED--TO--ANY.sql  ${PGPATHEDB}/share/extension/$EXTNAME--$POSTGIS_MICRO_VER--${POSTGIS_MINOR_MAX_VER}.sql;
+
+	if test "$EXTNAME" = "address_standardizer"; then #repeat for address_standardizer_data_us
+		cp extensions/$EXTNAME/sql/${EXTNAME}_data_us--${POSTGIS_MICRO_VER}.sql  ${PGPATHEDB}/share/extension
+		cp extensions//$EXTNAME/sql/${EXTNAME}_data_us--ANY--${POSTGIS_MICRO_VER}.sql  ${PGPATHEDB}/share/extension
+		cp extensions/$EXTNAME/sql/${EXTNAME}--TEMPLATED--TO--ANY.sql ${PGPATHEDB}/share/extension/${EXTNAME}_data_us--$POSTGIS_MICRO_VER--ANY.sql;
+	fi
+
+	for OLD_VERSION in $UPGRADEABLE_VERSIONS; do \
+		if [ "$OLD_VERSION" > "2.5" ] || [ "$OLD_VERSION" in $WIN_RELEASED_VERSIONS ]; then
+			cp extensions/$EXTNAME/sql/$EXTNAME--TEMPLATED--TO--ANY.sql  ${PGPATHEDB}/share/extension/$EXTNAME--$OLD_VERSION--${POSTGIS_MINOR_MAX_VER}.sql; \
+			if test "$EXTNAME" = "address_standardizer"; then
+				cp extensions/$EXTNAME/sql/$EXTNAME--TEMPLATED--TO--ANY.sql  ${PGPATHEDB}/share/extension/${EXTNAME}_data_us--$OLD_VERSION--${POSTGIS_MINOR_MAX_VER}.sql; \
+			fi
+		fi
+	done
+done
+ #cp -r ${PGPATH}/share/extension/postgis*${POSTGIS_MICRO_VER}.sql ${PGPATHEDB}/share/extension
+ #cp -r ${PGPATH}/share/extension/postgis*${POSTGIS_MICRO_VER}next.sql ${PGPATHEDB}/share/extension
+ #cp -r ${PGPATH}/share/extension/address_standardizer*${POSTGIS_MICRO_VER}.sql ${PGPATHEDB}/share/extension
  cp -r extensions/*/*.control ${PGPATHEDB}/share/extension
  cp -r extensions/*/*.dll ${PGPATHEDB}/lib
- 
+
  make check RUNTESTFLAGS="--extension -v"
- 
+
+## TODO: Put back after folder into main check setup #5254
  ##test address standardizer
- cd ${POSTGIS_SRC}
- cd extensions/address_standardizer
- make installcheck
- 
+ #cd ${POSTGIS_SRC}
+ #cd extensions/address_standardizer
+ #make installcheck
+
  ##test tiger geocoder
- cd ${POSTGIS_SRC}
- cd extensions/postgis_tiger_geocoder
- make installcheck
+ #cd ${POSTGIS_SRC}
+ #cd extensions/postgis_tiger_geocoder
+ #make installcheck
  if [ "$?" != "0" ]; then
   exit $?
  fi
 fi
 
-if [ "$DUMP_RESTORE" = "1" ]; then
+if [ "$DUMP_RESTORE" == "1" ]; then
  echo "Dum restore test"
  make install
  make check RUNTESTFLAGS="-v --dumprestore"

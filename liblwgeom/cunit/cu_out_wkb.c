@@ -20,8 +20,7 @@
 /*
 ** Global variable to hold hex WKB strings
 */
-char *s;
-size_t s_size;
+static char *s;
 
 /*
 ** The suite initialization function.
@@ -51,7 +50,7 @@ static void cu_wkb_from_hexwkb(char *hexwkb)
 {
 	LWGEOM *g = lwgeom_from_hexwkb(hexwkb, LW_PARSER_CHECK_NONE);
 	if ( s ) free(s);
-	s = (char*)lwgeom_to_wkb(g, WKB_HEX | WKB_XDR | WKB_EXTENDED, 0);
+	s = (char *)lwgeom_to_wkb_buffer(g, WKB_HEX | WKB_XDR | WKB_EXTENDED);
 	lwgeom_free(g);
 }
 
@@ -62,7 +61,7 @@ static void cu_wkb(char *wkt)
 {
 	LWGEOM *g = lwgeom_from_wkt(wkt, LW_PARSER_CHECK_NONE);
 	if ( s ) free(s);
-	s = (char*)lwgeom_to_wkb(g, WKB_HEX | WKB_XDR | WKB_EXTENDED, &s_size);
+	s = (char *)lwgeom_to_wkb_buffer(g, WKB_HEX | WKB_XDR | WKB_EXTENDED);
 	lwgeom_free(g);
 }
 
@@ -73,7 +72,7 @@ static void cu_wkb_empty_point_check(char *hex)
 	CU_ASSERT(g != NULL);
 	CU_ASSERT(lwgeom_is_empty(g));
 	CU_ASSERT(g->type == POINTTYPE);
-	lwgeom_free(g);	
+	lwgeom_free(g);
 }
 
 static void test_wkb_out_point(void)
@@ -83,10 +82,10 @@ static void test_wkb_out_point(void)
 
 	cu_wkb("SRID=4;POINTM(1 1 1)");
 	CU_ASSERT_STRING_EQUAL(s,"0060000001000000043FF00000000000003FF00000000000003FF0000000000000");
-	
+
 	cu_wkb("POINT EMPTY");
 	cu_wkb_empty_point_check(s);
-	
+
 	cu_wkb("SRID=4326;POINT EMPTY");
 	cu_wkb_empty_point_check(s);
 
@@ -204,7 +203,7 @@ static void test_wkb_out_multisurface(void) {}
 static void test_wkb_out_polyhedralsurface(void)
 {
 //	cu_wkb("POLYHEDRALSURFACE(((0 0 0 0,0 0 1 0,0 1 0 2,0 0 0 0)),((0 0 0 0,0 1 0 0,1 0 0 4,0 0 0 0)),((0 0 0 0,1 0 0 0,0 0 1 6,0 0 0 0)),((1 0 0 0,0 1 0 0,0 0 1 0,1 0 0 0)))");
-//	CU_ASSERT_STRING_EQUAL(s, t);		
+//	CU_ASSERT_STRING_EQUAL(s, t);
 //	printf("\nnew: %s\nold: %s\n",s,t);
 }
 

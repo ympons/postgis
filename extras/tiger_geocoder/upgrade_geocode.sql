@@ -24,6 +24,18 @@ SELECT tiger.SetSearchPathForInstall('tiger');
 ALTER TABLE state_lookup ADD COLUMN statefp char(2);
 UPDATE state_lookup SET statefp = lpad(st_code::text,2,'0') WHERE statefp IS NULL;
 ALTER TABLE state_lookup ADD CONSTRAINT state_lookup_statefp_key UNIQUE(statefp);
+
+-- these introduced in PostGIS 2.4
+DO language plpgsql
+$$
+    BEGIN
+        ALTER TYPE tiger.norm_addy ADD ATTRIBUTE zip4 varchar;
+        ALTER TYPE tiger.norm_addy ADD ATTRIBUTE address_alphanumeric varchar;
+    EXCEPTION
+        WHEN others THEN  -- ignore the error probably cause it already exists
+    END;
+$$;
+
 CREATE INDEX idx_tiger_edges_countyfp ON edges USING btree(countyfp);
 CREATE INDEX idx_tiger_faces_countyfp ON faces USING btree(countyfp);
 CREATE INDEX tiger_place_the_geom_gist ON place USING gist(the_geom);
@@ -40,9 +52,9 @@ DROP FUNCTION IF EXISTS geocode_address(norm_addy,integer); /** changed to inclu
 DROP FUNCTION IF EXISTS interpolate_from_address(integer, character varying, character varying, geometry); /** changed to use default args and added offset and side **/
 DROP FUNCTION IF EXISTS interpolate_from_address(integer, integer, integer, geometry); /**don't need this since got collapes into varchar version **/
 
--- this will fail if already exists, that is fine.  can't use IF NOT EXISTS until 9.1
+-- this will fail if already exists, that is fine.
 SELECT tiger.SetSearchPathForInstall('tiger');
-CREATE TABLE addrfeat
+CREATE TABLE IF NOT EXISTS addrfeat
 (
   gid serial not null primary key,
   tlid bigint,
@@ -263,7 +275,6 @@ SELECT create_census_base_tables();
 \i normalize/pprint_addy.sql
 \i pagc_normalize/pagc_tables.sql
 \i pagc_normalize/pagc_normalize_address.sql
-
 
 ---- Geocoder functions
 -- General helpers

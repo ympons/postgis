@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostGIS\n"
-"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2017-01-28 07:02+0000\n"
+"Report-Msgid-Bugs-To: https://bugs.kde.org\n"
+"POT-Creation-Date: 2021-09-11 01:55+0000\n"
 "PO-Revision-Date: 2016-07-20 06:55+0000\n"
 "Last-Translator: Kwon.Yongchan <ruvyn@naver.com>\n"
 "Language-Team: Korean (Korea) (http://www.transifex.com/postgis/postgis/"
@@ -19,8 +19,8 @@ msgstr ""
 
 #. Tag: title
 #: performance_tips.xml:3
-#, no-c-format
-msgid "Performance tips"
+#, fuzzy, no-c-format
+msgid "Performance Tips"
 msgstr "성능 향상 비법"
 
 #. Tag: title
@@ -37,9 +37,9 @@ msgstr "문제점 설명"
 
 #. Tag: para
 #: performance_tips.xml:11
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Current PostgreSQL versions (including 8.0) suffer from a query optimizer "
+"Current PostgreSQL versions (including 9.6) suffer from a query optimizer "
 "weakness regarding TOAST tables. TOAST tables are a kind of \"extension room"
 "\" used to store large (in the sense of data size) values that do not fit "
 "into normal data pages (like long texts, images or complex geometries with "
@@ -57,10 +57,10 @@ msgstr ""
 
 #. Tag: para
 #: performance_tips.xml:19
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The problem appears if you happen to have a table with rather large "
-"geometries, but not too much rows of them (like a table containing the "
+"geometries, but not too many rows of them (like a table containing the "
 "boundaries of all European countries in high resolution). Then the table "
 "itself is small, but it uses lots of TOAST space. In our example case, the "
 "table itself had about 80 rows and used only 3 data pages, but the TOAST "
@@ -74,13 +74,13 @@ msgstr ""
 
 #. Tag: para
 #: performance_tips.xml:26
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Now issue a query where you use the geometry operator &amp;&amp; to search "
 "for a bounding box that matches only very few of those rows. Now the query "
-"optimizer sees that the table has only 3 pages and 80 rows. He estimates "
+"optimizer sees that the table has only 3 pages and 80 rows. It estimates "
 "that a sequential scan on such a small table is much faster than using an "
-"index. And so he decides to ignore the GIST index. Usually, this estimation "
+"index. And so it decides to ignore the GIST index. Usually, this estimation "
 "is correct. But in our case, the &amp;&amp; operator has to fetch every "
 "geometry from disk to compare the bounding boxes, thus reading all TOAST "
 "pages, too."
@@ -95,26 +95,37 @@ msgstr ""
 
 #. Tag: para
 #: performance_tips.xml:35
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"To see whether your suffer from this bug, use the \"EXPLAIN ANALYZE\" "
+"To see whether your suffer from this issue, use the \"EXPLAIN ANALYZE\" "
 "postgresql command. For more information and the technical details, you can "
-"read the thread on the postgres performance mailing list: http://archives."
-"postgresql.org/pgsql-performance/2005-02/msg00030.php"
+"read the thread on the PostgreSQL performance mailing list: <ulink url="
+"\"http://archives.postgresql.org/pgsql-performance/2005-02/msg00030.php"
+"\">http://archives.postgresql.org/pgsql-performance/2005-02/msg00030.php</"
+"ulink>"
 msgstr ""
 "사용자 시스템에 이 버그가 있는지 확인하려면, \"EXPLAIN ANALYZE\" PostgreSQL "
 "명령어를 실행하십시오. 자세한 정보 및 기술적인 세부 사항을 알고 싶다면, "
 "PostgreSQL 성능 메일링 리스트에 있는 다음 스레드를 읽어볼 수 있습니다: "
 "http://archives.postgresql.org/pgsql-performance/2005-02/msg00030.php"
 
+#. Tag: para
+#: performance_tips.xml:41
+#, no-c-format
+msgid ""
+"and newer thread on PostGIS <ulink url=\"https://lists.osgeo.org/pipermail/"
+"postgis-devel/2017-June/026209.html\">https://lists.osgeo.org/pipermail/"
+"postgis-devel/2017-June/026209.html</ulink>"
+msgstr ""
+
 #. Tag: title
-#: performance_tips.xml:43
+#: performance_tips.xml:45
 #, no-c-format
 msgid "Workarounds"
 msgstr "해결 방법"
 
 #. Tag: para
-#: performance_tips.xml:45
+#: performance_tips.xml:47
 #, no-c-format
 msgid ""
 "The PostgreSQL people are trying to solve this issue by making the query "
@@ -124,7 +135,7 @@ msgstr ""
 "려 하고 있습니다. 현 시점에서는, 다음 두 가지 해결 방법이 있습니다:"
 
 #. Tag: para
-#: performance_tips.xml:48
+#: performance_tips.xml:50
 #, no-c-format
 msgid ""
 "The first workaround is to force the query planner to use the index. Send "
@@ -143,7 +154,7 @@ msgstr ""
 "\"을 전송해야 합니다."
 
 #. Tag: para
-#: performance_tips.xml:56
+#: performance_tips.xml:58
 #, no-c-format
 msgid ""
 "The second workaround is to make the sequential scan as fast as the query "
@@ -156,19 +167,19 @@ msgstr ""
 "치 여부를 쿼리하면 됩니다. 이번 예제의 경우, 해당 명령어는 다음과 같습니다:"
 
 #. Tag: programlisting
-#: performance_tips.xml:61
-#, no-c-format
+#: performance_tips.xml:63
+#, fuzzy, no-c-format
 msgid ""
 "SELECT "
 "AddGeometryColumn('myschema','mytable','bbox','4326','GEOMETRY','2');\n"
-"UPDATE mytable SET bbox = ST_Envelope(ST_Force2D(the_geom));"
+"UPDATE mytable SET bbox = ST_Envelope(ST_Force2D(geom));"
 msgstr ""
 "SELECT "
 "AddGeometryColumn('myschema','mytable','bbox','4326','GEOMETRY','2');\n"
 "UPDATE mytable SET bbox = ST_Envelope(ST_Force2D(the_geom));"
 
 #. Tag: para
-#: performance_tips.xml:63
+#: performance_tips.xml:65
 #, no-c-format
 msgid ""
 "Now change your query to use the &amp;&amp; operator against bbox instead of "
@@ -178,7 +189,7 @@ msgstr ""
 "이 사용자 쿼리를 변경하십시오:"
 
 #. Tag: programlisting
-#: performance_tips.xml:66
+#: performance_tips.xml:68
 #, no-c-format
 msgid ""
 "SELECT geom_column\n"
@@ -190,7 +201,7 @@ msgstr ""
 "WHERE bbox &amp;&amp; ST_SetSRID('BOX3D(0 0,1 1)'::box3d,4326);"
 
 #. Tag: para
-#: performance_tips.xml:68
+#: performance_tips.xml:70
 #, no-c-format
 msgid ""
 "Of course, if you change or add rows to mytable, you have to keep the bbox "
@@ -205,13 +216,13 @@ msgstr ""
 "니다."
 
 #. Tag: title
-#: performance_tips.xml:77
+#: performance_tips.xml:79
 #, no-c-format
 msgid "CLUSTERing on geometry indices"
 msgstr "도형 인덱스에 대한 클러스터 작업"
 
 #. Tag: para
-#: performance_tips.xml:79
+#: performance_tips.xml:81
 #, no-c-format
 msgid ""
 "For tables that are mostly read-only, and where a single index is used for "
@@ -235,7 +246,7 @@ msgstr ""
 "다.)"
 
 #. Tag: para
-#: performance_tips.xml:89
+#: performance_tips.xml:91
 #, no-c-format
 msgid ""
 "However, currently PostgreSQL does not allow clustering on PostGIS GIST "
@@ -247,12 +258,12 @@ msgstr ""
 "같은 오류 메시지를 보게 될 것입니다:"
 
 #. Tag: programlisting
-#: performance_tips.xml:93
-#, no-c-format
+#: performance_tips.xml:95
+#, fuzzy, no-c-format
 msgid ""
 "lwgeom=# CLUSTER my_geom_index ON my_table;\n"
 "ERROR: cannot cluster when index access method does not handle null values\n"
-"HINT: You may be able to work around this by marking column \"the_geom\" NOT "
+"HINT: You may be able to work around this by marking column \"geom\" NOT "
 "NULL."
 msgstr ""
 "lwgeom=# CLUSTER my_geom_index ON my_table;\n"
@@ -261,7 +272,7 @@ msgstr ""
 "NULL."
 
 #. Tag: para
-#: performance_tips.xml:95
+#: performance_tips.xml:97
 #, no-c-format
 msgid ""
 "As the HINT message tells you, one can work around this deficiency by adding "
@@ -271,17 +282,17 @@ msgstr ""
 "피해 갈 수 있습니다:"
 
 #. Tag: programlisting
-#: performance_tips.xml:98
-#, no-c-format
+#: performance_tips.xml:100
+#, fuzzy, no-c-format
 msgid ""
-"lwgeom=# ALTER TABLE my_table ALTER COLUMN the_geom SET not null;\n"
+"lwgeom=# ALTER TABLE my_table ALTER COLUMN geom SET not null;\n"
 "ALTER TABLE"
 msgstr ""
 "lwgeom=# ALTER TABLE my_table ALTER COLUMN the_geom SET not null;\n"
 "ALTER TABLE"
 
 #. Tag: para
-#: performance_tips.xml:100
+#: performance_tips.xml:102
 #, no-c-format
 msgid ""
 "Of course, this will not work if you in fact need NULL values in your "
@@ -295,13 +306,13 @@ msgstr ""
 "는 방법은 먹히지 않을 겁니다."
 
 #. Tag: title
-#: performance_tips.xml:107
+#: performance_tips.xml:109
 #, no-c-format
 msgid "Avoiding dimension conversion"
 msgstr "차원 변환 피하기"
 
 #. Tag: para
-#: performance_tips.xml:109
+#: performance_tips.xml:111
 #, no-c-format
 msgid ""
 "Sometimes, you happen to have 3D or 4D data in your table, but always access "
@@ -319,17 +330,17 @@ msgstr ""
 "다."
 
 #. Tag: programlisting
-#: performance_tips.xml:116
-#, no-c-format
+#: performance_tips.xml:118
+#, fuzzy, no-c-format
 msgid ""
-"UPDATE mytable SET the_geom = ST_Force2D(the_geom);\n"
+"UPDATE mytable SET geom = ST_Force2D(geom);\n"
 "VACUUM FULL ANALYZE mytable;"
 msgstr ""
 "UPDATE mytable SET the_geom = ST_Force2D(the_geom);\n"
 "VACUUM FULL ANALYZE mytable;"
 
 #. Tag: para
-#: performance_tips.xml:118
+#: performance_tips.xml:120
 #, no-c-format
 msgid ""
 "Note that if you added your geometry column using AddGeometryColumn() "
@@ -343,16 +354,16 @@ msgstr ""
 "시 생성하는 걸 잊지 마십시오."
 
 #. Tag: para
-#: performance_tips.xml:124
-#, no-c-format
+#: performance_tips.xml:126
+#, fuzzy, no-c-format
 msgid ""
 "In case of large tables, it may be wise to divide this UPDATE into smaller "
 "portions by constraining the UPDATE to a part of the table via a WHERE "
 "clause and your primary key or another feasible criteria, and running a "
 "simple \"VACUUM;\" between your UPDATEs. This drastically reduces the need "
 "for temporary disk space. Additionally, if you have mixed dimension "
-"geometries, restricting the UPDATE by \"WHERE dimension(the_geom)&gt;2\" "
-"skips re-writing of geometries that already are in 2D."
+"geometries, restricting the UPDATE by \"WHERE dimension(geom)&gt;2\" skips "
+"re-writing of geometries that already are in 2D."
 msgstr ""
 "대용량 테이블의 경우, 사용자의 기본 키 또는 또다른 사용 가능한 기준과 함께 "
 "WHERE 절을 이용해서 테이블의 일부분만 업데이트하도록 제한한 다음 업데이트마"
@@ -362,270 +373,124 @@ msgstr ""
 "dimension(the_geom)&gt;2\"로 업데이트를 제한하면 이미 2D인 도형을 다시 작성하"
 "는 일을 건너뛸 수 있습니다."
 
-#. Tag: title
-#: performance_tips.xml:136
-#, no-c-format
-msgid "Tuning your configuration"
-msgstr "사용자 설정 세부 조정"
+#~ msgid "Tuning your configuration"
+#~ msgstr "사용자 설정 세부 조정"
 
-#. Tag: para
-#: performance_tips.xml:138
-#, no-c-format
-msgid ""
-"Tuning for PostGIS is much like tuning for any PostgreSQL workload. The only "
-"additional note to keep in mind is that geometries and rasters are heavy so "
-"memory related optimizations generally have more of an impact on PostGIS "
-"than other types of PostgreSQL queries."
-msgstr ""
+#~ msgid "Startup"
+#~ msgstr "시작"
 
-#. Tag: para
-#: performance_tips.xml:141
-#, no-c-format
-msgid ""
-"For general details about optimizing PostgreSQL, refer to <ulink url="
-"\"https://wiki.postgresql.org/wiki/Tuning_Your_PostgreSQL_Server\">Tuning "
-"your PostgreSQL Server</ulink>."
-msgstr ""
+#~ msgid "These settings are configured in postgresql.conf:"
+#~ msgstr "다음 설정들은 postgresql.conf 파일 안에 설정됩니다:"
 
-#. Tag: para
-#: performance_tips.xml:143
-#, no-c-format
-msgid ""
-"For PostgreSQL 9.4+ all these can be set at the server level without "
-"touching postgresql.conf or postgresql.auto.conf by using the <code>ALTER "
-"SYSTEM..</code> command."
-msgstr ""
+#~ msgid "constraint_exclusion"
+#~ msgstr "constraint_exclusion"
 
-#. Tag: programlisting
-#: performance_tips.xml:145
-#, no-c-format
-msgid ""
-"ALTER SYSTEM SET work_mem = '256MB';\n"
-"-- this will force, non-startup configs to take effect for new connections\n"
-"SELECT pg_reload_conf();\n"
-"-- show current setting value\n"
-"-- use SHOW ALL to see all settings\n"
-"SHOW work_mem;"
-msgstr ""
+#, fuzzy
+#~ msgid "Default: partition"
+#~ msgstr "기본값은 1MB입니다."
 
-#. Tag: para
-#: performance_tips.xml:147
-#, no-c-format
-msgid ""
-"In addition to these settings, PostGIS also has some custom settings which "
-"you can find listed in <xref linkend=\"PostGIS_GUC\"/>."
-msgstr ""
+#, fuzzy
+#~ msgid ""
+#~ "This is generally used for table partitioning. The default for this is "
+#~ "set to \"partition\" which is ideal for PostgreSQL 8.4 and above since it "
+#~ "will force the planner to only analyze tables for constraint "
+#~ "consideration if they are in an inherited hierarchy and not pay the "
+#~ "planner penalty otherwise."
+#~ msgstr ""
+#~ "일반적으로 테이블을 분할하는 경우 쓰입니다. PostgreSQL 8.4 미만 버전을 실"
+#~ "행하고 있다면 쿼리 설계자가 원하는 만큼 최적화하도록 \"on\"으로 설정하십시"
+#~ "오. PostgreSQL 8.4 버전부터, 이 옵션의 기본값이 \"partition\"으로 설정되"
+#~ "어 PostgreSQL 8.4 이후 버전에 이상적으로 바뀌었습니다. 테이블이 상속된 계"
+#~ "층형일 경우 쿼리 설계자가 제약조건을 검토해야 할 테이블만 분석하도록 강제"
+#~ "하고 다른 경우엔 별다른 대가를 치르지 않기 때문입니다."
 
-#. Tag: title
-#: performance_tips.xml:150
-#, no-c-format
-msgid "Startup"
-msgstr "시작"
+#~ msgid "shared_buffers"
+#~ msgstr "shared_buffers"
 
-#. Tag: para
-#: performance_tips.xml:152
-#, no-c-format
-msgid "These settings are configured in postgresql.conf:"
-msgstr "다음 설정들은 postgresql.conf 파일 안에 설정됩니다:"
+#, fuzzy
+#~ msgid ""
+#~ "<ulink url=\"https://www.postgresql.org/docs/current/static/runtime-"
+#~ "config-resource.html#GUC-MAX-WORKER-PROCESSES\">max_worker_processes</"
+#~ "ulink> This setting is only available for PostgreSQL 9.4+. For PostgreSQL "
+#~ "9.6+ this setting has additional importance in that it controls the max "
+#~ "number of processes you can have for parallel queries."
+#~ msgstr ""
+#~ "<ulink url=\"http://www.postgresql.org/docs/current/static/runtime-config-"
+#~ "resource.html#GUC-WORK-MEM\">work_mem</ulink> (정렬 연산 및 복잡 쿼리에 쓰"
+#~ "이는 메모리)"
 
-#. Tag: ulink
-#: performance_tips.xml:157
-#, no-c-format
-msgid "constraint_exclusion"
-msgstr "constraint_exclusion"
+#, fuzzy
+#~ msgid "Default: 8"
+#~ msgstr "기본값은 1MB입니다."
 
-#. Tag: para
-#: performance_tips.xml:162
-#, fuzzy, no-c-format
-msgid "Default: partition"
-msgstr "기본값은 1MB입니다."
+#~ msgid "Runtime"
+#~ msgstr "런타임"
 
-#. Tag: para
-#: performance_tips.xml:167
-#, fuzzy, no-c-format
-msgid ""
-"This is generally used for table partitioning. The default for this is set "
-"to \"partition\" which is ideal for PostgreSQL 8.4 and above since it will "
-"force the planner to only analyze tables for constraint consideration if "
-"they are in an inherited hierarchy and not pay the planner penalty otherwise."
-msgstr ""
-"일반적으로 테이블을 분할하는 경우 쓰입니다. PostgreSQL 8.4 미만 버전을 실행하"
-"고 있다면 쿼리 설계자가 원하는 만큼 최적화하도록 \"on\"으로 설정하십시오. "
-"PostgreSQL 8.4 버전부터, 이 옵션의 기본값이 \"partition\"으로 설정되어 "
-"PostgreSQL 8.4 이후 버전에 이상적으로 바뀌었습니다. 테이블이 상속된 계층형일 "
-"경우 쿼리 설계자가 제약조건을 검토해야 할 테이블만 분석하도록 강제하고 다른 "
-"경우엔 별다른 대가를 치르지 않기 때문입니다."
+#~ msgid ""
+#~ "<ulink url=\"http://www.postgresql.org/docs/current/static/runtime-config-"
+#~ "resource.html#GUC-WORK-MEM\">work_mem</ulink> (the memory used for sort "
+#~ "operations and complex queries)"
+#~ msgstr ""
+#~ "<ulink url=\"http://www.postgresql.org/docs/current/static/runtime-config-"
+#~ "resource.html#GUC-WORK-MEM\">work_mem</ulink> (정렬 연산 및 복잡 쿼리에 쓰"
+#~ "이는 메모리)"
 
-#. Tag: ulink
-#: performance_tips.xml:176
-#, no-c-format
-msgid "shared_buffers"
-msgstr "shared_buffers"
+#, fuzzy
+#~ msgid "Default: 1-4MB"
+#~ msgstr "기본값은 1MB입니다."
 
-#. Tag: para
-#: performance_tips.xml:181
-#, no-c-format
-msgid "Default: ~32MB"
-msgstr "기본값은 최대 32MB입니다."
+#~ msgid "Adjust up for large dbs, complex queries, lots of RAM"
+#~ msgstr "대용량 DB, 복잡 쿼리, 많은 RAM의 경우 상향 조정하십시오."
 
-#. Tag: para
-#: performance_tips.xml:186
-#, no-c-format
-msgid "Set to about 1/3 to 3/4 of available RAM"
-msgstr "사용할 수 있는 RAM 용량의 1/3에서 3/4까지 설정하십시오."
+#~ msgid "Adjust down for many concurrent users or low RAM."
+#~ msgstr "동시 사용자가 많거나 RAM이 적을 경우 하향 조정하십시오."
 
-#. Tag: para
-#: performance_tips.xml:193
-#, fuzzy, no-c-format
-msgid ""
-"<ulink url=\"https://www.postgresql.org/docs/current/static/runtime-config-"
-"resource.html#GUC-MAX-WORKER-PROCESSES\">max_worker_processes</ulink> This "
-"setting is only available for PostgreSQL 9.4+. For PostgreSQL 9.6+ this "
-"setting has additional importance in that it controls the max number of "
-"processes you can have for parallel queries."
-msgstr ""
-"<ulink url=\"http://www.postgresql.org/docs/current/static/runtime-config-"
-"resource.html#GUC-WORK-MEM\">work_mem</ulink> (정렬 연산 및 복잡 쿼리에 쓰이"
-"는 메모리)"
+#~ msgid "If you have lots of RAM and few developers:"
+#~ msgstr "RAM이 많고 개발자가 적을 경우:"
 
-#. Tag: para
-#: performance_tips.xml:201
-#, fuzzy, no-c-format
-msgid "Default: 8"
-msgstr "기본값은 1MB입니다."
+#, fuzzy
+#~ msgid "SET work_mem TO '256MB';"
+#~ msgstr "SET work_mem TO 1200000;"
 
-#. Tag: para
-#: performance_tips.xml:206
-#, no-c-format
-msgid ""
-"Sets the maximum number of background processes that the system can support. "
-"This parameter can only be set at server start."
-msgstr ""
+#~ msgid ""
+#~ "<ulink url=\"http://www.postgresql.org/docs/current/static/runtime-config-"
+#~ "resource.html#GUC-MAINTENANCE-WORK-MEM\">maintenance_work_mem</ulink> "
+#~ "(used for VACUUM, CREATE INDEX, etc.)"
+#~ msgstr ""
+#~ "<ulink url=\"http://www.postgresql.org/docs/current/static/runtime-config-"
+#~ "resource.html#GUC-MAINTENANCE-WORK-MEM\">maintenance_work_mem</ulink> "
+#~ "(VACUUM, CREATE INDEX 등에 쓰이는 메모리)"
 
-#. Tag: title
-#: performance_tips.xml:216
-#, no-c-format
-msgid "Runtime"
-msgstr "런타임"
+#, fuzzy
+#~ msgid "Default: 16-64MB"
+#~ msgstr "기본값은 16MB입니다."
 
-#. Tag: para
-#: performance_tips.xml:218
-#, no-c-format
-msgid ""
-"<ulink url=\"http://www.postgresql.org/docs/current/static/runtime-config-"
-"resource.html#GUC-WORK-MEM\">work_mem</ulink> (the memory used for sort "
-"operations and complex queries)"
-msgstr ""
-"<ulink url=\"http://www.postgresql.org/docs/current/static/runtime-config-"
-"resource.html#GUC-WORK-MEM\">work_mem</ulink> (정렬 연산 및 복잡 쿼리에 쓰이"
-"는 메모리)"
+#~ msgid "Generally too low - ties up I/O, locks objects while swapping memory"
+#~ msgstr ""
+#~ "기본값이 너무 낮습니다. 메모리 스왑 도중 I/O 병목 현상이 일어나거나 객체"
+#~ "에 랙이 걸립니다."
 
-#. Tag: para
-#: performance_tips.xml:224
-#, fuzzy, no-c-format
-msgid "Default: 1-4MB"
-msgstr "기본값은 1MB입니다."
+#, fuzzy
+#~ msgid ""
+#~ "Recommend 32MB to 1GB on production servers w/lots of RAM, but depends on "
+#~ "the # of concurrent users. If you have lots of RAM and few developers:"
+#~ msgstr ""
+#~ "RAM이 많은 제품 서버(production server)라면 32MB에서 256MB까지 추천하지"
+#~ "만, 동시 사용자 수에 따라 다릅니다. RAM이 많고 개발자가 적을 경우:"
 
-#. Tag: para
-#: performance_tips.xml:229
-#, no-c-format
-msgid "Adjust up for large dbs, complex queries, lots of RAM"
-msgstr "대용량 DB, 복잡 쿼리, 많은 RAM의 경우 상향 조정하십시오."
+#, fuzzy
+#~ msgid "SET maintenance_work_mem TO '1GB';"
+#~ msgstr "SET maintainence_work_mem TO 1200000;"
 
-#. Tag: para
-#: performance_tips.xml:234
-#, no-c-format
-msgid "Adjust down for many concurrent users or low RAM."
-msgstr "동시 사용자가 많거나 RAM이 적을 경우 하향 조정하십시오."
+#, fuzzy
+#~ msgid "Default: 0"
+#~ msgstr "기본값은 1MB입니다."
 
-#. Tag: para
-#: performance_tips.xml:239
-#, no-c-format
-msgid "If you have lots of RAM and few developers:"
-msgstr "RAM이 많고 개발자가 적을 경우:"
+#~ msgid "Default: ~32MB"
+#~ msgstr "기본값은 최대 32MB입니다."
 
-#. Tag: programlisting
-#: performance_tips.xml:241
-#, fuzzy, no-c-format
-msgid "SET work_mem TO '256MB';;"
-msgstr "SET work_mem TO 1200000;"
-
-#. Tag: para
-#: performance_tips.xml:246
-#, no-c-format
-msgid ""
-"<ulink url=\"http://www.postgresql.org/docs/current/static/runtime-config-"
-"resource.html#GUC-MAINTENANCE-WORK-MEM\">maintenance_work_mem</ulink> (used "
-"for VACUUM, CREATE INDEX, etc.)"
-msgstr ""
-"<ulink url=\"http://www.postgresql.org/docs/current/static/runtime-config-"
-"resource.html#GUC-MAINTENANCE-WORK-MEM\">maintenance_work_mem</ulink> "
-"(VACUUM, CREATE INDEX 등에 쓰이는 메모리)"
-
-#. Tag: para
-#: performance_tips.xml:252
-#, fuzzy, no-c-format
-msgid "Default: 16-64MB"
-msgstr "기본값은 16MB입니다."
-
-#. Tag: para
-#: performance_tips.xml:257
-#, no-c-format
-msgid "Generally too low - ties up I/O, locks objects while swapping memory"
-msgstr ""
-"기본값이 너무 낮습니다. 메모리 스왑 도중 I/O 병목 현상이 일어나거나 객체에 랙"
-"이 걸립니다."
-
-#. Tag: para
-#: performance_tips.xml:262
-#, fuzzy, no-c-format
-msgid ""
-"Recommend 32MB to 1GB on production servers w/lots of RAM, but depends on "
-"the # of concurrent users. If you have lots of RAM and few developers:"
-msgstr ""
-"RAM이 많은 제품 서버(production server)라면 32MB에서 256MB까지 추천하지만, 동"
-"시 사용자 수에 따라 다릅니다. RAM이 많고 개발자가 적을 경우:"
-
-#. Tag: programlisting
-#: performance_tips.xml:265
-#, fuzzy, no-c-format
-msgid "SET maintenance_work_mem TO '1GB';"
-msgstr "SET maintainence_work_mem TO 1200000;"
-
-#. Tag: para
-#: performance_tips.xml:270
-#, no-c-format
-msgid ""
-"<ulink url=\"https://www.postgresql.org/docs/current/static/runtime-config-"
-"resource.html#GUC-MAX-PARALLEL-WORKERS-PER-GATHER"
-"\">max_parallel_workers_per_gather</ulink> This setting is only available "
-"for PostgreSQL 9.6+ and will only affect PostGIS 2.3+, since only PostGIS "
-"2.3+ supports parallel queries. If set to higher than 0, then some queries "
-"such as those involving relation functions like <code>ST_Intersects</code> "
-"can use multiple processes and can run more than twice as fast when doing "
-"so. If you have a lot of processors to spare, you should change the value of "
-"this to as many processors as you have. Also make sure to bump up "
-"<code>max_worker_processes</code> to at least as high as this number."
-msgstr ""
-
-#. Tag: para
-#: performance_tips.xml:280
-#, fuzzy, no-c-format
-msgid "Default: 0"
-msgstr "기본값은 1MB입니다."
-
-#. Tag: para
-#: performance_tips.xml:285
-#, no-c-format
-msgid ""
-"Sets the maximum number of workers that can be started by a single "
-"<varname>Gather</varname> node. Parallel workers are taken from the pool of "
-"processes established by <varname>max_worker_processes</varname>. Note that "
-"the requested number of workers may not actually be available at run time. "
-"If this occurs, the plan will run with fewer workers than expected, which "
-"may be inefficient. Setting this value to 0, which is the default, disables "
-"parallel query execution."
-msgstr ""
+#~ msgid "Set to about 1/3 to 3/4 of available RAM"
+#~ msgstr "사용할 수 있는 RAM 용량의 1/3에서 3/4까지 설정하십시오."
 
 #~ msgid ""
 #~ "These tips are taken from Kevin Neufeld's presentation \"Tips for the "

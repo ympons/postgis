@@ -265,7 +265,7 @@ static void test_ptarray_locate_point(void)
 	loc = ptarray_locate_point(line->points, &p, &dist, &l);
 	CU_ASSERT_EQUAL(loc, 0.5);
 	CU_ASSERT_EQUAL(dist, 0.0);
-	CU_ASSERT_EQUAL(l.m, 10.0);	
+	CU_ASSERT_EQUAL(l.m, 10.0);
 
 	lwline_free(line);
 
@@ -322,141 +322,21 @@ static void test_ptarray_signed_area()
 	/* parallelogram */
 	line = lwgeom_as_lwline(lwgeom_from_text("LINESTRING(0 0,1 1, 2 1, 1 0, 0 0)"));
 	area = ptarray_signed_area(line->points);
-	CU_ASSERT_DOUBLE_EQUAL(area, 1.0, 0.0000001);
+	ASSERT_DOUBLE_EQUAL_TOLERANCE(area, 1.0, 0.0000001);
 	lwline_free(line);
 
 	/* square */
 	line = lwgeom_as_lwline(lwgeom_from_text("LINESTRING(0 0,0 2, 2 2, 2 0, 0 0)"));
 	area = ptarray_signed_area(line->points);
-	CU_ASSERT_DOUBLE_EQUAL(area, 4.0, 0.0000001);
+	ASSERT_DOUBLE_EQUAL_TOLERANCE(area, 4.0, 0.0000001);
 	lwline_free(line);
 
 	/* square backwares*/
 	line = lwgeom_as_lwline(lwgeom_from_text("LINESTRING(0 0,2 0, 2 2, 0 2, 0 0)"));
 	area = ptarray_signed_area(line->points);
 	//printf("%g\n",area);
-	CU_ASSERT_DOUBLE_EQUAL(area, -4.0, 0.0000001);
+	ASSERT_DOUBLE_EQUAL_TOLERANCE(area, -4.0, 0.0000001);
 	lwline_free(line);
-	
-}
-
-
-
-static void test_ptarray_unstroke()
-{
-	LWGEOM *in, *out;
-	char *str;
-
-	/* It would be nice if this example returned two arcs (it's the intersection of two circles)
-	   but it looks like the intersection itself is too sloppy in generating the derived point
-	   to accurately reconstruct the circles.
-	in = lwgeom_from_text("POLYGON((0.5 0,0.471177920604846 -0.292635483024192,0.38581929876693 -0.574025148547634,0.247204418453818 -0.833355349529403,0.0606601717798223 -1.06066017177982,-5.44089437167602e-17 -1.11044268820754,-0.0606601717798188 -1.06066017177982,-0.247204418453816 -0.833355349529406,-0.385819298766929 -0.574025148547639,-0.471177920604845 -0.292635483024197,-0.5 -4.84663372329776e-15,-0.471177920604847 0.292635483024187,-0.385819298766932 0.57402514854763,-0.247204418453821 0.833355349529398,-0.0606601717798256 1.06066017177982,3.45538806345173e-16 1.11044268820754,0.0606601717798183 1.06066017177982,0.247204418453816 0.833355349529407,0.385819298766929 0.574025148547638,0.471177920604845 0.292635483024196,0.5 0))");
-	out = lwgeom_unstroke(in);
-	str = lwgeom_to_wkt(out, WKT_ISO, 8, NULL);
-	printf("%s\n", str);
-	ASSERT_STRING_EQUAL(str, "CIRCULARSTRING(-1 0,0 1,0 -1)");
-	lwgeom_free(in);
-	lwgeom_free(out);
-	lwfree(str);	
-	*/
-	
-	in = lwgeom_from_text("CIRCULARSTRING(-1 0,0 1,0 -1)");
-	out = lwgeom_stroke(in,8);
-	lwgeom_free(in);
-	in = out;
-	out = lwgeom_unstroke(in);
-	str = lwgeom_to_wkt(out, WKT_ISO, 8, NULL);
-	// printf("%s\n", str);
-	ASSERT_STRING_EQUAL(str, "CIRCULARSTRING(-1 0,0.70710678 0.70710678,0 -1)");
-	lwgeom_free(in);
-	lwgeom_free(out);
-	lwfree(str);	
-
-	in = lwgeom_from_text("COMPOUNDCURVE(CIRCULARSTRING(-1 0,0 1,0 -1),(0 -1,-1 -1))");
-	out = lwgeom_stroke(in,8);
-	lwgeom_free(in);
-	in = out;
-	out = lwgeom_unstroke(in);
-	str = lwgeom_to_wkt(out, WKT_ISO, 8, NULL);
-	// printf("%s\n", str);
-	ASSERT_STRING_EQUAL(str, "COMPOUNDCURVE(CIRCULARSTRING(-1 0,0.70710678 0.70710678,0 -1),(0 -1,-1 -1))");
-	lwgeom_free(in);
-	lwgeom_free(out);
-	lwfree(str);	
-
-	in = lwgeom_from_text("COMPOUNDCURVE((-3 -3,-1 0),CIRCULARSTRING(-1 0,0 1,0 -1),(0 -1,0 -1.5,0 -2),CIRCULARSTRING(0 -2,-1 -3,1 -3),(1 -3,5 5))");
-	out = lwgeom_stroke(in,8);
-	lwgeom_free(in);
-	in = out;
-	out = lwgeom_unstroke(in);
-	str = lwgeom_to_wkt(out, WKT_ISO, 8, NULL);
-	// printf("%s\n", str);
-	ASSERT_STRING_EQUAL(str, "COMPOUNDCURVE((-3 -3,-1 0),CIRCULARSTRING(-1 0,0.70710678 0.70710678,0 -1),(0 -1,0 -1.5,0 -2),CIRCULARSTRING(0 -2,-0.70710678 -3.7071068,1 -3),(1 -3,5 5))");
-	lwgeom_free(in);
-	lwgeom_free(out);
-	lwfree(str);	
-
-	in = lwgeom_from_text("COMPOUNDCURVE(CIRCULARSTRING(-1 0,0 1,0 -1),CIRCULARSTRING(0 -1,-1 -2,1 -2))");
-	out = lwgeom_stroke(in,8);
-	lwgeom_free(in);
-	in = out;
-	out = lwgeom_unstroke(in);
-	str = lwgeom_to_wkt(out, WKT_ISO, 8, NULL);
-	// printf("%s\n", str);
-	ASSERT_STRING_EQUAL(str, "COMPOUNDCURVE(CIRCULARSTRING(-1 0,0.70710678 0.70710678,0 -1),CIRCULARSTRING(0 -1,-0.70710678 -2.7071068,1 -2))");
-	lwgeom_free(in);
-	lwgeom_free(out);
-	lwfree(str);	
-	
-	in = lwgeom_from_text("COMPOUNDCURVE((0 0, 1 1), CIRCULARSTRING(1 1, 2 2, 3 1), (3 1, 4 4))");
-	out = lwgeom_stroke(in,8);
-	lwgeom_free(in);
-	in = out;
-	out = lwgeom_unstroke(in);
-	str = lwgeom_to_wkt(out, WKT_ISO, 8, NULL);
-	ASSERT_STRING_EQUAL(str, "COMPOUNDCURVE((0 0,1 1),CIRCULARSTRING(1 1,2 2,3 1),(3 1,4 4))");
-	lwgeom_free(in);
-	lwgeom_free(out);
-	// printf("%s\n", str);
-	lwfree(str);		
-	
-	// See http://trac.osgeo.org/postgis/ticket/2425
-	// and http://trac.osgeo.org/postgis/ticket/2420
-	in = lwgeom_from_text("LINESTRING(0 0,10 0,10 10,0 10,0 0)");
-	out = lwgeom_unstroke(in);
-	str = lwgeom_to_wkt(out, WKT_ISO, 8, NULL);
-	ASSERT_STRING_EQUAL(str, "LINESTRING(0 0,10 0,10 10,0 10,0 0)");
-	lwgeom_free(in);
-	lwgeom_free(out);
-	lwfree(str);	
-
-	in = lwgeom_from_text("LINESTRING(10 10,0 10,0 0,10 0)");
-	out = lwgeom_unstroke(in);
-	str = lwgeom_to_wkt(out, WKT_ISO, 8, NULL);
-	ASSERT_STRING_EQUAL(str, "LINESTRING(10 10,0 10,0 0,10 0)");
-	// printf("%s\n", str);
-	lwgeom_free(in);
-	lwgeom_free(out);
-	lwfree(str);
-
-	in = lwgeom_from_text("LINESTRING(0 0,10 0,10 10,0 10)");
-	out = lwgeom_unstroke(in);
-	str = lwgeom_to_wkt(out, WKT_ISO, 8, NULL);
-	ASSERT_STRING_EQUAL(str, "LINESTRING(0 0,10 0,10 10,0 10)");
-	// printf("%s\n", str);
-	lwgeom_free(in);
-	lwgeom_free(out);
-	lwfree(str);
-
-	// See http://trac.osgeo.org/postgis/ticket/2412
-	in = lwgeom_from_text("LINESTRING(0 0, 1 1)");
-	out = lwgeom_unstroke(in);
-	str = lwgeom_to_wkt(out, WKT_ISO, 8, NULL);
-	// printf("%s\n", str);
-	ASSERT_STRING_EQUAL(str, "LINESTRING(0 0,1 1)");
-	lwgeom_free(in);
-	lwgeom_free(out);
-	lwfree(str);		
 
 }
 
@@ -468,7 +348,7 @@ static void test_ptarray_contains_point()
 	POINTARRAY *pa;
 	POINT2D pt;
 	int rv;
-	
+
 	lwline = lwgeom_as_lwline(lwgeom_from_text("LINESTRING(0 0, 0 1, 1 1, 1 0, 0 0)"));
 	pa = lwline->points;
 
@@ -477,7 +357,7 @@ static void test_ptarray_contains_point()
 	pt.y = 0.5;
 	rv = ptarray_contains_point(pa, &pt);
 	CU_ASSERT_EQUAL(rv, LW_INSIDE);
-	
+
 	/* Point on left edge of square */
 	pt.x = 0;
 	pt.y = 0.5;
@@ -519,11 +399,11 @@ static void test_ptarray_contains_point()
 	pt.y = 0.5;
 	rv = ptarray_contains_point(pa, &pt);
 	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);
-	
+
 	lwline_free(lwline);
 	lwline = lwgeom_as_lwline(lwgeom_from_text("LINESTRING(0 0, 1 1, 2 0, 0 0)"));
 	pa = lwline->points;
-	
+
 	/* Point outside grazing top of triangle */
 	pt.x = 0;
 	pt.y = 1;
@@ -567,30 +447,30 @@ static void test_ptarrayarc_contains_point()
 	pt.y = 0;
 	rv = ptarrayarc_contains_point(pa, &pt);
 	CU_ASSERT_EQUAL(rv, LW_INSIDE);
-	
+
 	/* Point in left lobe */
 	pt.x = -1.1;
 	pt.y = 0.1;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_INSIDE);	
+	CU_ASSERT_EQUAL(rv, LW_INSIDE);
 
 	/* Point on boundary of left lobe */
 	pt.x = -1;
 	pt.y = 0;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_INSIDE);	
+	CU_ASSERT_EQUAL(rv, LW_INSIDE);
 
 	/* Point on boundary vertex */
 	pt.x = -1;
 	pt.y = 1;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_BOUNDARY);	
+	CU_ASSERT_EQUAL(rv, LW_BOUNDARY);
 
 	/* Point outside */
 	pt.x = -1.5;
 	pt.y = 1.5;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);	
+	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);
 
 	/*** Two-edge ring made up of semi-circles (really, a circle) ***/
 	lwline_free(lwline);
@@ -601,37 +481,37 @@ static void test_ptarrayarc_contains_point()
 	pt.x = -1.5;
 	pt.y = 1.5;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);	
+	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);
 
 	/* Point more outside */
 	pt.x = 2.5;
 	pt.y = 1.5;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);	
+	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);
 
 	/* Point more outside */
 	pt.x = 2.5;
 	pt.y = 2.5;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);	
+	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);
 
 	/* Point inside at middle */
 	pt.x = 0;
 	pt.y = 0;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_INSIDE);	
+	CU_ASSERT_EQUAL(rv, LW_INSIDE);
 
 	/* Point inside offset from middle */
 	pt.x = 0.01;
 	pt.y = 0.01;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_INSIDE);	
+	CU_ASSERT_EQUAL(rv, LW_INSIDE);
 
 	/* Point on edge vertex */
 	pt.x = 0;
 	pt.y = 1;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_BOUNDARY);	
+	CU_ASSERT_EQUAL(rv, LW_BOUNDARY);
 
 	/*** Two-edge ring, closed ***/
 	lwline_free(lwline);
@@ -642,7 +522,7 @@ static void test_ptarrayarc_contains_point()
 	pt.x = 20;
 	pt.y = 4;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);	
+	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);
 
 	/*** One-edge ring, closed circle ***/
 	lwline_free(lwline);
@@ -653,19 +533,19 @@ static void test_ptarrayarc_contains_point()
 	pt.x = 0;
 	pt.y = 0;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_INSIDE);	
+	CU_ASSERT_EQUAL(rv, LW_INSIDE);
 
 	/* Point outside */
 	pt.x = 0;
 	pt.y = 2;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);	
+	CU_ASSERT_EQUAL(rv, LW_OUTSIDE);
 
 	/* Point on boundary */
 	pt.x = 0;
 	pt.y = 1;
 	rv = ptarrayarc_contains_point(pa, &pt);
-	CU_ASSERT_EQUAL(rv, LW_BOUNDARY);	
+	CU_ASSERT_EQUAL(rv, LW_BOUNDARY);
 
 	/*** Overshort ring ***/
 	lwline_free(lwline);
@@ -720,20 +600,236 @@ static void test_ptarray_scale()
   lwfree(wktout);
 
   factor.x = 1; factor.y = 1; factor.z = -2;
-  wkt = "LINESTRING ZM (0 3 -4 3,2 6 -6 0,-4 -9 -0 -1,-6 0 2 -2)";
+  wkt = "LINESTRING ZM (0 3 -4 3,2 6 -6 0,-4 -9 0 -1,-6 0 2 -2)";
   ptarray_scale(pa, &factor);
   wktout = lwgeom_to_text(lwline_as_lwgeom(line));
   ASSERT_STRING_EQUAL(wktout, wkt);
   lwfree(wktout);
 
   factor.x = 1; factor.y = 1; factor.z = 1; factor.m = 2;
-  wkt = "LINESTRING ZM (0 3 -4 6,2 6 -6 0,-4 -9 -0 -2,-6 0 2 -4)";
+  wkt = "LINESTRING ZM (0 3 -4 6,2 6 -6 0,-4 -9 0 -2,-6 0 2 -4)";
   ptarray_scale(pa, &factor);
   wktout = lwgeom_to_text(lwline_as_lwgeom(line));
   ASSERT_STRING_EQUAL(wktout, wkt);
   lwfree(wktout);
 
   lwline_free(line);
+}
+
+static void test_ptarray_scroll()
+{
+  LWLINE *line;
+  POINTARRAY *pa;
+  POINT4D scroll;
+  const char *wkt;
+  char *wktout;
+	int rv;
+
+  wkt = "LINESTRING ZM (1 1 1 1,2 2 2 2,3 3 3 3,4 4 4 4,1 1 1 1)";
+  line = lwgeom_as_lwline(lwgeom_from_text(wkt));
+  pa = line->points;
+
+	scroll.x = scroll.y = scroll.z = scroll.m = 2;
+  rv = ptarray_scroll_in_place(pa, &scroll);
+	CU_ASSERT_EQUAL(rv, LW_SUCCESS);
+  wktout = lwgeom_to_text(lwline_as_lwgeom(line));
+  wkt = "LINESTRING ZM (2 2 2 2,3 3 3 3,4 4 4 4,1 1 1 1,2 2 2 2)";
+  ASSERT_STRING_EQUAL(wktout, wkt);
+  lwfree(wktout);
+
+	scroll.x = scroll.y = scroll.z = scroll.m = 1;
+  rv = ptarray_scroll_in_place(pa, &scroll);
+	CU_ASSERT_EQUAL(rv, LW_SUCCESS);
+  wktout = lwgeom_to_text(lwline_as_lwgeom(line));
+  wkt = "LINESTRING ZM (1 1 1 1,2 2 2 2,3 3 3 3,4 4 4 4,1 1 1 1)";
+  ASSERT_STRING_EQUAL(wktout, wkt);
+  lwfree(wktout);
+
+	scroll.x = scroll.y = scroll.z = scroll.m = 9;
+  rv = ptarray_scroll_in_place(pa, &scroll);
+	CU_ASSERT_EQUAL(rv, LW_FAILURE);
+	ASSERT_STRING_EQUAL(cu_error_msg, "ptarray_scroll_in_place: input POINTARRAY does not contain the given point");
+
+  lwline_free(line);
+}
+
+static void test_ptarray_closest_vertex_2d()
+{
+	LWLINE *line;
+	POINTARRAY *pa;
+	double dist;
+	POINT2D qp;
+	const char *wkt;
+	int rv;
+
+	wkt = "LINESTRING (0 0 0, 1 0 0, 2 0 0, 3 0 10)";
+	line = lwgeom_as_lwline(lwgeom_from_text(wkt));
+	pa = line->points;
+
+	qp.x = qp.y = 0;
+	rv = ptarray_closest_vertex_2d(pa, &qp, &dist);
+	ASSERT_INT_EQUAL(rv, 0);
+	ASSERT_DOUBLE_EQUAL(dist, 0);
+
+	qp.x = qp.y = 1;
+	rv = ptarray_closest_vertex_2d(pa, &qp, &dist);
+	ASSERT_INT_EQUAL(rv, 1);
+	ASSERT_DOUBLE_EQUAL(dist, 1);
+
+	qp.x = 5; qp.y = 0;
+	rv = ptarray_closest_vertex_2d(pa, &qp, &dist);
+	ASSERT_INT_EQUAL(rv, 3);
+	ASSERT_DOUBLE_EQUAL(dist, 2);
+
+
+  lwline_free(line);
+}
+
+static void test_ptarray_closest_segment_2d()
+{
+	LWLINE *line;
+	POINTARRAY *pa;
+	double dist;
+	POINT2D qp;
+	const char *wkt;
+	int rv;
+
+	wkt = "LINESTRING (0 0 0, 1 0 0, 2 0 0, 3 0 10)";
+	line = lwgeom_as_lwline(lwgeom_from_text(wkt));
+	pa = line->points;
+
+	qp.x = qp.y = 0;
+	rv = ptarray_closest_segment_2d(pa, &qp, &dist);
+	ASSERT_INT_EQUAL(rv, 0);
+	ASSERT_DOUBLE_EQUAL(dist, 0);
+
+	qp.x = 1;
+	rv = ptarray_closest_segment_2d(pa, &qp, &dist);
+	ASSERT_INT_EQUAL(rv, 0);
+	ASSERT_DOUBLE_EQUAL(dist, 0);
+
+	qp.y = 1;
+	rv = ptarray_closest_segment_2d(pa, &qp, &dist);
+	ASSERT_INT_EQUAL(rv, 0);
+	ASSERT_DOUBLE_EQUAL(dist, 1);
+
+	qp.x = 5; qp.y = 0;
+	rv = ptarray_closest_segment_2d(pa, &qp, &dist);
+	ASSERT_INT_EQUAL(rv, 2);
+	ASSERT_DOUBLE_EQUAL(dist, 2);
+
+
+	lwline_free(line);
+
+	/* See https://trac.osgeo.org/postgis/ticket/4990 */
+	/* Test modified to give more stable results */
+	wkt = "LINESTRING(4 31,7 31,7 34,4 34,4 31)";
+	line = lwgeom_as_lwline(lwgeom_from_text(wkt));
+	pa = line->points;
+	qp.x = 7.1; qp.y = 31.1;
+	rv = ptarray_closest_segment_2d(pa, &qp, &dist);
+	ASSERT_INT_EQUAL(rv, 1);
+	lwline_free(line);
+}
+
+static void test_ptarray_closest_point_on_segment(void)
+{
+	POINT4D s0, s1, qp, cp;
+
+	s0.x = s0.y = 0; s0.z = 10; s0.m = 20;
+	s1.x = 0; s1.y = 10; s1.z = 0; s1.m = 10;
+
+	/* Closest is bottom point */
+
+	qp.x = -0.1; qp.y = 0;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 0);
+	ASSERT_DOUBLE_EQUAL(cp.z, 10);
+	ASSERT_DOUBLE_EQUAL(cp.m, 20);
+
+	qp.x = 0.1; qp.y = 0;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 0);
+	ASSERT_DOUBLE_EQUAL(cp.z, 10);
+	ASSERT_DOUBLE_EQUAL(cp.m, 20);
+
+	qp.x = 0; qp.y = -0.1;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 0);
+	ASSERT_DOUBLE_EQUAL(cp.z, 10);
+	ASSERT_DOUBLE_EQUAL(cp.m, 20);
+
+	/* Closest is top point */
+
+	qp.x = 0; qp.y = 10.1;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 10);
+	ASSERT_DOUBLE_EQUAL(cp.z, 0);
+	ASSERT_DOUBLE_EQUAL(cp.m, 10);
+
+	qp.x = 0.1; qp.y = 10;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 10);
+	ASSERT_DOUBLE_EQUAL(cp.z, 0);
+	ASSERT_DOUBLE_EQUAL(cp.m, 10);
+
+	qp.x = -0.1; qp.y = 10;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 10);
+	ASSERT_DOUBLE_EQUAL(cp.z, 0);
+	ASSERT_DOUBLE_EQUAL(cp.m, 10);
+
+	/* Closest is mid point */
+
+	qp.x = 0.1; qp.y = 5;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 5);
+	ASSERT_DOUBLE_EQUAL(cp.z, 5);
+	ASSERT_DOUBLE_EQUAL(cp.m, 15);
+
+	qp.x = -0.1; qp.y = 5;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 5);
+	ASSERT_DOUBLE_EQUAL(cp.z, 5);
+	ASSERT_DOUBLE_EQUAL(cp.m, 15);
+
+	qp.x = 0.1; qp.y = 2;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 2);
+	ASSERT_DOUBLE_EQUAL(cp.z, 8);
+	ASSERT_DOUBLE_EQUAL(cp.m, 18);
+
+	qp.x = -0.1; qp.y = 2;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 2);
+	ASSERT_DOUBLE_EQUAL(cp.z, 8);
+	ASSERT_DOUBLE_EQUAL(cp.m, 18);
+
+	qp.x = 0.1; qp.y = 8;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 8);
+	ASSERT_DOUBLE_EQUAL_TOLERANCE(cp.z, 2, 1e-5);
+	ASSERT_DOUBLE_EQUAL(cp.m, 12);
+
+	qp.x = -0.1; qp.y = 8;
+	closest_point_on_segment(&qp, &s0, &s1, &cp);
+	ASSERT_DOUBLE_EQUAL(cp.x, 0);
+	ASSERT_DOUBLE_EQUAL(cp.y, 8);
+	ASSERT_DOUBLE_EQUAL_TOLERANCE(cp.z, 2, 1e-5);
+	ASSERT_DOUBLE_EQUAL(cp.m, 12);
+
+
 }
 
 
@@ -749,9 +845,12 @@ void ptarray_suite_setup(void)
 	PG_ADD_TEST(suite, test_ptarray_locate_point);
 	PG_ADD_TEST(suite, test_ptarray_isccw);
 	PG_ADD_TEST(suite, test_ptarray_signed_area);
-	PG_ADD_TEST(suite, test_ptarray_unstroke);
 	PG_ADD_TEST(suite, test_ptarray_insert_point);
 	PG_ADD_TEST(suite, test_ptarray_contains_point);
 	PG_ADD_TEST(suite, test_ptarrayarc_contains_point);
 	PG_ADD_TEST(suite, test_ptarray_scale);
+	PG_ADD_TEST(suite, test_ptarray_scroll);
+	PG_ADD_TEST(suite, test_ptarray_closest_vertex_2d);
+	PG_ADD_TEST(suite, test_ptarray_closest_segment_2d);
+	PG_ADD_TEST(suite, test_ptarray_closest_point_on_segment);
 }

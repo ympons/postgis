@@ -88,7 +88,7 @@ sub install_upgrade_from
 		die "File ${EXTDIR}/${extname}--TEMPLATED--TO--ANY.sql is missing"
 			unless -f "${EXTDIR}/${extname}--TEMPLATED--TO--ANY.sql";
 
-		my $shcmd = "ln -fvs '${extname}--TEMPLATED--TO--ANY.sql' '${EXTDIR}/${extname}--${from}--ANY.sql'";
+		my $shcmd = "ln -fs '${extname}--TEMPLATED--TO--ANY.sql' '${EXTDIR}/${extname}--${from}--ANY.sql'";
 		#print " CMD: ${shcmd}\n";
 		my $rv = system($shcmd);
 		if ( $rv ) {
@@ -255,6 +255,10 @@ SELECT n.nspname
 		{
       $NEED_UPGRADE=" - NEEDS UPGRADE";
     }
+		elsif ( $FULL_VERSION =~ /deprecated functions/ )
+		{
+			$NEED_UPGRADE=" - NEEDS UPGRADE (HAS DEPRECATED FUNCTIONS)";
+		}
 
     print "db $db has postgis ${VERSION}${EXTENSION} in schema ${SCHEMA}${NEED_UPGRADE}\n";
   }

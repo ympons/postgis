@@ -1153,6 +1153,11 @@ extern POINTARRAY* lwline_interpolate_points(const LWLINE *line, double length_f
  */
 extern LWPOINT* lwline_interpolate_point_3d(const LWLINE *line, double distance);
 
+/**
+ * Extend the ends of a line
+ */
+extern LWLINE* lwline_extend(const LWLINE *line, double distance_forward, double distance_backward);
+
 /******************************************************************
  * LWPOLY functions
  ******************************************************************/
@@ -1339,6 +1344,8 @@ extern LWPOINT* lwcompound_get_lwpoint(const LWCOMPOUND *lwcmp, uint32_t where);
 extern double ptarray_length_2d(const POINTARRAY *pts);
 extern int pt_in_ring_2d(const POINT2D *p, const POINTARRAY *ring);
 extern int azimuth_pt_pt(const POINT2D *p1, const POINT2D *p2, double *ret);
+extern LWPOINT* lwpoint_project_lwpoint(const LWPOINT* lwpoint1, const LWPOINT* lwpoint2, double distance);
+extern LWPOINT* lwpoint_project(const LWPOINT* lwpoint1, double distance, double azimuth);
 extern int lwpoint_inside_circle(const LWPOINT *p, double cx, double cy, double rad);
 
 extern LWGEOM* lwgeom_reverse(const LWGEOM *lwgeom);
@@ -1745,6 +1752,11 @@ extern double lwgeom_distance_spheroid(const LWGEOM *lwgeom1, const LWGEOM *lwge
 extern LWPOINT* lwgeom_project_spheroid(const LWPOINT *r, const SPHEROID *spheroid, double distance, double azimuth);
 
 /**
+* Calculate the location of a point on a spheroid, give a start point, end point and distance.
+*/
+extern LWPOINT* lwgeom_project_spheroid_lwpoint(const LWPOINT *from, const LWPOINT *to, const SPHEROID *spheroid, double distance);
+
+/**
 * Derive a new geometry with vertices added to ensure no vertex is more
 * than max_seg_length (in radians) from any other vertex.
 */
@@ -1778,6 +1790,27 @@ extern double lwgeom_length_spheroid(const LWGEOM *geom, const SPHEROID *s);
 * only handles point-in-polygon.
 */
 extern int lwgeom_covers_lwgeom_sphere(const LWGEOM *lwgeom1, const LWGEOM *lwgeom2);
+
+
+extern LWGEOM * geography_substring(const LWLINE *line,
+    const SPHEROID *s,
+    double from, double to,
+    double tolerance);
+
+extern LWGEOM * geography_interpolate_points(
+    const LWLINE *line,
+    double length_fraction,
+    const SPHEROID *s, char repeat);
+
+extern double
+ptarray_locate_point_spheroid(
+    const POINTARRAY *pa,
+    const POINT4D *p4d,
+    const SPHEROID *s,
+    double tolerance,
+    double *mindistout,
+    POINT4D *proj4d);
+
 
 typedef struct {
 	POINT2D* center;

@@ -1,0 +1,10 @@
+  @TARGET@-@LANG@:
+    image: *test_image
+    pull: true
+    commands:
+      - make -C build-docs/doc/po/@LANG@ local-@TARGET@
+    group: @GROUP@
+    when:
+      path:
+        include:
+          - "doc/po/@LANG@/*.po"

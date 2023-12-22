@@ -1167,6 +1167,14 @@ static void test_lwgeom_remove_repeated_points(void)
 	char *ewkt_exp;
 	int modified = LW_FALSE;
 
+	g = lwgeom_from_wkt("LINESTRING(0 0,1 1,1 1,1 1,1.707 1.707)", LW_PARSER_CHECK_NONE);
+	modified = lwgeom_remove_repeated_points_in_place(g, 0.001);
+	ASSERT_INT_EQUAL(modified, LW_TRUE);
+	ewkt = lwgeom_to_ewkt(g);
+	ASSERT_STRING_EQUAL(ewkt, "LINESTRING(0 0,1 1,1.707 1.707)");
+	lwgeom_free(g);
+	lwfree(ewkt);
+
 	g = lwgeom_from_wkt("MULTIPOINT(0 0, 10 0, 10 10, 10 10, 0 10, 0 10, 0 10, 0 0, 0 0, 0 0, 5 5, 0 0, 5 5)", LW_PARSER_CHECK_NONE);
 	modified = lwgeom_remove_repeated_points_in_place(g, 1);
 	ASSERT_INT_EQUAL(modified, LW_TRUE);
@@ -1650,11 +1658,11 @@ static void test_point_density(void)
 	/* Check if the 1000th point is the expected value.
 	 * Note that if the RNG is not portable, this test may fail. */
 	pt = (LWPOINT*)mpt->geoms[999];
-	// ewkt = lwgeom_to_ewkt((LWGEOM*)pt);
+	// char* ewkt = lwgeom_to_ewkt((LWGEOM*)pt);
 	// printf("%s\n", ewkt);
 	// lwfree(ewkt);
-	CU_ASSERT_DOUBLE_EQUAL(lwpoint_get_x(pt), 0.801167838758, 1e-11);
-	CU_ASSERT_DOUBLE_EQUAL(lwpoint_get_y(pt), 0.345281131175, 1e-11);
+	CU_ASSERT_DOUBLE_EQUAL(lwpoint_get_x(pt), 0.363667838758, 1e-11);
+	CU_ASSERT_DOUBLE_EQUAL(lwpoint_get_y(pt), 0.782781131175, 1e-11);
 	lwmpoint_free(mpt);
 	pt = NULL;
 

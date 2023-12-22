@@ -1,36 +1,131 @@
-PostGIS 3.4.0dev
+PostGIS 3.5.0dev
 xxxx/xx/xx
 
+To take advantage of all SFCGAL featurs, SFCGAL 1.5.0+ is needed.
+
 * Breaking Changes *
-  - #5229, Drop support for Proj < 6.1 and PG 11 (Regina Obe)
+
+  - #5546, TopoGeometry <> TopoGeometry is now ambiguous, to get
+           the old behaviour, assuming your TopoGeometry objects
+           are named tg1 and tg2, use: (
+              id(tg1) <> id(tg2) OR
+              topology_id(tg1) <> topology_id(tg2) OR
+              layer_id(tg1) <> layer_id(tg2) OR
+              type(tg1) <> type(tg2)
+           ) (Sandro Santilli)
+  - #5536, comments are not anymore included in PostGIS extensions
+    (Sandro Santilli)
+  - xmllint is now required to build comments and
+    (Sandro Santilli)
+  - DocBook5 XSL is now required to build html documentation
+    (Sandro Santilli)
+  - #5602, Drop support for GEOS 3.6 and 3.7 (Regina Obe)
+  - #5571, Improve ST_GeneratePoints performance, but old
+           seeded pseudo random points will need to be regenerated.
+  - #5596, GH-749, Allow promoting column as an id 
+          in ST_AsGeoJson(record,..).
+          Views and materialized views that use the ST_AsGeoJSON(record ..)
+          will need rebuilding to upgrade to new signature
+          (Jan Tojnar)
+  - #5496, ST_Clip all variants replaced, will require
+           rebuilding of materialized views that use them (Regina Obe)
 
 * New Features *
+
+  - #5055, add explicit <> geometry operator to prevent non-unique
+           error with <> and != (Paul Ramsey)
+  - Add ST_HasZ/ST_HasM (Loïc Bartoletti)
+  - GT-123, postgis_sfcgal: CG_YMonotonePartition, CG_ApproxConvexPartition, CG_GreeneApproxConvexPartition and CG_OptimalConvexPartition (Loïc Bartoletti)
+  - GT-156, postgis_sfcgal: CG_Visibility (Loïc Bartoletti)
+  - GT-157, postgis_sfcgal: Add ST_ExtrudeStraightSkeleton (Loïc Bartoletti)
+  - #5496, ST_Clip support for touched (Regina Obe)
+
+* Enhancements *
+
+  - #5531, documentation format upgraded to DocBook 5 (Sandro Santilli)
+  - #5543, allow building without documentation (Sandro Santilli)
+  - #5596, GH-749, Allow promoting column as an id 
+          in ST_AsGeoJson(record,..). (Jan Tojnar)
+
+
+PostGIS 3.4.0
+2023/08/15
+
+This version requires PostgreSQL 12-16, GEOS 3.6 or higher, and Proj 6.1+.
+To take advantage of all features, GEOS 3.12+ is needed.
+To take advantage of all SFCGAL featurs, SFCGAL 1.4.1+ is needed.
+
+Many thanks to our translation teams, in particular:
+
+Teramoto Ikuhiro (Japanese Team)
+Vincent Bre (French Team)
+
+There are 2 new ./configure switches:
+
+ -  --disable-extension-upgrades-install, will skip installing all the extension upgrade scripts except for the ANY--currentversion. If you use this, you can install select upgrades using the postgis commandline tool
+ -  --without-pgconfig, will build just the commandline tools
+    raster2pgsql and shp2pgsql even if PostgreSQL is not installed
+
+* New Features *
+  - #5055, complete manual internationalization (Sandro Santilli)
   - #5052, target version support in postgis_extensions_upgrade
     (Sandro Santilli)
   - #5306, expose version of GEOS at compile time (Sandro Santilli)
   - New install-extension-upgrades command in postgis script (Sandro Santilli)
   - #5257, #5261, #5277, Support changes for PostgreSQL 16 (Regina Obe)
   - #5006, GH705, ST_Transform: Support PROJ pipelines (Robert Coup, Koordinates)
-  - #5283, RenameTopology (Sandro Santilli)
-  - #5286, RenameTopoGeometryColumn (Sandro Santilli)
-  - GH703, Add min/max resampling as options (Christian Schroeder)
-  - #5336, topogeometry cast to topoelement support (Regina Obe)
+  - #5283, [postgis_topology] RenameTopology (Sandro Santilli)
+  - #5286, [postgis_topology] RenameTopoGeometryColumn (Sandro Santilli)
+  - GH703, [postgis_raster] Add min/max resampling as options (Christian Schroeder)
+  - #5336, [postgis_topology] topogeometry cast to topoelement support (Regina Obe)
   - Allow singleton geometry to be inserted into Geometry(Multi*) columns (Paul Ramsey)
   - GH721, New window-based ST_ClusterWithinWin and ST_ClusterIntersectingWin (Paul Ramsey)
+  - #5397, [address_standardizer] debug_standardize_address function (Regina Obe)
+  - #5373, ST_LargestEmptyCircle, exposes extra semantics on circle finding
+    Requires GEOS 3.9+ (Martin Davis)
+  - #5267, ST_Project signature for geometry, and two-point signature (Paul Ramsey)
+  - #5267, ST_LineExtend for extending linestrings (Paul Ramsey)
+  - New coverage functions ST_CoverageInvalidEdges, ST_CoverageSimplify, ST_CoverageUnion (Paul Ramsey)
+
 
 * Enhancements *
   - #5194, do not update system catalogs from postgis_extensions_upgrade (Sandro Santilli)
-  - #5092, reduce number of upgrade paths installed on system (Sandro Santilli)
+  - #5092, reduce number of upgrade paths installed on system,
+           by providing an ANY intermediary path that all upgrades will
+           go thru (Sandro Santilli)
   - #635, honour --bindir (and --prefix) configure switch for executables (Sandro Santilli)
   - Honour --mandir (and --prefix) configure switch for man pages install path (Sandro Santilli)
-  - Speed up check of topology faces without edges (Sandro Santilli)
-  - Speed up coincident nodes check in topology validation  (Sandro Santilli)
+  - Honour --htmldir (and --docdir and --prefix) configure switch for
+    html pages install path (Sandro Santilli)
+  - [postgis_topology] Speed up check of topology faces without edges (Sandro Santilli)
+  - [postgis_topology] Speed up coincident nodes check in topology validation  (Sandro Santilli)
   - GH718, ST_QuantizeCoordinates(): speed-up implementation (Even Rouault)
   - Repair spatial planner stats to use computed selectivity for contains/within queries (Paul Ramsey)
+  - GH734, Additional metadata on Proj installation in postgis_proj_version (Paul Ramsey)
+  - #5177, Allow building tools without PostgreSQL server headers (Sandro Santilli)
+  - #5447, Manual pages added for postgis and postgis_restore utilities
+    (Sandro Santilli)
+  - ST_Project signature for geometry, and two-point signature (Paul Ramsey)
+  - #4913, ST_AsSVG support for curve types CircularString, CompoundCurve, MultiCurve,
+           and MultiSurface (Regina Obe)
+  - #5266, #5460 ST_ClosestPoint, ST_ShortestLine support for geography type
+    (MobilityDB Esteban Zimanyi, Maxime Schoemans, Paul Ramsey)
 
-* Bug Fix *
-
-
+* Breaking Changes *
+  - #5229, Drop support for Proj < 6.1 and PG 11 (Regina Obe)
+  - #5306, GH734, postgis_full_version() and postgis_proj_version()
+    now output more information about proj network configuration
+    and data paths. GEOS compile-time version
+    also shown if different from run-time
+    (Paul Ramsey, Sandro Santilli)
+ - #5447, postgis_restore.pl renamed to postgis_restore
+ (Sandro Santilli)
+ - Utilities now installed in OS bin or
+   user specified --bindir and --prefix
+   instead of postgresql bin
+   and extension stripped except on windows
+   (postgis, postgis_restore, shp2pgsql, raster2pgsql, pgsql2shp,
+   pgtopo_import, pgtopo_export)
 
 PostGIS 3.3.0
 2022/08/26

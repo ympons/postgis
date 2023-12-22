@@ -82,7 +82,7 @@ BEGIN
       edgering AS (
         SELECT *
         FROM
-          GetRingEdges(
+          topology.GetRingEdges(
             %1$L,
             (SELECT ring_id FROM leftmost_edge)
           )
@@ -882,6 +882,7 @@ BEGIN
     )
     AND e.edge_id IS NULL
   LOOP --{
+    invalid_faces := array_append(invalid_faces, rec.id1);
     retrec.error = 'face without edges';
     retrec.id1 = rec.id1;
     retrec.id2 = NULL;

@@ -430,7 +430,7 @@ SELECT '#1273.1', st_equals(p.g, postgis_dropbbox(p.g)) from p;
 -- #1292
 SELECT '#1292', ST_AsText(ST_SnapToGrid(ST_GeomFromText(
 	'GEOMETRYCOLLECTION(POINT(180 90),POLYGON((140 50,150 50,180 50,140 50),(140 60,150 60,180 60,140 60)))'
-	, 4326), 0.00001)::geography);
+	, 4326), 0.00001)::geography, 3);
 
 -- #1292.1
 SELECT '#1292.1', ST_AsText(ST_GeomFromText('POINT(180.00000000001 95)')::geography),
@@ -1252,10 +1252,10 @@ SELECT '#4299', ST_Disjoint(ST_GeneratePoints(g, 1000), ST_GeneratePoints(g, 100
 FROM (SELECT 'POLYGON((0 0,1 0,1 1,0 1,0 0))'::geometry AS g) AS f;
 
 -- #4304
-SELECT '#4304', ST_Equals(ST_GeneratePoints(g, 1000, 12345), ST_GeneratePoints(g, 1000, 12345)),
-ST_Disjoint(ST_GeneratePoints(g, 1000, 12345), ST_GeneratePoints(g, 1000, 54321)),
-ST_Disjoint(ST_GeneratePoints(g, 1000, 12345), ST_GeneratePoints(g, 1000)),
-ST_Distance(ST_GeometryN(ST_GeneratePoints(g, 1000, 12345), 1000), 'POINT(0.801167838758 0.345281131175)'::geometry) < 1e-11
+SELECT '#4304',
+  ST_Equals(ST_GeneratePoints(g, 1000, 12345), ST_GeneratePoints(g, 1000, 12345)),
+  ST_Disjoint(ST_GeneratePoints(g, 1000, 12345), ST_GeneratePoints(g, 1000, 54321)),
+  ST_Disjoint(ST_GeneratePoints(g, 1000, 12345), ST_GeneratePoints(g, 1000))
 FROM (SELECT 'POLYGON((0 0,1 0,1 1,0 1,0 0))'::geometry AS g) AS f;
 
 -- #4331
@@ -1509,3 +1509,20 @@ SELECT '#5320', ST_SimplifyPreserveTopology('0106000020E864000001000000010300000
 
 DROP PROCEDURE IF EXISTS p_force_parellel_mode(text);
 SELECT '#5378', ST_SRID( ST_Buffer(ST_GeomFromText('POINT(-94 29.53)', 4269)::geography, 12)::geometry );
+
+SELECT '#5627' AS ticket, bool_and(ST_Intersects(
+    'MULTIPOINT(EMPTY,(-378 574))'::geometry,
+    geom))
+FROM (VALUES
+    ('MULTIPOLYGON(((-357 477,-392 574,-378 574,-357 477)))'::geometry),
+    ('MULTIPOLYGON(((-357 477,-392 574,-378 574,-357 477)))'::geometry))
+    AS geoms(geom);
+
+SELECT '#5604',
+ ST_Distance(a2, a1),
+ ST_AsText(ST_ClosestPoint(a2, a1)),
+ ST_Distance(a1, a2),
+ ST_AsText(ST_ClosestPoint(a1, a2))
+FROM
+ST_GeomFromText('MULTIPOINT((-2 0), EMPTY)') AS a1,
+ST_GeomFromText('MULTIPOINT((1 0),(0 0))') AS a2;

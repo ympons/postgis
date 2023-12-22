@@ -133,34 +133,6 @@ is_point(const GSERIALIZED* g)
 	return type == POINTTYPE || type == MULTIPOINTTYPE;
 }
 
-/* Utility function that checks a LWPOINT and a GSERIALIZED poly against a cache.
- * Serialized poly may be a multipart.
- */
-static int
-pip_short_circuit(RTREE_POLY_CACHE *poly_cache, LWPOINT *point, const GSERIALIZED *gpoly)
-{
-	int result;
-
-	if ( poly_cache && poly_cache->ringIndices )
-	{
-        result = point_in_multipolygon_rtree(poly_cache->ringIndices, poly_cache->polyCount, poly_cache->ringCounts, point);
-	}
-	else
-	{
-		LWGEOM* poly = lwgeom_from_gserialized(gpoly);
-		if ( lwgeom_get_type(poly) == POLYGONTYPE )
-		{
-			result = point_in_polygon(lwgeom_as_lwpoly(poly), point);
-		}
-		else
-		{
-			result = point_in_multipolygon(lwgeom_as_lwmpoly(poly), point);
-		}
-		lwgeom_free(poly);
-	}
-
-	return result;
-}
 
 /**
  *  @brief Compute the Hausdorff distance thanks to the corresponding GEOS function
@@ -271,15 +243,6 @@ Datum hausdorffdistancedensify(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(ST_FrechetDistance);
 Datum ST_FrechetDistance(PG_FUNCTION_ARGS)
 {
-#if POSTGIS_GEOS_VERSION < 30700
-
-	lwpgerror("The GEOS version this PostGIS binary "
-					"was compiled against (%d) doesn't support "
-					"'GEOSFechetDistance' function (3.7.0+ required)",
-					POSTGIS_GEOS_VERSION);
-	PG_RETURN_NULL();
-
-#else /* POSTGIS_GEOS_VERSION >= 30700 */
 	GSERIALIZED *geom1;
 	GSERIALIZED *geom2;
 	GEOSGeometry *g1;
@@ -326,17 +289,9 @@ Datum ST_FrechetDistance(PG_FUNCTION_ARGS)
 	PG_FREE_IF_COPY(geom2, 1);
 
 	PG_RETURN_FLOAT8(result);
-
-#endif /* POSTGIS_GEOS_VERSION >= 30700 */
 }
 
 
-/**
- *  @brief Compute the Frechet distance with optional densification thanks to the corresponding GEOS function
- *  @example ST_FrechetDistance {@link #frechetdistance} - SELECT ST_FrechetDistance(
- *      'LINESTRING (0 0, 50 200, 100 0, 150 200, 200 0)'::geometry,
- *      'LINESTRING (0 200, 200 150, 0 100, 200 50, 0 0)'::geometry, 0.5);
- */
 
 PG_FUNCTION_INFO_V1(ST_MaximumInscribedCircle);
 Datum ST_MaximumInscribedCircle(PG_FUNCTION_ARGS)
@@ -460,6 +415,136 @@ Datum ST_MaximumInscribedCircle(PG_FUNCTION_ARGS)
 
 #endif /* POSTGIS_GEOS_VERSION >= 30900 */
 }
+
+
+/* ST_LargestEmptyCircle(geom, boundary, tolerance) */
+PG_FUNCTION_INFO_V1(ST_LargestEmptyCircle);
+Datum ST_LargestEmptyCircle(PG_FUNCTION_ARGS)
+{
+#if POSTGIS_GEOS_VERSION < 30900
+
+	lwpgerror("The GEOS version this PostGIS binary "
+	          "was compiled against (%d) doesn't support "
+	          "'GEOSMaximumInscribedCircle' function (3.9.0+ required)",
+	          POSTGIS_GEOS_VERSION);
+	          PG_RETURN_NULL();
+
+#else /* POSTGIS_GEOS_VERSION >= 30900 */
+	GSERIALIZED* geom;
+	GSERIALIZED* boundary;
+	GSERIALIZED* center;
+	GSERIALIZED* nearest;
+	TupleDesc resultTupleDesc;
+	HeapTuple resultTuple;
+	Datum result;
+	Datum result_values[3];
+	bool result_is_null[3];
+	double radius = 0.0, tolerance = 0.0;
+	int32 srid = SRID_UNKNOWN;
+	bool is3d = false, hasBoundary = false;
+
+	if (PG_ARGISNULL(0))
+		PG_RETURN_NULL();
+
+	geom = PG_GETARG_GSERIALIZED_P(0);
+	tolerance = PG_GETARG_FLOAT8(1);
+	boundary = PG_GETARG_GSERIALIZED_P(2);
+	srid = gserialized_get_srid(geom);
+	is3d = gserialized_has_z(geom);
+
+	if (boundary && ! gserialized_is_empty(boundary))
+		hasBoundary = true;
+
+    /* Empty geometry?  Return POINT EMPTY with zero radius */
+	if (gserialized_is_empty(geom))
+	{
+		LWGEOM* lwcenter = (LWGEOM*) lwpoint_construct_empty(gserialized_get_srid(geom), LW_FALSE, LW_FALSE);
+		LWGEOM* lwnearest = (LWGEOM*) lwpoint_construct_empty(gserialized_get_srid(geom), LW_FALSE, LW_FALSE);
+		center = geometry_serialize(lwcenter);
+		nearest = geometry_serialize(lwnearest);
+		radius = 0.0;
+	}
+	else
+	{
+		GEOSGeometry *ginput, *gcircle, *gcenter, *gnearest;
+		GEOSGeometry *gboundary = NULL;
+		double width, height, size;
+		GBOX gbox;
+		LWGEOM *lwg;
+		lwg = lwgeom_from_gserialized(geom);
+		if (!lwgeom_isfinite(lwg))
+		{
+			lwpgerror("Geometry contains invalid coordinates");
+			PG_RETURN_NULL();
+		}
+		lwgeom_free(lwg);
+
+
+		if (!gserialized_get_gbox_p(geom, &gbox))
+			PG_RETURN_NULL();
+
+		if (tolerance <= 0)
+		{
+			width = gbox.xmax - gbox.xmin;
+			height = gbox.ymax - gbox.ymin;
+			size = width > height ? width : height;
+			tolerance = size / 1000.0;
+		}
+
+		initGEOS(lwpgnotice, lwgeom_geos_error);
+
+		ginput = POSTGIS2GEOS(geom);
+		if (!ginput)
+			HANDLE_GEOS_ERROR("Geometry could not be converted to GEOS");
+
+		if (hasBoundary)
+		{
+			gboundary = POSTGIS2GEOS(boundary);
+			if (!gboundary)
+				HANDLE_GEOS_ERROR("Boundary could not be converted to GEOS");
+		}
+
+		gcircle = GEOSLargestEmptyCircle(ginput, gboundary, tolerance);
+		if (!gcircle)
+		{
+			lwpgerror("Error calculating GEOSLargestEmptyCircle.");
+			GEOSGeom_destroy(ginput);
+			PG_RETURN_NULL();
+		}
+
+		gcenter = GEOSGeomGetStartPoint(gcircle);
+		gnearest = GEOSGeomGetEndPoint(gcircle);
+		GEOSDistance(gcenter, gnearest, &radius);
+		GEOSSetSRID(gcenter, srid);
+		GEOSSetSRID(gnearest, srid);
+
+		center = GEOS2POSTGIS(gcenter, is3d);
+		nearest = GEOS2POSTGIS(gnearest, is3d);
+		GEOSGeom_destroy(gcenter);
+		GEOSGeom_destroy(gnearest);
+		GEOSGeom_destroy(gcircle);
+		GEOSGeom_destroy(ginput);
+		if (gboundary) GEOSGeom_destroy(gboundary);
+	}
+
+	get_call_result_type(fcinfo, NULL, &resultTupleDesc);
+	BlessTupleDesc(resultTupleDesc);
+
+	result_values[0] = PointerGetDatum(center);
+	result_is_null[0] = false;
+	result_values[1] = PointerGetDatum(nearest);
+	result_is_null[1] = false;
+	result_values[2] = Float8GetDatum(radius);
+	result_is_null[2] = false;
+	resultTuple = heap_form_tuple(resultTupleDesc, result_values, result_is_null);
+
+	result = HeapTupleGetDatum(resultTuple);
+
+	PG_RETURN_DATUM(result);
+
+#endif /* POSTGIS_GEOS_VERSION >= 30900 */
+}
+
 
 
 /**
@@ -2745,19 +2830,23 @@ POSTGIS2GEOS(const GSERIALIZED *pglwgeom)
 	return ret;
 }
 
-uint32_t array_nelems_not_null(ArrayType* array) {
-    ArrayIterator iterator;
-    Datum value;
-    bool isnull;
-    uint32_t nelems_not_null = 0;
+static uint32_t
+array_nelems_not_null(ArrayType* array)
+{
+	ArrayIterator iterator;
+	Datum value;
+	bool isnull;
+	uint32_t nelems_not_null = 0;
 	iterator = array_create_iterator(array, 0, NULL);
-	while(array_iterate(iterator, &value, &isnull) )
-        if (!isnull)
-            nelems_not_null++;
+	while(array_iterate(iterator, &value, &isnull))
+	{
+		if (!isnull)
+			nelems_not_null++;
+	}
 
-    array_free_iterator(iterator);
+	array_free_iterator(iterator);
 
-    return nelems_not_null;
+	return nelems_not_null;
 }
 
 /* ARRAY2LWGEOM: Converts the non-null elements of a Postgres array into a LWGEOM* array */
@@ -3278,6 +3367,19 @@ Datum ST_Split(PG_FUNCTION_ARGS)
 
 	lwgeom_in = lwgeom_from_gserialized(in);
 	lwblade_in = lwgeom_from_gserialized(blade_in);
+
+	if (!lwgeom_isfinite(lwgeom_in))
+	{
+		lwpgerror("Input Geometry contains invalid coordinates");
+		PG_RETURN_NULL();
+	}
+
+	if (!lwgeom_isfinite(lwblade_in))
+	{
+		lwpgerror("Blade Geometry contains invalid coordinates");
+		PG_RETURN_NULL();
+	}
+
 
 	lwgeom_out = lwgeom_split(lwgeom_in, lwblade_in);
 	lwgeom_free(lwgeom_in);

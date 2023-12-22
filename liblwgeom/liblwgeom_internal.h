@@ -196,9 +196,9 @@ int lwpoint_is_empty(const LWPOINT *point);
 /*
 * Number of vertices?
 */
-uint32_t lwline_count_vertices(LWLINE *line);
-uint32_t lwpoly_count_vertices(LWPOLY *poly);
-uint32_t lwcollection_count_vertices(LWCOLLECTION *col);
+uint32_t lwline_count_vertices(const LWLINE *line);
+uint32_t lwpoly_count_vertices(const LWPOLY *poly);
+uint32_t lwcollection_count_vertices(const LWCOLLECTION *col);
 
 /*
 * DP simplification
@@ -252,6 +252,12 @@ void decode_geohash_bbox(char *geohash, double *lat, double *lon, int precision)
 int p4d_same(const POINT4D *p1, const POINT4D *p2);
 int p3d_same(const POINT3D *p1, const POINT3D *p2);
 int p2d_same(const POINT2D *p1, const POINT2D *p2);
+
+/*
+* Projections
+*/
+int project_pt(const POINT2D *P, double distance, double azimuth, POINT2D *R);
+int project_pt_pt(const POINT4D *A, const POINT4D *B, double distance, POINT4D *R);
 
 /*
 * Area calculations
@@ -356,7 +362,9 @@ int ptarray_isccw(const POINTARRAY *pa);
 /*
 * Same
 */
+char ptarray_same2d(const POINTARRAY *pa1, const POINTARRAY *pa2);
 char ptarray_same(const POINTARRAY *pa1, const POINTARRAY *pa2);
+char lwpoint_same2d(const LWPOINT *p1, const LWPOINT *p2);
 char lwpoint_same(const LWPOINT *p1, const LWPOINT *p2);
 char lwline_same(const LWLINE *p1, const LWLINE *p2);
 char lwpoly_same(const LWPOLY *p1, const LWPOLY *p2);

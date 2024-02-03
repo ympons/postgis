@@ -23,7 +23,6 @@
  **********************************************************************/
 
 #include "../postgis_config.h"
-/*#define POSTGIS_DEBUG_LEVEL 4*/
 
 #include "liblwgeom.h"
 #include "lwgeom_geos.h"
@@ -34,9 +33,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-
-/* #define PARANOIA_LEVEL 2 */
-#undef LWGEOM_PROFILE_MAKEVALID
 
 LWGEOM* lwcollection_make_geos_friendly(LWCOLLECTION* g);
 LWGEOM* lwline_make_geos_friendly(LWLINE* line);

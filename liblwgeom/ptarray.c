@@ -578,20 +578,8 @@ ptarray_removePoint(POINTARRAY *pa, uint32_t which)
 
 	LWDEBUGF(3, "pa %x which %d", pa, which);
 
-#if PARANOIA_LEVEL > 0
-	if ( which > pa->npoints-1 )
-	{
-		lwerror("%s [%d] offset (%d) out of range (%d..%d)", __FILE__, __LINE__,
-		        which, 0, pa->npoints-1);
-		return NULL;
-	}
-
-	if ( pa->npoints < 3 )
-	{
-		lwerror("%s [%d] can't remove a point from a 2-vertex POINTARRAY", __FILE__, __LINE__);
-		return NULL;
-	}
-#endif
+	assert(which <= pa->npoints-1);
+	assert(pa->npoints >= 3);
 
 	ret = ptarray_construct(FLAGS_GET_Z(pa->flags),
 	                        FLAGS_GET_M(pa->flags), pa->npoints-1);
@@ -746,8 +734,10 @@ ptarray_is_closed_z(const POINTARRAY *in)
 }
 
 /**
-* Return 1 if the point is inside the POINTARRAY, -1 if it is outside,
-* and 0 if it is on the boundary.
+* Return LW_INSIDE if the point is inside the POINTARRAY,
+* LW_OUTSIDE if it is outside, and LW_BOUNDARY if it is on
+* the boundary.
+* LW_INSIDE == 1, LW_BOUNDARY == 0, LW_OUTSIDE == -1
 */
 int
 ptarray_contains_point(const POINTARRAY *pa, const POINT2D *pt)
@@ -755,6 +745,12 @@ ptarray_contains_point(const POINTARRAY *pa, const POINT2D *pt)
 	return ptarray_contains_point_partial(pa, pt, LW_TRUE, NULL);
 }
 
+
+/*
+ * The following is based on the "Fast Winding Number Inclusion of a Point
+ * in a Polygon" algorithm by Dan Sunday.
+ * http://softsurfer.com/Archive/algorithm_0103/algorithm_0103.htm#Winding%20Number
+ */
 int
 ptarray_contains_point_partial(const POINTARRAY *pa, const POINT2D *pt, int check_closed, int *winding_number)
 {

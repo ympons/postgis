@@ -4,7 +4,7 @@
 # PostGIS - Spatial Types for PostgreSQL
 # http://postgis.net
 #
-# Copyright (C) 2012-2014 Sandro Santilli <strk@kbt.io>
+# Copyright (C) 2012-2024 Sandro Santilli <strk@kbt.io>
 # Copyright (C) 2014-2015 Regina Obe <lr@pcorp.us>
 # Copyright (C) 2012-2013 Paul Ramsey <pramsey@cleverelephant.ca>
 #
@@ -348,7 +348,24 @@ else
 	}
 }
 
+unless ( $OPT_NOCREATE )
+{
+    foreach my $hook (@OPT_HOOK_AFTER_CREATE)
+    {
+        print "Running after-create script $hook\n";
+        die unless load_sql_file($hook, 1);
+    }
+}
+
+
 my $libver = sql("select postgis_lib_version()");
+if ( ! $libver )
+{
+	`dropdb $DB`;
+	print "\nSomething went wrong (no PostGIS installed in $DB).\n";
+	print "For details, check $REGRESS_LOG\n\n";
+	exit(1);
+}
 
 sub compute_executor_slow_factor
 {
@@ -371,14 +388,6 @@ EOF
 }
 
 compute_executor_slow_factor;
-
-if ( ! $libver )
-{
-	`dropdb $DB`;
-	print "\nSomething went wrong (no PostGIS installed in $DB).\n";
-	print "For details, check $REGRESS_LOG\n\n";
-	exit(1);
-}
 
 sub staged_scripts_dir
 {
@@ -510,19 +519,15 @@ print "  PROJ: $projver\n" if $projver;
 print "  SFCGAL: $sfcgalver\n" if $sfcgalver;
 print "  GDAL: $gdalver\n" if $gdalver;
 
+# allow hook scripts to perform arbitrary reports via output of INFO strings
+system("grep INFO $REGRESS_LOG | sed 's/INFO://'");
+
 
 ##################################################################
 # Run the tests
 ##################################################################
 
 print "\nRunning tests\n\n";
-
-foreach my $hook (@OPT_HOOK_AFTER_CREATE)
-{
-	start_test("after-create-script $hook");
-	show_progress();
-	pass() if load_sql_file($hook, 1);
-}
 
 foreach $TEST (@ARGV)
 {
@@ -903,6 +908,7 @@ sub drop_table
 sub sql
 {
 	my $sql = shift;
+	# TODO: capture or discard stderr ?
 	my $result = `psql -qtXA -d $DB -c 'SET search_path TO public,$OPT_SCHEMA' -c "$sql" | sed '/^SET\$/d'`;
 	$result =~ s/[\n\r]*$//;
 	$result;
@@ -1571,34 +1577,47 @@ sub create_spatial
 
 sub load_sql_file
 {
-	my $file = shift;
-	my $strict = shift;
+    my $file = shift;
+    my $strict = shift;
+    my $werror = shift;
 
-	if ( -e $file )
-	{
-		# ON_ERROR_STOP is used by psql to return non-0 on an error
-		my $psql_opts = "--quiet --no-psqlrc --variable ON_ERROR_STOP=true";
-		my $cmd = "psql $psql_opts -c 'CREATE SCHEMA IF NOT EXISTS $OPT_SCHEMA' ";
-		$cmd .= "-c 'SET search_path TO $OPT_SCHEMA,topology'";
-		$cmd .= " -v \"opt_dumprestore=${OPT_DUMPRESTORE}\"";
-		$cmd .= " -v \"regdir=$REGDIR\"";
-		$cmd .= " -Xf $file $DB >> $REGRESS_LOG 2>&1";
-		#print "  $file\n" if $VERBOSE;
-		my $rv = system($cmd);
-		if ( $rv )
-		{
-		  fail "Error encountered loading $file", $REGRESS_LOG;
-		  #exit 1;
-			return 0;
-		}
-	}
-	elsif ( $strict )
-	{
-		fail "Unable to find $file";
-		return 0;
-	}
+    my $tmplog = ${REGRESS_LOG} . '.tmp';
 
-	return 1;
+    if ( -e $file )
+    {
+        # ON_ERROR_STOP is used by psql to return non-0 on an error
+        my $psql_opts = "--quiet --no-psqlrc --variable ON_ERROR_STOP=true";
+        my $cmd = "psql $psql_opts -c 'CREATE SCHEMA IF NOT EXISTS $OPT_SCHEMA' ";
+        $cmd .= "-c 'SET search_path TO $OPT_SCHEMA,topology'";
+        $cmd .= " -v \"opt_dumprestore=${OPT_DUMPRESTORE}\"";
+        $cmd .= " -v \"regdir=$REGDIR\"";
+        $cmd .= " -Xf $file $DB > $tmplog 2>&1";
+        #print "  $file\n" if $VERBOSE;
+        my $rv = system($cmd);
+        if ( $rv )
+        {
+            fail "Error encountered loading $file", $tmplog;
+            return 0;
+        }
+
+        if ( $werror )
+        {
+            if ( system("grep -A3 WARNING $tmplog") == 0 )
+            {
+                fail "Warnings encountered loading $file", $tmplog;
+                return 0;
+            }
+        }
+
+        system("cat $tmplog >> $REGRESS_LOG");
+    }
+    elsif ( $strict )
+    {
+        fail "Unable to find $file";
+        return 0;
+    }
+
+    return 1;
 }
 
 # Prepare the database for spatial operations (extension method)
@@ -1729,40 +1748,39 @@ sub prepare_spatial_extensions
 sub prepare_spatial
 {
 	my $version = shift;
+	my $werror = defined ($version) ? 0 : 1; # threat warnings as errors
 	my $scriptdir = scriptdir($version);
-	print "Loading unpackaged components from $scriptdir\n";
-
-	print "Loading PostGIS into '${DB}' \n";
+	print "Loading PostGIS in '${DB} using scripts from $scriptdir'\n";
 
 	# Load postgis.sql into the database
-	return 0 unless load_sql_file("${scriptdir}/postgis.sql", 1);
-	return 0 unless load_sql_file("${scriptdir}/postgis_comments.sql", 0);
-	return 0 unless load_sql_file("${scriptdir}/spatial_ref_sys.sql", 0);
+	return 0 unless load_sql_file("${scriptdir}/postgis.sql", 1, $werror);
+	return 0 unless load_sql_file("${scriptdir}/postgis_comments.sql", 0, $werror);
+	return 0 unless load_sql_file("${scriptdir}/spatial_ref_sys.sql", 0, $werror);
 	if ( $OPT_LEGACY )
 	{
 		print "Loading legacy.sql from $scriptdir\n";
-		return 0 unless load_sql_file("${scriptdir}/legacy.sql", 0);
+		return 0 unless load_sql_file("${scriptdir}/legacy.sql", 0, $werror);
 	}
 
 	if ( $OPT_WITH_TOPO )
 	{
 		print "Loading Topology into '${DB}'\n";
-		return 0 unless load_sql_file("${scriptdir}/topology.sql", 1);
-		return 0 unless load_sql_file("${scriptdir}/topology_comments.sql", 0);
+		return 0 unless load_sql_file("${scriptdir}/topology.sql", 1, $werror);
+		return 0 unless load_sql_file("${scriptdir}/topology_comments.sql", 0, $werror);
 	}
 
 	if ( $OPT_WITH_RASTER )
 	{
 		print "Loading Raster into '${DB}'\n";
-		return 0 unless load_sql_file("${scriptdir}/rtpostgis.sql", 1);
-		return 0 unless load_sql_file("${scriptdir}/raster_comments.sql", 0);
+		return 0 unless load_sql_file("${scriptdir}/rtpostgis.sql", 1, $werror);
+		return 0 unless load_sql_file("${scriptdir}/raster_comments.sql", 0, $werror);
 	}
 
 	if ( $OPT_WITH_SFCGAL )
 	{
 		print "Loading SFCGAL into '${DB}'\n";
-		return 0 unless load_sql_file("${scriptdir}/sfcgal.sql", 1);
-		return 0 unless load_sql_file("${scriptdir}/sfcgal_comments.sql", 0);
+		return 0 unless load_sql_file("${scriptdir}/sfcgal.sql", 1, $werror);
+		return 0 unless load_sql_file("${scriptdir}/sfcgal_comments.sql", 0, $werror);
 	}
 
 	return 1;

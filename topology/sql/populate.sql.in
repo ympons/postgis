@@ -3,7 +3,7 @@
 -- PostGIS - Spatial Types for PostgreSQL
 -- http://postgis.net
 --
--- Copyright (C) 2010-2012 Sandro Santilli <strk@kbt.io>
+-- Copyright (C) 2010-2024 Sandro Santilli <strk@kbt.io>
 --
 -- This is free software; you can redistribute and/or modify it under
 -- the terms of the GNU General Public Licence. See the COPYING file.
@@ -703,7 +703,7 @@ CREATE OR REPLACE FUNCTION topology.TopoGeo_AddPoint(atopology varchar, apoint g
 --  Add a LineString into a topology
 --
 -- }{
-CREATE OR REPLACE FUNCTION topology.TopoGeo_addLinestring(atopology varchar, aline geometry, tolerance float8 DEFAULT 0)
+CREATE OR REPLACE FUNCTION topology.TopoGeo_AddLinestring(atopology varchar, aline geometry, tolerance float8 DEFAULT 0)
 	RETURNS SETOF int AS
 	'MODULE_PATHNAME', 'TopoGeo_AddLinestring'
   LANGUAGE 'c' VOLATILE;
@@ -722,6 +722,19 @@ CREATE OR REPLACE FUNCTION topology.TopoGeo_AddPolygon(atopology varchar, apoly 
 --} TopoGeo_AddPolygon
 
 --{
+--  TopoGeo_LoadGeometry(toponame, geom, tolerance)
+--
+--  Load a Geometry into a topology
+--
+-- Availability: 3.5.0
+--
+CREATE OR REPLACE FUNCTION topology.TopoGeo_LoadGeometry(atopology varchar, ageom geometry, tolerance float8 DEFAULT 0)
+	RETURNS void AS
+	'MODULE_PATHNAME', 'TopoGeo_LoadGeometry'
+  LANGUAGE 'c' VOLATILE;
+--} TopoGeo_LoadGeometry
+
+--{
 --  TopoGeo_AddGeometry(toponame, geom, tolerance)
 --
 --  Add a Geometry into a topology
@@ -731,8 +744,21 @@ CREATE OR REPLACE FUNCTION topology.TopoGeo_AddGeometry(atopology varchar, ageom
 $$
 DECLARE
 BEGIN
-	RAISE EXCEPTION 'TopoGeo_AddGeometry not implemented yet';
+	RAISE EXCEPTION 'TopoGeo_AddGeometry not implemented yet, use TopoGeo_LoadGeometry';
 END
 $$
 LANGUAGE 'plpgsql';
 --} TopoGeo_AddGeometry
+
+
+-- Internal function used by ST_CreateTopoGeo
+CREATE OR REPLACE FUNCTION topology._TopoGeo_AddLinestringNoFace(atopology varchar, aline geometry, tolerance float8 DEFAULT 0)
+	RETURNS void AS
+	'MODULE_PATHNAME', 'TopoGeo_AddLinestringNoFace'
+  LANGUAGE 'c' VOLATILE STRICT;
+
+-- Internal function used by ST_CreateTopoGeo
+CREATE OR REPLACE FUNCTION topology._RegisterMissingFaces(atopology varchar)
+	RETURNS void AS
+	'MODULE_PATHNAME', 'RegisterMissingFaces'
+  LANGUAGE 'c' VOLATILE;

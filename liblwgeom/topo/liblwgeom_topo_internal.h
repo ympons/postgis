@@ -31,11 +31,37 @@
 #include "liblwgeom.h"
 #include "liblwgeom_topo.h"
 
+#include <stdio.h>
+#include <inttypes.h> /* for PRId64 */
+#include <math.h>
+
+#ifdef WIN32
+# define LWTFMT_ELEMID "lld"
+#else
+# define LWTFMT_ELEMID PRId64
+#endif
+
+
 /************************************************************************
  *
  * Generic SQL handler
  *
  ************************************************************************/
+
+/*
+ * Use in backend implementation to print error from backend
+ */
+
+#define PGTOPO_BE_ERROR() lwerror(\
+	"[%s:%s:%d] Backend error: %s", \
+	__FILE__, __func__, __LINE__, \
+	lwt_be_lastErrorMessage(topo->be_iface))
+
+#define PGTOPO_BE_ERRORF(msg, ...) lwerror(\
+	"[%s:%s:%d] Backend error (" msg "): %s", \
+	__FILE__, __func__, __LINE__, \
+	lwt_be_lastErrorMessage(topo->be_iface), \
+	__VA_ARGS__ )
 
 struct LWT_BE_IFACE_T
 {
@@ -50,7 +76,7 @@ LWT_BE_TOPOLOGY * lwt_be_loadTopologyByName(LWT_BE_IFACE *be, const char *name);
 int lwt_be_freeTopology(LWT_TOPOLOGY *topo);
 
 LWT_ISO_NODE *lwt_be_getNodeWithinDistance2D(LWT_TOPOLOGY *topo,
-					     LWPOINT *pt,
+					     const LWPOINT *pt,
 					     double dist,
 					     uint64_t *numelems,
 					     int fields,
@@ -58,10 +84,18 @@ LWT_ISO_NODE *lwt_be_getNodeWithinDistance2D(LWT_TOPOLOGY *topo,
 
 LWT_ISO_NODE *lwt_be_getNodeById(LWT_TOPOLOGY *topo, const LWT_ELEMID *ids, uint64_t *numelems, int fields);
 
-int lwt_be_ExistsCoincidentNode(LWT_TOPOLOGY* topo, LWPOINT* pt);
+LWT_ISO_EDGE *lwt_be_getEdgeWithinBox2D(const LWT_TOPOLOGY *topo, const GBOX *box, uint64_t *numelems, int fields, uint64_t limit);
+LWT_ISO_FACE *lwt_be_getFaceWithinBox2D(const LWT_TOPOLOGY *topo, const GBOX *box, uint64_t *numelems, int fields, uint64_t limit);
+
+void _lwt_release_faces(LWT_ISO_FACE *faces, int num_faces);
+void _lwt_release_edges(LWT_ISO_EDGE *edges, int num_edges);
+int lwt_be_updateEdgesById(LWT_TOPOLOGY* topo, const LWT_ISO_EDGE* edges, int numedges, int upd_fields);
+int lwt_be_insertFaces(LWT_TOPOLOGY *topo, LWT_ISO_FACE *face, uint64_t numelems);
+
+int lwt_be_ExistsCoincidentNode(LWT_TOPOLOGY* topo, const LWPOINT* pt);
 int lwt_be_insertNodes(LWT_TOPOLOGY *topo, LWT_ISO_NODE *node, uint64_t numelems);
 
-int lwt_be_ExistsEdgeIntersectingPoint(LWT_TOPOLOGY* topo, LWPOINT* pt);
+int lwt_be_ExistsEdgeIntersectingPoint(LWT_TOPOLOGY* topo, const LWPOINT* pt);
 
 LWT_ELEMID lwt_be_getNextEdgeId(LWT_TOPOLOGY* topo);
 LWT_ISO_EDGE *lwt_be_getEdgeById(LWT_TOPOLOGY *topo, const LWT_ELEMID *ids, uint64_t *numelems, int fields);

@@ -46,6 +46,7 @@ TESTS += \
 	$(top_srcdir)/topology/test/regress/legacy_query.sql \
 	$(top_srcdir)/topology/test/regress/legacy_validate.sql \
 	$(top_srcdir)/topology/test/regress/polygonize.sql \
+	$(top_srcdir)/topology/test/regress/populate_topology_layer.sql \
 	$(top_srcdir)/topology/test/regress/removeunusedprimitives.sql \
 	$(top_srcdir)/topology/test/regress/renametopology.sql \
 	$(top_srcdir)/topology/test/regress/renametopogeometrycolumn.sql \
@@ -74,6 +75,7 @@ TESTS += \
 	$(top_srcdir)/topology/test/regress/topogeo_addlinestring.sql \
 	$(top_srcdir)/topology/test/regress/topogeo_addpoint.sql \
 	$(top_srcdir)/topology/test/regress/topogeo_addpolygon.sql \
+	$(top_srcdir)/topology/test/regress/topogeo_loadgeometry.sql \
 	$(top_srcdir)/topology/test/regress/topogeom_addtopogeom.sql \
 	$(top_srcdir)/topology/test/regress/topogeom_edit.sql \
 	$(top_srcdir)/topology/test/regress/topogeometry_srid.sql \
@@ -82,4 +84,5 @@ TESTS += \
 	$(top_srcdir)/topology/test/regress/topologysummary.sql \
 	$(top_srcdir)/topology/test/regress/totopogeom.sql \
 	$(top_srcdir)/topology/test/regress/validatetopology.sql \
+	$(top_srcdir)/topology/test/regress/validatetopologyrelation.sql \
 	$(top_srcdir)/topology/test/regress/topoelement_cast.sql

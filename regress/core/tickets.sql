@@ -1539,3 +1539,19 @@ FROM (VALUES
 ) AS t(id, a, b, r);
 
 SELECT '#5597', ST_AsGeoJSON(r.*) from (values (null::geometry)) as r(geom);
+
+SELECT '#5677',
+ st_asewkt(st_normalize(
+   st_union(
+     array[
+       st_geomfromtext(
+         'GEOMETRYCOLLECTION(
+           POLYGON((0 0,10 0,25 25,0 10,0 0)),
+           POLYGON((20 20,30 20,30 30,20 30,20 20))
+         )'
+       )
+     ]
+   ))
+ );
+
+SELECT '#5686', ST_NumInteriorRings('TRIANGLE (( -71.0821 42.3036, -71.0821 42.3936, -71.0901 42.3036, -71.0821 42.3036))'::geometry);

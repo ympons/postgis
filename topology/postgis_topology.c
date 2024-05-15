@@ -2137,8 +2137,14 @@ cb_getNextEdgeId( const LWT_BE_TOPOLOGY* topo )
   LWT_ELEMID edge_id;
 
   initStringInfo(sql);
-  appendStringInfo(sql, "SELECT nextval('\"%s\".edge_data_edge_id_seq')",
-                   topo->name);
+  appendStringInfo(sql, "SELECT nextval("
+       "SUBSTRING(column_default, "
+       "POSITION('(' IN column_default)+2, "
+       "(POSITION(':' IN column_default)-POSITION('(' IN column_default)-3))"
+       ") "
+       "FROM information_schema.columns "
+       "WHERE table_schema = '%s' AND table_name='edge_data' AND column_name = 'edge_id' \n",
+      topo->name);
   spi_result = SPI_execute(sql->data, false, 0);
   MemoryContextSwitchTo( oldcontext ); /* switch back */
   if ( spi_result != SPI_OK_SELECT )
@@ -5627,12 +5633,17 @@ Datum TopoGeo_LoadGeometry(PG_FUNCTION_ARGS)
   LWGEOM *lwgeom;
   LWT_TOPOLOGY *topo;
 
+  if ( PG_ARGISNULL(0) || PG_ARGISNULL(1) )
+  {
+    lwpgerror("SQL/MM Spatial exception - null argument");
+    PG_RETURN_NULL();
+  }
+
   toponame_text = PG_GETARG_TEXT_P(0);
   toponame = text_to_cstring(toponame_text);
   PG_FREE_IF_COPY(toponame_text, 0);
 
   geom = PG_GETARG_GSERIALIZED_P(1);
-  lwgeom = lwgeom_from_gserialized(geom);
 
   tol = PG_GETARG_FLOAT8(2);
   if ( tol < 0 )
@@ -5657,10 +5668,16 @@ Datum TopoGeo_LoadGeometry(PG_FUNCTION_ARGS)
     PG_RETURN_NULL();
   }
 
-  POSTGIS_DEBUG(1, "Calling lwt_LoadGeometry");
-  lwt_LoadGeometry(topo, lwgeom, tol);
-  POSTGIS_DEBUG(1, "lwt_LoadGeometry returned");
-  lwgeom_free(lwgeom);
+  /* Nothing to do if the input is empty */
+  if (gserialized_is_empty(geom) != LW_TRUE)
+  {
+    lwgeom = lwgeom_from_gserialized(geom);
+    POSTGIS_DEBUG(1, "Calling lwt_LoadGeometry");
+    lwt_LoadGeometry(topo, lwgeom, tol);
+    POSTGIS_DEBUG(1, "lwt_LoadGeometry returned");
+    lwgeom_free(lwgeom);
+  }
+
   PG_FREE_IF_COPY(geom, 1);
   lwt_FreeTopology(topo);
 

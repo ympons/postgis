@@ -3,6 +3,12 @@ xxxx/xx/xx
 
 To take advantage of all SFCGAL featurs, SFCGAL 1.5.0+ is needed.
 
+Many thanks to our translation teams, in particular:
+
+Dapeng Wang, Zuo Chenwei from HighGo (Chinese Team)
+Teramoto Ikuhiro (Japanese Team)
+Andreas Schild (German Team)
+
 * Breaking Changes *
 
   - #5546, TopoGeometry <> TopoGeometry is now ambiguous, to get
@@ -29,6 +35,7 @@ To take advantage of all SFCGAL featurs, SFCGAL 1.5.0+ is needed.
            rebuilding of materialized views that use them (Regina Obe)
   - #5659, ST_DFullyWithin behaviour has changed to
            be ST_Contains(ST_Buffer(A, R), B) (Paul Ramsey)
+  - Remove the WFS_locks extra package. (Paul Ramsey)
 
 * Deprecated signatures *
   - GH-761, ST_StraightSkeleton => CG_StraightSkeleton (Loïc Bartoletti)
@@ -37,6 +44,7 @@ To take advantage of all SFCGAL featurs, SFCGAL 1.5.0+ is needed.
 
 * New Features *
 
+  - #5721, Allow sharing sequences between different topologies (Lars Opsahl)
   - #5667, TopoGeo_LoadGeometry (Sandro Santilli)
   - #5055, add explicit <> geometry operator to prevent non-unique
            error with <> and != (Paul Ramsey)

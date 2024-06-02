@@ -60,7 +60,15 @@ echo "Removing make_dist.sh and HOWTO_RELEASE"
 rm -fv "$outdir"/make_dist.sh "$outdir"/HOWTO_RELEASE
 
 echo "Removing ci files"
-rm -rfv "$outdir"/ci "$outdir"/.gitlab-ci.yml "$outdir"/.github "$outdir"/.dron*.yml "$outdir"/.cirrus.yml "$outdir"/.clang-format
+rm -rfv \
+  "$outdir"/ci \
+  "$outdir"/.cirrus.yml \
+  "$outdir"/.clang-format \
+  "$outdir"/.dron*.yml \
+  "$outdir"/.github \
+  "$outdir"/.gitlab-ci.yml \
+  "$outdir"/utils/check_releases_md5.sh \
+  "$outdir"/.woodpecker
 
 # generating configure script and configuring
 echo "Running autogen.sh"
@@ -128,6 +136,9 @@ if test "x$package" = "x"; then
 fi
 echo "Generating $package file"
 tar czf "$package" "$outdir" || exit 1
+
+echo "Generating ${package}.md5 file"
+md5sum "${package}" > ${package}.md5
 
 #echo "Cleaning up"
 #rm -Rf "$outdir"

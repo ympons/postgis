@@ -121,7 +121,7 @@ Release procedure
   - If debbie job succeeds:
 
     - Download tar ball from http://postgis.net/stuff/
-      $ wget debbie.postgis.net:/var/www/postgis_stuff/postgis-${rev}.tar.gz .
+      $ wget http://postgis.net/stuff/postgis-${rev}.tar.gz .
 
     - Test generated tarball (including extension upgrade)
 
@@ -138,7 +138,6 @@ Release procedure
       $ sh make_dist.sh $rev
 
     - Upload md5 file to https://postgis.net/stuff:
-      $ md5sum postgis-${rev}.tar.gz > postgis-${rev}.tar.gz.md5
       $ scp postgis-${rev}.tar.gz.md5 debbie.postgis.net:/var/www/postgis_stuff
 
     - Create the pdf and epub files:
@@ -173,7 +172,7 @@ Release procedure
 
 6. Spread the word
 
-  - Announce on e-mail
+  - Announce on e-mail, including MD5 checksum in the body of the email
     - postgis-users@lists.osgeo.org
     - postgis-devel@lists.osgeo.org
     - discuss@lists.osgeo.org

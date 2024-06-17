@@ -50,6 +50,7 @@ Andreas Schild (German Team)
       - command upgrade upgrades all databases that need to be
       - command status reports status of all databases
     (Sandro Santilli)
+  - #5742, expose version of PROJ at compile time (Sandro Santilli)
   - #5721, Allow sharing sequences between different topologies (Lars Opsahl)
   - #5667, TopoGeo_LoadGeometry (Sandro Santilli)
   - #5055, add explicit <> geometry operator to prevent non-unique
@@ -66,6 +67,8 @@ Andreas Schild (German Team)
             CG_3DDistance, CG_Distance (Loïc Bartoletti)
   - #5687, Don't rely on search_path to determine postgis schema
            Fix for PG17 security change (Regina Obe)
+  - #5705, GH-767, ST_RemoveIrrelevantPointsForView  (Sam Peters)
+  - #5706, GH-768, ST_RemoveSmallParts (Sam Peters)
 
 * Enhancements *
 

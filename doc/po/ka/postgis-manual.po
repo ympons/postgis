@@ -1,32 +1,30 @@
-# Polish translations for postgis package.
-# Automatically generated, 2023.
-#
+# SOME DESCRIPTIVE TITLE.
+# Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: postgis 3.5\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
 "POT-Creation-Date: 2024-06-27 05:26+0000\n"
-"PO-Revision-Date: 2023-09-22 19:23+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
-"Language-Team: Polish <https://weblate.osgeo.org/projects/postgis/postgis-"
-"manual/pl/>\n"
-"Language: pl\n"
+"PO-Revision-Date: 2024-06-29 07:45+0000\n"
+"Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
+"Language-Team: Georgian <https://weblate.osgeo.org/projects/postgis/"
+"postgis-manual/ka/>\n"
+"Language: ka\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
-"|| n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 5.0\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.4.3\n"
 
 #. Tag: chapter
 #, no-c-format
 msgid "&database_tuning;"
-msgstr ""
+msgstr "&database_tuning;"
 
 #. Tag: title
 #, no-c-format
 msgid "PostGIS Administration"
-msgstr ""
+msgstr "postGIS-ის ადმინისტრაცია"
 
 #. Tag: title
 #, no-c-format
@@ -545,7 +543,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Performance Tuning"
-msgstr ""
+msgstr "წარმადობის მორგება"
 
 #. Tag: para
 #, no-c-format
@@ -582,7 +580,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Startup"
-msgstr ""
+msgstr "გაშვება"
 
 #. Tag: para
 #, no-c-format
@@ -590,7 +588,7 @@ msgid "These settings are configured in <code>postgresql.conf</code>:"
 msgstr ""
 
 #. Tag: link
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "constraint_exclusion"
 msgstr "constraint_exclusion"
 
@@ -611,7 +609,7 @@ msgstr ""
 #. Tag: link
 #, no-c-format
 msgid "shared_buffers"
-msgstr ""
+msgstr "shared_buffers"
 
 #. Tag: para
 #, no-c-format
@@ -650,7 +648,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Runtime"
-msgstr ""
+msgstr "გაშვების გარემო"
 
 #. Tag: para
 #, no-c-format
@@ -708,7 +706,7 @@ msgstr ""
 #. Tag: link
 #, no-c-format
 msgid "max_parallel_workers_per_gather"
-msgstr ""
+msgstr "max_parallel_workers_per_gather"
 
 #. Tag: para
 #, no-c-format
@@ -825,7 +823,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Country code"
-msgstr ""
+msgstr "ქვეყნის კოდი"
 
 #. Tag: para
 #, no-c-format
@@ -837,7 +835,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Postcode/zipcode"
-msgstr ""
+msgstr "საფოსტო კოდი/ZIP კოდი"
 
 #. Tag: para
 #, no-c-format
@@ -850,7 +848,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "State/province"
-msgstr ""
+msgstr "შტატი/პროვინცია"
 
 #. Tag: para
 #, no-c-format
@@ -883,7 +881,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Description"
-msgstr "Opis"
+msgstr "აღწერა"
 
 #. Tag: para
 #, no-c-format
@@ -904,7 +902,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&address_standardizer_required;"
-msgstr ""
+msgstr "&address_standardizer_required;"
 
 #. Tag: para
 #, no-c-format
@@ -1583,7 +1581,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Examples"
-msgstr "Przykłady"
+msgstr "მაგალითები"
 
 #. Tag: para
 #, no-c-format
@@ -1605,7 +1603,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "See Also"
-msgstr "Zobacz także"
+msgstr "ასევე იხილეთ"
 
 #. Tag: para
 #, no-c-format
@@ -1632,7 +1630,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 2.2.0"
-msgstr "Dostępność: 2.0.0"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -1792,7 +1790,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 1.5.0"
-msgstr "Dostępność: 1.5.0"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -1928,7 +1926,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Design:"
-msgstr ""
+msgstr "დიზაინი:"
 
 #. Tag: para
 #, no-c-format
@@ -2036,7 +2034,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 2.0.0"
-msgstr "Dostępność: 2.0.0"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -2293,7 +2291,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&gt;"
-msgstr ""
+msgstr "&gt;"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -3075,7 +3073,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Topology"
-msgstr "Topologia"
+msgstr "ტოპოლოგია"
 
 #. Tag: para
 #, no-c-format
@@ -3129,9 +3127,6 @@ msgid ""
 "Details of this project can be found at <link xlink:href=\"http://trac.osgeo."
 "org/postgis/wiki/UsersWikiPostgisTopology\">PostGIS Topology Wiki</link>"
 msgstr ""
-"Szczegóły tego projektu można znaleźć pod adresem <link xlink:href=\"http://"
-"trac.osgeo.org/postgis/wiki/UsersWikiPostgisTopology\">PostGIS Topology "
-"Wiki</link>"
 
 #. Tag: para
 #, no-c-format
@@ -3257,7 +3252,7 @@ msgstr ""
 #. Tag: entry
 #, no-c-format
 msgid "Behavior"
-msgstr ""
+msgstr "ქცევა"
 
 #. Tag: entry
 #, no-c-format
@@ -3267,7 +3262,7 @@ msgstr "geometry"
 #. Tag: entry
 #, no-c-format
 msgid "automatic"
-msgstr ""
+msgstr "ავტომატური"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -3367,9 +3362,9 @@ msgid ""
 msgstr ""
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "An array of TopoElement objects."
-msgstr "Tablica obiektów TopoElement"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -3384,8 +3379,6 @@ msgid ""
 ", <xref linkend=\"GetTopoGeomElementArray\"/>, <xref "
 "linkend=\"TopoElementArray_Agg\"/>"
 msgstr ""
-", <xref linkend=\"GetTopoGeomElementArray\"/>, <xref "
-"linkend=\"TopoElementArray_Agg\"/>"
 
 #. Tag: title
 #, no-c-format
@@ -3452,13 +3445,11 @@ msgid "Availability: 1.1"
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"toTopoGeom\"/>, <xref linkend=\"CreateTopology\"/>, <xref "
 "linkend=\"CreateTopoGeom\"/>"
 msgstr ""
-", <xref linkend=\"DropTopology\"/>, <xref linkend=\"GetTopologyName\"/>, "
-"<xref linkend=\"GetTopologyID\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -3610,24 +3601,24 @@ msgid ""
 msgstr ""
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Error"
-msgstr "Błąd"
+msgstr "შეცდომა"
 
 #. Tag: entry
 #, no-c-format
 msgid "<entry>id1</entry>"
-msgstr ""
+msgstr "<entry>id1</entry>"
 
 #. Tag: entry
 #, no-c-format
 msgid "<entry>id2</entry>"
-msgstr ""
+msgstr "<entry>id2</entry>"
 
 #. Tag: entry
 #, no-c-format
 msgid "Meaning"
-msgstr ""
+msgstr "მნიშვნელობა"
 
 #. Tag: entry
 #, no-c-format
@@ -3969,7 +3960,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"Topology_Load_Tiger\"/>"
-msgstr ", <xref linkend=\"Topology_Load_Tiger\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -3984,9 +3975,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Availability: 3.2.0"
-msgstr "Dostępność: 2.0"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -4129,7 +4120,6 @@ msgstr ""
 msgid ""
 ", <xref linkend=\"ST_InitTopoGeo\"/>, <xref linkend=\"Topology_Load_Tiger\"/>"
 msgstr ""
-", <xref linkend=\"ST_InitTopoGeo\"/>, <xref linkend=\"Topology_Load_Tiger\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -4203,7 +4193,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 2.0"
-msgstr "Dostępność: 2.0"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -4378,8 +4368,6 @@ msgid ""
 ", <xref linkend=\"CreateTopology\"/>, <xref linkend=\"DropTopology\"/>, "
 "<xref linkend=\"ST_Intersects\"/>"
 msgstr ""
-", <xref linkend=\"CreateTopology\"/>, <xref linkend=\"DropTopology\"/>, "
-"<xref linkend=\"ST_Intersects\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -4433,7 +4421,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_IsSimple\"/>, <xref linkend=\"ST_Within\"/>"
-msgstr ", <xref linkend=\"ST_IsSimple\"/>, <xref linkend=\"ST_Within\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -4618,7 +4606,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 1.1.0"
-msgstr "Dostępność: 1.1.0"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -4663,8 +4651,6 @@ msgid ""
 ", <xref linkend=\"ST_ModEdgeHeal\"/>, <xref linkend=\"ST_NewEdgeHeal\"/>, "
 "<xref linkend=\"AddEdge\"/>"
 msgstr ""
-", <xref linkend=\"ST_ModEdgeHeal\"/>, <xref linkend=\"ST_NewEdgeHeal\"/>, "
-"<xref linkend=\"AddEdge\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -4904,12 +4890,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"AddFace\"/>, <xref linkend=\"GetNodeByPoint\"/>, <xref "
 "linkend=\"GetEdgeByPoint\"/>"
 msgstr ""
-", <xref linkend=\"GetNodeByPoint\"/>, <xref linkend=\"GetEdgeByPoint\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -4990,8 +4975,6 @@ msgid ""
 ", <xref linkend=\"DropTopology\"/>, <xref linkend=\"GetTopologyName\"/>, "
 "<xref linkend=\"GetTopologySRID\"/>"
 msgstr ""
-", <xref linkend=\"DropTopology\"/>, <xref linkend=\"GetTopologyName\"/>, "
-"<xref linkend=\"GetTopologySRID\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5013,8 +4996,6 @@ msgid ""
 ", <xref linkend=\"DropTopology\"/>, <xref linkend=\"GetTopologyName\"/>, "
 "<xref linkend=\"GetTopologyID\"/>"
 msgstr ""
-", <xref linkend=\"DropTopology\"/>, <xref linkend=\"GetTopologyName\"/>, "
-"<xref linkend=\"GetTopologyID\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5034,8 +5015,6 @@ msgid ""
 ", <xref linkend=\"DropTopology\"/>, <xref linkend=\"GetTopologyID\"/>, <xref "
 "linkend=\"GetTopologySRID\"/>"
 msgstr ""
-", <xref linkend=\"DropTopology\"/>, <xref linkend=\"GetTopologyID\"/>, <xref "
-"linkend=\"GetTopologySRID\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5067,7 +5046,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"AddFace\"/>, <xref linkend=\"ST_GetFaceGeometry\"/>"
-msgstr ", <xref linkend=\"AddFace\"/>, <xref linkend=\"ST_GetFaceGeometry\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5126,7 +5105,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"GetNodeEdges\"/>"
-msgstr ", <xref linkend=\"GetNodeEdges\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5151,9 +5130,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"GetRingEdges\"/>, <xref linkend=\"ST_Azimuth\"/>"
-msgstr ", <xref linkend=\"ST_IsSimple\"/>, <xref linkend=\"ST_Within\"/>"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -5199,7 +5178,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_Polygonize\"/>"
-msgstr ", <xref linkend=\"ST_Polygonize\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5242,7 +5221,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"CreateTopology\"/>"
-msgstr ", <xref linkend=\"CreateTopology\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5290,7 +5269,6 @@ msgstr ""
 msgid ""
 ", <xref linkend=\"CreateTopology\"/>, <xref linkend=\"spatial_ref_sys\"/>"
 msgstr ""
-", <xref linkend=\"CreateTopology\"/>, <xref linkend=\"spatial_ref_sys\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5495,9 +5473,6 @@ msgid ""
 "linkend=\"ST_GetFaceGeometry\"/>, <xref linkend=\"topoelementarray\"/>, "
 "<xref linkend=\"TopoElementArray_Agg\"/>"
 msgstr ""
-", <xref linkend=\"toTopoGeom\"/> <xref linkend=\"ST_CreateTopoGeo\"/>, <xref "
-"linkend=\"ST_GetFaceGeometry\"/>, <xref linkend=\"topoelementarray\"/>, "
-"<xref linkend=\"TopoElementArray_Agg\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5584,7 +5559,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"topoelementarray\"/>"
-msgstr ", <xref linkend=\"topoelementarray\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5654,7 +5629,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"CreateTopoGeom\"/>"
-msgstr ", <xref linkend=\"CreateTopoGeom\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5691,14 +5666,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Availability: 3.2"
-msgstr "Dostępność: 1.?"
+msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"clearTopoGeom\"/>, <xref linkend=\"CreateTopoGeom\"/>"
-msgstr ", <xref linkend=\"CreateTopology\"/>, <xref linkend=\"DropTopology\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -5706,9 +5681,9 @@ msgid "Adds a geometry shape to an existing topo geometry."
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Refer to <xref linkend=\"toTopoGeom\"/>."
-msgstr ", <xref linkend=\"CreateTopoGeom\"/>"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -5858,7 +5833,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_CreateTopoGeo\"/>"
-msgstr ", <xref linkend=\"ST_CreateTopoGeo\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -6124,7 +6099,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Short Version"
-msgstr ""
+msgstr "მოკლე ვერსია"
 
 #. Tag: para
 #, no-c-format
@@ -6270,9 +6245,9 @@ msgid "PostGIS has the following requirements for building and usage:"
 msgstr ""
 
 #. Tag: emphasis
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Required"
-msgstr "Podstawa"
+msgstr "საჭირო"
 
 #. Tag: para
 #, no-c-format
@@ -6363,9 +6338,9 @@ msgid ""
 msgstr ""
 
 #. Tag: emphasis
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Optional"
-msgstr "Opcje"
+msgstr "არასავალდებულო"
 
 #. Tag: para
 #, no-c-format
@@ -6663,7 +6638,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Building"
-msgstr ""
+msgstr "აგება"
 
 #. Tag: para
 #, no-c-format
@@ -6862,7 +6837,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Testing"
-msgstr ""
+msgstr "ტესტირება"
 
 #. Tag: para
 #, no-c-format
@@ -6939,7 +6914,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Installation"
-msgstr ""
+msgstr "დაყენება"
 
 #. Tag: para
 #, no-c-format
@@ -7513,7 +7488,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Introduction"
-msgstr "Wprowadzenie"
+msgstr "შესავალი"
 
 #. Tag: para
 #, no-c-format
@@ -7546,7 +7521,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Project Steering Committee"
-msgstr "Komitet Wykonawczy Projektu"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7558,17 +7533,6 @@ msgid ""
 "miscellaneous issues involving PostGIS such as developer commit access, new "
 "PSC members or significant API changes."
 msgstr ""
-"W ramach projektu PostGIS, komitet wykonawczy (Project Steering Committee, "
-"PSC) koordynuje generalny kierunek prac, cykl kolejnych wydań nowych wersji "
-"oprogramowania, tworzenie dokumentacji, oraz adresuje potrzeby społeczności "
-"skupionej wokół projektu PostGIS.\n"
-"Dodatkowo, komitet przyjmuje, akceptuje i zatwierdza wszelkie zmiany "
-"zgłaszane do projektu przez ogół użytkowników i programistów "
-"zainteresowanych PostGIS. Komitet również przeprowadza głosowania nad "
-"istotnymi decyzjami, takimi jak nadanie nowemu programiście praw zapisu do "
-"repozytorium kodu źródłowego, zgłoszenie nowego członka do komitetu "
-"wykonawczego lub istotnych zmian w interfejsie programowania aplikacji "
-"(Application Programming Interface, API)."
 
 #. Tag: term
 #, no-c-format
@@ -7585,7 +7549,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Regina Obe"
-msgstr "Regina Obe"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7610,7 +7574,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Paul Ramsey (Chair)"
-msgstr "Paul Ramsey (Lider)"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7625,7 +7589,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Sandro Santilli"
-msgstr "Sandro Santilli"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7643,7 +7607,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Nicklas Avén"
-msgstr "Nicklas Avén"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7715,7 +7679,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Bborie Park"
-msgstr "Bborie Park"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7728,7 +7692,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Mark Cave-Ayland"
-msgstr "Mark Cave-Ayland"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7741,7 +7705,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Jorge Arévalo"
-msgstr "Jorge Arévalo"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7751,7 +7715,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Olivier Courtin"
-msgstr "Olivier Courtin"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7763,7 +7727,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Chris Hodgson"
-msgstr "Chris Hodgson"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7775,7 +7739,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Mateusz Loskot"
-msgstr "Mateusz Łoskot"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7787,7 +7751,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Kevin Neufeld"
-msgstr "Kevin Neufeld"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7800,7 +7764,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Dave Blasby"
-msgstr "Dave Blasby"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7808,14 +7772,11 @@ msgid ""
 "The original developer/Co-founder of PostGIS. Dave wrote the server side "
 "objects, index bindings, and many of the server side analytical functions."
 msgstr ""
-"Developer / współzałożyciel projektu PostGIS. Dave przygotował obiekty po "
-"stronie serwera, index bindings oraz wiele z funkcji analitycznych po "
-"stronie serwera."
 
 #. Tag: term
 #, no-c-format
 msgid "Jeff Lounsbury"
-msgstr "Jeff Lounsbury"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7825,7 +7786,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Mark Leslie"
-msgstr "Mark Leslie"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7837,7 +7798,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Pierre Racine"
-msgstr "Pierre Racine"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7849,7 +7810,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "David Zwarg"
-msgstr "David Zwarg"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -7859,7 +7820,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Other Contributors"
-msgstr ""
+msgstr "სხვა მოხალისეები"
 
 #. Tag: term
 #, no-c-format
@@ -8007,19 +7968,19 @@ msgid "Dave Fuhry"
 msgstr ""
 
 #. Tag: member
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "David Garnier"
-msgstr "David Zwarg"
+msgstr ""
 
 #. Tag: member
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "David Skea"
-msgstr "David Zwarg"
+msgstr ""
 
 #. Tag: member
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "David Techer"
-msgstr "David Zwarg"
+msgstr ""
 
 #. Tag: member
 #, no-c-format
@@ -8472,18 +8433,16 @@ msgid "Corporate Sponsors"
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "These are corporate entities that have contributed developer time, hosting, "
 "or direct monetary funding to the PostGIS project. In alphabetical order:"
 msgstr ""
-"Podmioty korporacyjne, które wniosły wkład do projektu PostGIS w postaci "
-"developmentu, hostingu lub wsparcia finansowego"
 
 #. Tag: link
 #, no-c-format
 msgid "Aiven"
-msgstr ""
+msgstr "Aiven"
 
 #. Tag: link
 #, no-c-format
@@ -8498,37 +8457,37 @@ msgstr ""
 #. Tag: link
 #, no-c-format
 msgid "AusVet"
-msgstr ""
+msgstr "AusVet"
 
 #. Tag: simpara
 #, no-c-format
 msgid "Avencia"
-msgstr ""
+msgstr "Avencia"
 
 #. Tag: link
 #, no-c-format
 msgid "Azavea"
-msgstr ""
+msgstr "Azavea"
 
 #. Tag: link
 #, no-c-format
 msgid "Boundless"
-msgstr ""
+msgstr "Boundless"
 
 #. Tag: link
 #, no-c-format
 msgid "Cadcorp"
-msgstr ""
+msgstr "Cadcorp"
 
 #. Tag: link
 #, no-c-format
 msgid "Camptocamp"
-msgstr ""
+msgstr "Camptocamp"
 
 #. Tag: link
 #, no-c-format
 msgid "Carto"
-msgstr ""
+msgstr "Carto"
 
 #. Tag: link
 #, no-c-format
@@ -8563,7 +8522,7 @@ msgstr ""
 #. Tag: link
 #, no-c-format
 msgid "Faunalia"
-msgstr ""
+msgstr "Faunalia"
 
 #. Tag: link
 #, no-c-format
@@ -8573,7 +8532,7 @@ msgstr ""
 #. Tag: link
 #, no-c-format
 msgid "HighGo"
-msgstr ""
+msgstr "HighGo"
 
 #. Tag: simpara
 #, no-c-format
@@ -8583,7 +8542,7 @@ msgstr ""
 #. Tag: link
 #, no-c-format
 msgid "INIA-CSIC"
-msgstr ""
+msgstr "INIA-CSIC"
 
 #. Tag: link
 #, no-c-format
@@ -8593,7 +8552,7 @@ msgstr ""
 #. Tag: link
 #, no-c-format
 msgid "Kontur"
-msgstr ""
+msgstr "Kontur"
 
 #. Tag: link
 #, no-c-format
@@ -8603,7 +8562,7 @@ msgstr ""
 #. Tag: link
 #, no-c-format
 msgid "LISAsoft"
-msgstr ""
+msgstr "LISAsoft"
 
 #. Tag: simpara
 #, no-c-format
@@ -8613,7 +8572,7 @@ msgstr ""
 #. Tag: simpara
 #, no-c-format
 msgid "Maponics"
-msgstr ""
+msgstr "Maponics"
 
 #. Tag: link
 #, no-c-format
@@ -8638,12 +8597,12 @@ msgstr ""
 #. Tag: link
 #, no-c-format
 msgid "OSGeo"
-msgstr ""
+msgstr "OSGeo"
 
 #. Tag: link
 #, no-c-format
 msgid "Oslandia"
-msgstr ""
+msgstr "Oslandia"
 
 #. Tag: link
 #, no-c-format
@@ -8708,7 +8667,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "Crowd Funding Campaigns"
-msgstr "Kampanie corwdfundingowe"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -8731,9 +8690,6 @@ msgid ""
 "xlink:href=\"http://www.pledgebank.com\">PledgeBank</link> and we got two "
 "successful campaigns out of it."
 msgstr ""
-"PostGIS 2.0.0 był pierwszym wydaniem, w którym wypróbowaliśmy taką "
-"strategię. Skorzystaliśmy z <link xlink:href=\"http://www.pledgebank."
-"com\">PledgeBank</link> i przeprowadzilśmy dwie udane kampanie."
 
 #. Tag: para
 #, no-c-format
@@ -8743,28 +8699,20 @@ msgid ""
 "contributed $250 USD to build toTopoGeometry function and beef up topology "
 "support in 2.0.0. It happened."
 msgstr ""
-"<link xlink:href=\"http://www.pledgebank.com/postgistopology\"><emphasis "
-"role=\"bold\">postgistopology</emphasis></link>  - ponad 10 sponsorów "
-"wpłaciło po 250$ w celu stworzenia funkcji toTopoGeometry oraz rozbudowy "
-"wsparcia dla topologii w wersji 2.0.0. To naprawdę się wydarzyło."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<link xlink:href=\"http://www.pledgebank.com/postgis64windows\"><emphasis "
 "role=\"bold\">postgis64windows</emphasis></link> - 20 someodd sponsors each "
 "contributed $100 USD to pay for the work needed to work out PostGIS 64-bit "
 "issues on windows. It happened."
 msgstr ""
-"<link xlink:href=\"http://www.pledgebank.com/postgistopology\"><emphasis "
-"role=\"bold\">postgistopology</emphasis></link>  - ponad 10 sponsorów "
-"wpłaciło po 250$ w celu stworzenia funkcji toTopoGeometry oraz rozbudowy "
-"wsparcia dla topologii w wersji 2.0.0. To naprawdę się wydarzyło."
 
 #. Tag: term
 #, no-c-format
 msgid "Important Support Libraries"
-msgstr "Istotne biblioteki wspierające"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -8812,7 +8760,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Problem description"
-msgstr ""
+msgstr "პრობლემის აღწერა"
 
 #. Tag: para
 #, no-c-format
@@ -8872,7 +8820,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Workarounds"
-msgstr ""
+msgstr "შემოვლები"
 
 #. Tag: para
 #, no-c-format
@@ -9000,7 +8948,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "PostGIS &last_release_version; Manual"
-msgstr "PostGIS &last_release_version;. Podręcznik"
+msgstr ""
 
 #. Tag: orgname
 #, no-c-format
@@ -9015,10 +8963,6 @@ msgid ""
 "state> <country>Canada</country> <email>pramsey@cleverelephant.ca</email></"
 "address>"
 msgstr ""
-"<orgname><link xlink:href=\"http://www.cleverelephant.ca\">clever elephant</"
-"link></orgname> <address><city>Victoria</city> <state>British Columbia</"
-"state> <country>Canada</country> <email>pramsey@cleverelephant.ca</email></"
-"address>"
 
 #. Tag: para
 #, no-c-format
@@ -9029,17 +8973,11 @@ msgid ""
 "PostGIS includes support for GiST-based R-Tree spatial indexes, and "
 "functions for analysis and processing of GIS objects."
 msgstr ""
-"PostGIS jest rozszerzeniem relacyjno-obiektowego systemu bazy danych <link "
-"xlink:href=\"https://www.postgresql.org/\">PostgreSQL</link> , który pozwala "
-"na przechowywanie obiektów GIS (Geographic Information Systems) w bazie "
-"danych. PostGIS posiada wsparcie dla indeksów przestrzennych opartych na "
-"algorytmach GiST i R-Tree, oraz funkcje pozwalające na analizowanie i "
-"przetwarzanie obiektów GIS."
 
 #. Tag: para
 #, no-c-format
 msgid "This is the manual for version &last_release_version;"
-msgstr "Podręcznik dla wersji &last_release_version;"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -9064,7 +9002,7 @@ msgstr ""
 #. Tag: section
 #, no-c-format
 msgid "&list_aggregates;"
-msgstr ""
+msgstr "&list_aggregates;"
 
 #. Tag: para
 #, no-c-format
@@ -9082,7 +9020,7 @@ msgstr ""
 #. Tag: section
 #, no-c-format
 msgid "&list_window_functions;"
-msgstr ""
+msgstr "&list_window_functions;"
 
 #. Tag: para
 #, no-c-format
@@ -9101,7 +9039,7 @@ msgstr ""
 #. Tag: section
 #, no-c-format
 msgid "&list_sqlmm_functions;"
-msgstr ""
+msgstr "&list_sqlmm_functions;"
 
 #. Tag: para
 #, no-c-format
@@ -9137,7 +9075,7 @@ msgstr ""
 #. Tag: section
 #, no-c-format
 msgid "&list_geography_functions;"
-msgstr ""
+msgstr "&list_geography_functions;"
 
 #. Tag: title
 #, no-c-format
@@ -9155,7 +9093,7 @@ msgstr ""
 #. Tag: section
 #, no-c-format
 msgid "&list_raster_functions;"
-msgstr ""
+msgstr "&list_raster_functions;"
 
 #. Tag: title
 #, no-c-format
@@ -9165,7 +9103,7 @@ msgstr ""
 #. Tag: section
 #, no-c-format
 msgid "&list_dump_functions;"
-msgstr ""
+msgstr "&list_dump_functions;"
 
 #. Tag: para
 #, no-c-format
@@ -9192,7 +9130,7 @@ msgstr ""
 #. Tag: section
 #, no-c-format
 msgid "&list_box_functions;"
-msgstr ""
+msgstr "&list_box_functions;"
 
 #. Tag: title
 #, no-c-format
@@ -9202,7 +9140,7 @@ msgstr ""
 #. Tag: section
 #, no-c-format
 msgid "&list_3d_functions;"
-msgstr ""
+msgstr "&list_3d_functions;"
 
 #. Tag: para
 #, no-c-format
@@ -9219,7 +9157,7 @@ msgstr ""
 #. Tag: section
 #, no-c-format
 msgid "&list_curved_geometry_functions;"
-msgstr ""
+msgstr "&list_curved_geometry_functions;"
 
 #. Tag: para
 #, no-c-format
@@ -9236,7 +9174,7 @@ msgstr ""
 #. Tag: section
 #, no-c-format
 msgid "&list_polyhedral_geometry_functions;"
-msgstr ""
+msgstr "&list_polyhedral_geometry_functions;"
 
 #. Tag: para
 #, no-c-format
@@ -9321,27 +9259,27 @@ msgstr ""
 #. Tag: entry
 #, no-c-format
 msgid "Function"
-msgstr ""
+msgstr "ფუნქცია"
 
 #. Tag: entry
 #, no-c-format
 msgid "geom"
-msgstr ""
+msgstr "geom"
 
 #. Tag: entry
 #, no-c-format
 msgid "geog"
-msgstr ""
+msgstr "geog"
 
 #. Tag: entry
 #, no-c-format
 msgid "2.5D"
-msgstr ""
+msgstr "2.5D"
 
 #. Tag: entry
 #, no-c-format
 msgid "Curves"
-msgstr ""
+msgstr "მრუდები"
 
 #. Tag: entry
 #, no-c-format
@@ -9351,22 +9289,22 @@ msgstr ""
 #. Tag: entry
 #, no-c-format
 msgid "<entry>PS</entry>"
-msgstr ""
+msgstr "<entry>PS</entry>"
 
 #. Tag: entry
 #, no-c-format
 msgid "<entry>T</entry>"
-msgstr ""
+msgstr "<entry>T</entry>"
 
 #. Tag: tgroup
 #, no-c-format
 msgid "&table_body_function_support_matrix;"
-msgstr ""
+msgstr "&table_body_function_support_matrix;"
 
 #. Tag: section
 #, no-c-format
 msgid "&list_new_functions;"
-msgstr ""
+msgstr "&list_new_functions;"
 
 #. Tag: title
 #, no-c-format
@@ -10083,7 +10021,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Enhanced: 2.0.0 support for Polyhedral surfaces was introduced."
-msgstr "Ulepszenie: 2.0.0 wprowadzono wsparcie dla powierzchni wielościanowych"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -10102,9 +10040,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Availability: 1.2.3?"
-msgstr "Dostępność: 1.2.2"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -10221,17 +10159,17 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "GEOMETRYCOLLECTION"
-msgstr ""
+msgstr "GEOMETRYCOLLECTION"
 
 #. Tag: para
 #, no-c-format
 msgid "MULTI{POINT,POLYGON,LINESTRING,CURVE,SURFACE}"
-msgstr ""
+msgstr "MULTI{POINT,POLYGON,LINESTRING,CURVE,SURFACE}"
 
 #. Tag: para
 #, no-c-format
 msgid "COMPOUNDCURVE"
-msgstr ""
+msgstr "COMPOUNDCURVE"
 
 #. Tag: para
 #, no-c-format
@@ -10311,9 +10249,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Availability: 2.4.0"
-msgstr "Dostępność: 2.0.0"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -10841,7 +10779,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 1.2.2"
-msgstr "Dostępność: 1.2.2"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -11808,9 +11746,9 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Examples - Two-input variant"
-msgstr "Przykłady - użycie XLink"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -11853,9 +11791,9 @@ msgid "Creating multiple collections by grouping geometries in a table."
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"ST_Union\"/>"
-msgstr ", <xref linkend=\"ST_AsBinary\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -11881,9 +11819,9 @@ msgid "Create a 3D line string from a 3D MultiPoint"
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"ST_MakeLine\"/>"
-msgstr ", <xref linkend=\"ST_AsKML\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -11902,7 +11840,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 1.5"
-msgstr "Dostępność: 1.5"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -11917,13 +11855,11 @@ msgid "Example: Building a bounding box polygon"
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"ST_MakeLine\"/>, <xref linkend=\"ST_MakePolygon\"/>, <xref "
 "linkend=\"ST_TileEnvelope\"/>"
 msgstr ""
-", <xref linkend=\"ST_MakePoint\"/>, <xref linkend=\"ST_Point\"/>, <xref "
-"linkend=\"ST_SRID\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -12037,14 +11973,12 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"ST_AsEWKT\"/>, <xref linkend=\"ST_AsText\"/>, <xref "
 "linkend=\"ST_GeomFromText\"/>, <xref linkend=\"ST_MakePoint\"/>, <xref "
 "linkend=\"ST_Point\"/>"
 msgstr ""
-", <xref linkend=\"ST_AsText\"/>, <xref linkend=\"ST_GeomFromText\"/>, <xref "
-"linkend=\"ST_MakePoint\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -12267,7 +12201,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 6.1.2"
-msgstr "&sqlmm_compliant; SQL-MM 3: 6.1.2"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -12331,13 +12265,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"ST_Point\"/>, <xref linkend=\"ST_PointM\"/>, <xref "
 "linkend=\"ST_PointZM\"/>"
 msgstr ""
-", <xref linkend=\"ST_Point\"/>, <xref linkend=\"ST_SetSRID\"/>, <xref "
-"linkend=\"ST_SRID\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -12352,13 +12284,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"ST_Point\"/>, <xref linkend=\"ST_PointZ\"/>, <xref "
 "linkend=\"ST_PointZM\"/>"
 msgstr ""
-", <xref linkend=\"ST_Point\"/>, <xref linkend=\"ST_SetSRID\"/>, <xref "
-"linkend=\"ST_SRID\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -12399,16 +12329,16 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "To create polygons with holes use <xref linkend=\"ST_MakePolygon\"/> Variant "
 "2 and then <xref linkend=\"ST_SetSRID\"/>."
-msgstr ", <xref linkend=\"ST_MakePoint\"/>, <xref linkend=\"ST_SetSRID\"/>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 8.3.2"
-msgstr "&sqlmm_compliant; SQL-MM 3: 8.3.2"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -12427,9 +12357,6 @@ msgid ""
 "linkend=\"ST_GeomFromText\"/>, <xref linkend=\"ST_LineMerge\"/>, <xref "
 "linkend=\"ST_MakePolygon\"/>"
 msgstr ""
-", <xref linkend=\"ST_AsText\"/>, <xref linkend=\"ST_GeomFromEWKT\"/>, <xref "
-"linkend=\"ST_GeomFromText\"/>, <xref linkend=\"ST_LineMerge\"/>, <xref "
-"linkend=\"ST_MakePolygon\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -12488,9 +12415,9 @@ msgid "Enhanced: 3.1.0 Added margin parameter."
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Availability: 3.0.0"
-msgstr "Dostępność: 1.5"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -12530,9 +12457,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Availability: 3.1.0"
-msgstr "Dostępność: 1.5"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -12576,13 +12503,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"ST_SetSRID\"/>, <xref linkend=\"ST_SquareGrid\"/>, <xref "
 "linkend=\"ST_TileEnvelope\"/>"
 msgstr ""
-", <xref linkend=\"ST_MakePoint\"/>, <xref linkend=\"ST_Point\"/>, <xref "
-"linkend=\"ST_SRID\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -12612,9 +12537,9 @@ msgid "Example: Creating a hexagon at the origin"
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"ST_HexagonGrid\"/>, <xref linkend=\"ST_Square\"/>"
-msgstr ", <xref linkend=\"ST_MakePoint\"/>, <xref linkend=\"ST_SetSRID\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -12687,13 +12612,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"ST_HexagonGrid\"/> , <xref linkend=\"ST_EstimatedExtent\"/"
 "> , <xref linkend=\"ST_SetSRID\"/>"
 msgstr ""
-", <xref linkend=\"ST_Point\"/>, <xref linkend=\"ST_SetSRID\"/>, <xref "
-"linkend=\"ST_SRID\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -12723,9 +12646,9 @@ msgid "Example: Creating a square at the origin"
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"ST_SquareGrid\"/>, <xref linkend=\"ST_Hexagon\"/>"
-msgstr ", <xref linkend=\"ST_MakeLine\"/>, <xref linkend=\"ST_MakePolygon\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -12777,7 +12700,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Coverages"
-msgstr ""
+msgstr "დაფარვები"
 
 #. Tag: para
 #, no-c-format
@@ -12969,7 +12892,7 @@ msgstr ""
 #. Tag: refpurpose
 #, no-c-format
 msgid "Add a point to a LineString."
-msgstr "Dodaj punkt do linii"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -12995,7 +12918,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_SetPoint\"/>"
-msgstr ", <xref linkend=\"ST_SetPoint\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -13281,7 +13204,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Example"
-msgstr "Przykład"
+msgstr "მაგალითი"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -13598,7 +13521,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "<para>,</para>"
-msgstr ""
+msgstr "<para>,</para>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -13796,7 +13719,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_NPoints\"/>, <xref linkend=\"ST_NumPoints\"/>"
-msgstr ", <xref linkend=\"ST_NPoints\"/>, <xref linkend=\"ST_NumPoints\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -14182,8 +14105,6 @@ msgid ""
 ", <xref linkend=\"ST_NPoints\"/>, <xref linkend=\"ST_NumPoints\"/>, <xref "
 "linkend=\"ST_PointN\"/>, <xref linkend=\"ST_RemovePoint\"/>"
 msgstr ""
-", <xref linkend=\"ST_NPoints\"/>, <xref linkend=\"ST_NumPoints\"/>, <xref "
-"linkend=\"ST_PointN\"/>, <xref linkend=\"ST_RemovePoint\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -14292,12 +14213,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 1.0.0RC1"
-msgstr "Dostępność: 1.0.0RC1"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "Availability: 1.1.0 - Z and M support"
-msgstr "Dostępność: 1.1.0 - wsparcie dla Z i M"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -14306,9 +14227,6 @@ msgid ""
 "linkend=\"ST_GeomFromText\"/>, <xref linkend=\"ST_GeomFromEWKT\"/>, <xref "
 "linkend=\"ST_Simplify\"/>"
 msgstr ""
-", <xref linkend=\"ST_AsEWKT\"/>, <xref linkend=\"ST_AsText\"/>, <xref "
-"linkend=\"ST_GeomFromText\"/>, <xref linkend=\"ST_GeomFromEWKT\"/>, <xref "
-"linkend=\"ST_Simplify\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -14438,7 +14356,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"PostGIS_HasBBox\"/>"
-msgstr ", <xref linkend=\"PostGIS_HasBBox\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -14471,7 +14389,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"PostGIS_HasBBox\"/>, <xref linkend=\"Box2D\"/>"
-msgstr ", <xref linkend=\"PostGIS_HasBBox\"/>, <xref linkend=\"Box2D\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -14489,7 +14407,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"PostGIS_DropBBox\"/>"
-msgstr ", <xref linkend=\"PostGIS_DropBBox\"/>"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -14831,12 +14749,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sfs_compliant; s3.2.6.2"
-msgstr "&sfs_compliant; s3.2.6.2"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_BdMPolyFromText\"/>"
-msgstr ", <xref linkend=\"ST_BdMPolyFromText\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -14866,7 +14784,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_BdPolyFromText\"/>"
-msgstr ", <xref linkend=\"ST_BdPolyFromText\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -14886,7 +14804,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_GeographyFromText\"/>"
-msgstr ", <xref linkend=\"ST_GeographyFromText\"/>"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -14898,7 +14816,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_AsText\"/>"
-msgstr ", <xref linkend=\"ST_AsText\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -14922,7 +14840,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Returns null if the WKT is not a GEOMETRYCOLLECTION"
-msgstr "Zwraca null jeśli WKT nie jest GEOMETRYCOLLECTION"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -14935,7 +14853,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_SRID\"/>"
-msgstr ", <xref linkend=\"ST_SRID\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15039,7 +14957,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 5.1.40"
-msgstr "&sqlmm_compliant; SQL-MM 3: 5.1.40"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15091,7 +15009,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_GeomFromWKB\"/>, <xref linkend=\"ST_SRID\"/>"
-msgstr ", <xref linkend=\"ST_GeomFromWKB\"/>, <xref linkend=\"ST_SRID\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15123,7 +15041,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 7.2.8"
-msgstr "&sqlmm_compliant; SQL-MM 3: 7.2.8"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15153,7 +15071,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant;SQL-MM 3: 9.4.4"
-msgstr "&sqlmm_compliant;SQL-MM 3: 9.4.4"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15177,12 +15095,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sfs_compliant; 3.2.6.2"
-msgstr "&sfs_compliant; 3.2.6.2"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 9.2.4"
-msgstr "&sqlmm_compliant; SQL-MM 3: 9.2.4"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15214,7 +15132,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 9.6.4"
-msgstr "&sqlmm_compliant; SQL-MM 3: 9.6.4"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15256,7 +15174,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 6.1.8"
-msgstr "&sqlmm_compliant; SQL-MM 3: 6.1.8"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -15264,8 +15182,6 @@ msgid ""
 ", <xref linkend=\"ST_MakePoint\"/>, <xref linkend=\"ST_Point\"/>, <xref "
 "linkend=\"ST_SRID\"/>"
 msgstr ""
-", <xref linkend=\"ST_MakePoint\"/>, <xref linkend=\"ST_Point\"/>, <xref "
-"linkend=\"ST_SRID\"/>"
 
 #. Tag: para
 #, no-c-format
@@ -15285,12 +15201,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 8.3.6"
-msgstr "&sqlmm_compliant; SQL-MM 3: 8.3.6"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 5.1.34"
-msgstr "&sqlmm_compliant; SQL-MM 3: 5.1.34"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -15321,7 +15237,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_AsBinary\"/>"
-msgstr ", <xref linkend=\"ST_AsBinary\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15350,8 +15266,6 @@ msgid ""
 "line string binary rep 0f LINESTRING(-71.160281 42.258729,-71.160837 "
 "42.259113,-71.161144 42.25932) in NAD 83 long lat (4269)."
 msgstr ""
-"line string binary rep 0f LINESTRING(-71.160281 42.258729,-71.160837 "
-"42.259113,-71.161144 42.25932) in NAD 83 long lat (4269)."
 
 #. Tag: para
 #, no-c-format
@@ -15374,7 +15288,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_AsEWKB\"/>, <xref linkend=\"ST_GeomFromWKB\"/>"
-msgstr ", <xref linkend=\"ST_AsEWKB\"/>, <xref linkend=\"ST_GeomFromWKB\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15407,12 +15321,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 5.1.41"
-msgstr "&sqlmm_compliant; SQL-MM 3: 5.1.41"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_AsBinary\"/>, <xref linkend=\"ST_GeomFromEWKB\"/>"
-msgstr ", <xref linkend=\"ST_AsBinary\"/>, <xref linkend=\"ST_GeomFromEWKB\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15449,12 +15363,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 7.2.9"
-msgstr "&sqlmm_compliant; SQL-MM 3: 7.2.9"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_LinestringFromWKB\"/>"
-msgstr ", <xref linkend=\"ST_LinestringFromWKB\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15497,7 +15411,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_LineFromWKB\"/>"
-msgstr ", <xref linkend=\"ST_LineFromWKB\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15525,12 +15439,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sfs_compliant; s3.2.7.2"
-msgstr "&sfs_compliant; s3.2.7.2"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 6.1.9"
-msgstr "&sqlmm_compliant; SQL-MM 3: 6.1.9"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15542,7 +15456,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "&sqlmm_compliant; SQL-MM 3: 5.1.36"
-msgstr "&sqlmm_compliant; SQL-MM 3: 5.1.36"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -15648,7 +15562,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 1.5, requires libxml2 1.6+"
-msgstr "Dostępność: 1.5, wymaga libxml2 1.6+"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -15693,7 +15607,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Examples - XLink usage"
-msgstr "Przykłady - użycie XLink"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
@@ -15703,7 +15617,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_AsGML\"/>, <xref linkend=\"ST_GMLToSQL\"/>"
-msgstr ", <xref linkend=\"ST_AsGML\"/>, <xref linkend=\"ST_GMLToSQL\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15739,7 +15653,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 2.0.0 requires - JSON-C &gt;= 0.9"
-msgstr "Dostępność: 2.0.0 wymaga - JSON-C &gt;= 0.9"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -15756,8 +15670,6 @@ msgid ""
 ", <xref linkend=\"ST_AsGeoJSON\"/>, <xref "
 "linkend=\"installation_configuration\"/>"
 msgstr ""
-", <xref linkend=\"ST_AsGeoJSON\"/>, <xref "
-"linkend=\"installation_configuration\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15801,7 +15713,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_AsKML\"/>"
-msgstr ", <xref linkend=\"ST_AsKML\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15835,7 +15747,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"ST_GeomFromGML\"/>, <xref linkend=\"ST_AsGML\"/>"
-msgstr ", <xref linkend=\"ST_GeomFromGML\"/>, <xref linkend=\"ST_AsGML\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -15988,7 +15900,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 0.8.2, Z and M supported added in 1.1.1"
-msgstr "Dostępność: 0.8.2 - wsparcie dla Z i M dodano w wersji 1.1.1"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -16011,12 +15923,11 @@ msgid "The closest point on a line to a point:"
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"ST_3DLineInterpolatePoint\"/>, <xref "
 "linkend=\"ST_LineLocatePoint\"/>"
 msgstr ""
-", <xref linkend=\"ST_LocateAlong\"/>, <xref linkend=\"ST_LocateBetween\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -16045,12 +15956,11 @@ msgid "Return point 20% along 3D line"
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"ST_LineInterpolatePoints\"/>, <xref "
 "linkend=\"ST_LineLocatePoint\"/>"
 msgstr ""
-", <xref linkend=\"ST_LocateAlong\"/>, <xref linkend=\"ST_LocateBetween\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -16174,7 +16084,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 1.1.0, Z and M supported added in 1.1.1"
-msgstr "Dostępność: 1.1.0 - wsparcie dla Z i M"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -16318,10 +16228,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"ST_LocateBetweenElevations\"/>"
 msgstr ""
-", <xref linkend=\"ST_LocateAlong\"/>, <xref linkend=\"ST_LocateBetween\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -16338,13 +16247,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 1.4.0"
-msgstr "Dostępność: 1.4.0"
+msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"ST_LocateBetween\"/>"
 msgstr ""
-", <xref linkend=\"ST_LocateAlong\"/>, <xref linkend=\"ST_LocateBetween\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -16363,7 +16271,6 @@ msgstr ""
 msgid ""
 ", <xref linkend=\"ST_LocateAlong\"/>, <xref linkend=\"ST_LocateBetween\"/>"
 msgstr ""
-", <xref linkend=\"ST_LocateAlong\"/>, <xref linkend=\"ST_LocateBetween\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -17480,9 +17387,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "For example:"
-msgstr "Przykłady"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -17932,7 +17839,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Operators"
-msgstr "Operatory"
+msgstr "ოპერატორები"
 
 #. Tag: title
 #, no-c-format
@@ -17945,8 +17852,6 @@ msgid ""
 "Returns <varname>TRUE</varname> if A's 2D bounding box intersects B's 2D "
 "bounding box."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
 #, no-c-format
@@ -17955,9 +17860,6 @@ msgid ""
 "if the 2D bounding box of geometry A intersects the 2D bounding box of "
 "geometry B."
 msgstr ""
-"Operator <varname>&amp;&amp;</varname> zwraca <varname>TRUE</varname> jeśli "
-"dwuwymiarowe (2D) pole ograniczające geometrii A przecina dwuwymiarowe (2D) "
-"pole ograniczające geometrii B."
 
 #. Tag: para
 #, no-c-format
@@ -17969,10 +17871,10 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Availability: 1.5.0 support for geography was introduced."
-msgstr "Dostępność: 1.5.0 wprowadzono wsparcie dla danych geograficznych."
+msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"ST_Extent\"/>, <xref linkend=\"ST_Geometry_Overabove\"/>, "
 "<xref linkend=\"ST_Geometry_Overright\"/>, <xref "
@@ -17980,22 +17882,16 @@ msgid ""
 ">, <xref linkend=\"ST_Geometry_Contain\"/>, <xref "
 "linkend=\"ST_Geometry_Contained\"/>"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Overright\"/>, <xref "
-"linkend=\"ST_Geometry_Overbelow\"/>, <xref linkend=\"ST_Geometry_Overleft\"/"
-">, <xref linkend=\"ST_Geometry_Contain\"/>, <xref "
-"linkend=\"ST_Geometry_Contained\"/>"
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if a geometry's (cached) 2D bounding box "
 "intersects a 2D float precision bounding box (BOX2DF)."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <varname>&amp;&amp;</varname> operator returns <varname>TRUE</varname> "
 "if the cached 2D bounding box of geometry A intersects the 2D bounding box "
@@ -18003,9 +17899,6 @@ msgid ""
 "box2d, it will be internally converted to a float precision 2D bounding box "
 "(BOX2DF)"
 msgstr ""
-"Operator <varname>&amp;&amp;</varname> zwraca <varname>TRUE</varname> jeśli "
-"dwuwymiarowe (2D) pole ograniczające geometrii A przecina dwuwymiarowe (2D) "
-"pole ograniczające geometrii B."
 
 #. Tag: para
 #, no-c-format
@@ -18015,11 +17908,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Availability: 2.3.0 support for Block Range INdexes (BRIN) was introduced. "
 "Requires PostgreSQL 9.5+."
-msgstr "Dostępność: 1.5.0 wprowadzono wsparcie dla danych geograficznych."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -18034,16 +17927,14 @@ msgid ""
 msgstr ""
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if a 2D float precision bounding box "
 "(BOX2DF) intersects a geometry's (cached) 2D bounding box."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <varname>&amp;&amp;</varname> operator returns <varname>TRUE</varname> "
 "if the 2D bounding box A intersects the cached 2D bounding box of geometry "
@@ -18051,30 +17942,22 @@ msgid ""
 "box2d, it will be internally converted to a float precision 2D bounding box "
 "(BOX2DF)"
 msgstr ""
-"Operator <varname>&amp;&amp;</varname> zwraca <varname>TRUE</varname> jeśli "
-"dwuwymiarowe (2D) pole ograniczające geometrii A przecina dwuwymiarowe (2D) "
-"pole ograniczające geometrii B."
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if two 2D float precision bounding boxes "
 "(BOX2DF) intersect each other."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <varname>&amp;&amp;</varname> operator returns <varname>TRUE</varname> "
 "if two 2D bounding boxes A and B intersect each other, using float "
 "precision. This means that if A (or B) is a (double precision) box2d, it "
 "will be internally converted to a float precision 2D bounding box (BOX2DF)"
 msgstr ""
-"Operator <varname>&amp;&amp;</varname> zwraca <varname>TRUE</varname> jeśli "
-"dwuwymiarowe (2D) pole ograniczające geometrii A przecina dwuwymiarowe (2D) "
-"pole ograniczające geometrii B."
 
 #. Tag: para
 #, no-c-format
@@ -18084,7 +17967,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"overlaps_box2df_geometry\"/>, <xref "
 "linkend=\"contains_geometry_box2df\"/>, <xref "
@@ -18094,10 +17977,6 @@ msgid ""
 "linkend=\"is_contained_box2df_geometry\"/>, <xref "
 "linkend=\"is_contained_box2df_box2df\"/>"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Overright\"/>, <xref "
-"linkend=\"ST_Geometry_Overbelow\"/>, <xref linkend=\"ST_Geometry_Overleft\"/"
-">, <xref linkend=\"ST_Geometry_Contain\"/>, <xref "
-"linkend=\"ST_Geometry_Contained\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18113,31 +17992,26 @@ msgid ""
 "varname> if the n-D bounding box of geometry A intersects the n-D bounding "
 "box of geometry B."
 msgstr ""
-"Operator <varname>&amp;&amp;&amp;</varname> zwraca <varname>TRUE</"
-"varname>jesli n-wymiarowe (n-D) pole ograniczające geometrii A przecina n-"
-"wymiarowe (n-D) pole ograniczające geometrii B."
 
 #. Tag: title
 #, no-c-format
 msgid "Examples: 3D LineStrings"
-msgstr "Przykłady: 3D LineStrings"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
 msgid "Examples: 3M LineStrings"
-msgstr "Przykłady: 3M LineStrings"
+msgstr ""
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if a geometry's (cached) n-D bounding box "
 "intersects a n-D float precision bounding box (GIDX)."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <varname>&amp;&amp;&amp;</varname> operator returns <varname>TRUE</"
 "varname> if the cached n-D bounding box of geometry A intersects the n-D "
@@ -18145,26 +18019,21 @@ msgid ""
 "precision) box3d, it will be internally converted to a float precision 3D "
 "bounding box (GIDX)"
 msgstr ""
-"Operator <varname>&amp;&amp;&amp;</varname> zwraca <varname>TRUE</"
-"varname>jesli n-wymiarowe (n-D) pole ograniczające geometrii A przecina n-"
-"wymiarowe (n-D) pole ograniczające geometrii B."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"overlaps_nd_gidx_gidx\"/>"
-msgstr ", <xref linkend=\"geometry_overlaps\"/>"
+msgstr ""
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if a n-D float precision bounding box (GIDX) "
 "intersects a geometry's (cached) n-D bounding box."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <varname>&amp;&amp;&amp;</varname> operator returns <varname>TRUE</"
 "varname> if the n-D bounding box A intersects the cached n-D bounding box of "
@@ -18172,35 +18041,27 @@ msgid ""
 "precision) box3d, it will be internally converted to a float precision 3D "
 "bounding box (GIDX)"
 msgstr ""
-"Operator <varname>&amp;&amp;&amp;</varname> zwraca <varname>TRUE</"
-"varname>jesli n-wymiarowe (n-D) pole ograniczające geometrii A przecina n-"
-"wymiarowe (n-D) pole ograniczające geometrii B."
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if two n-D float precision bounding boxes "
 "(GIDX) intersect each other."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <varname>&amp;&amp;&amp;</varname> operator returns <varname>TRUE</"
 "varname> if two n-D bounding boxes A and B intersect each other, using float "
 "precision. This means that if A (or B) is a (double precision) box3d, it "
 "will be internally converted to a float precision 3D bounding box (GIDX)"
 msgstr ""
-"Operator <varname>&amp;&amp;&amp;</varname> zwraca <varname>TRUE</"
-"varname>jesli n-wymiarowe (n-D) pole ograniczające geometrii A przecina n-"
-"wymiarowe (n-D) pole ograniczające geometrii B."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"overlaps_nd_gidx_geometry\"/>"
-msgstr ", <xref linkend=\"geometry_overlaps\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18208,9 +18069,6 @@ msgid ""
 "Returns <varname>TRUE</varname> if A's bounding box overlaps or is to the "
 "left of B's."
 msgstr ""
-"Zwraca wartość <varname>TRUE</varname> jeżeli pole ograniczające A posiada "
-"część wspólną z polem ograniczającym B lub pole ograniczające A leży po "
-"lewej stronie pola ograniczającego B."
 
 #. Tag: para
 #, no-c-format
@@ -18228,9 +18086,6 @@ msgid ""
 "linkend=\"ST_Geometry_Overright\"/>, <xref linkend=\"ST_Geometry_Overbelow\"/"
 ">"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Overabove\"/>, <xref "
-"linkend=\"ST_Geometry_Overright\"/>, <xref linkend=\"ST_Geometry_Overbelow\"/"
-">"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18253,8 +18108,6 @@ msgid ""
 ", <xref linkend=\"ST_Geometry_Overabove\"/>, <xref "
 "linkend=\"ST_Geometry_Overright\"/>, <xref linkend=\"ST_Geometry_Overleft\"/>"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Overabove\"/>, <xref "
-"linkend=\"ST_Geometry_Overright\"/>, <xref linkend=\"ST_Geometry_Overleft\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18278,8 +18131,6 @@ msgid ""
 ", <xref linkend=\"ST_Geometry_Overabove\"/>, <xref "
 "linkend=\"ST_Geometry_Overbelow\"/>, <xref linkend=\"ST_Geometry_Overleft\"/>"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Overabove\"/>, <xref "
-"linkend=\"ST_Geometry_Overbelow\"/>, <xref linkend=\"ST_Geometry_Overleft\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18302,8 +18153,6 @@ msgid ""
 ", <xref linkend=\"ST_Geometry_Above\"/>, <xref linkend=\"ST_Geometry_Below\"/"
 ">"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Above\"/>, <xref linkend=\"ST_Geometry_Below\"/"
-">"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18325,8 +18174,6 @@ msgid ""
 ", <xref linkend=\"ST_Geometry_Right\"/>, <xref linkend=\"ST_Geometry_Above\"/"
 ">"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Right\"/>, <xref linkend=\"ST_Geometry_Above\"/"
-">"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18375,11 +18222,10 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"ST_OrderingEquals\"/>, <xref linkend=\"ST_Geometry_Same\"/>"
 msgstr ""
-", <xref linkend=\"ST_OrderingEquals\"/>, <xref linkend=\"ST_Geometry_EQ\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18413,16 +18259,14 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ", <xref linkend=\"geometry_overlaps\"/>"
-msgstr ", <xref linkend=\"geometry_overlaps\"/>"
+msgstr ""
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if a geometry's 2D bounding box is contained "
 "into a 2D float precision bounding box (BOX2DF)."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
 #, no-c-format
@@ -18434,7 +18278,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"overlaps_box2df_geometry\"/>, <xref "
 "linkend=\"overlaps_box2df_box2df\"/>, <xref "
@@ -18444,19 +18288,13 @@ msgid ""
 "linkend=\"is_contained_box2df_geometry\"/>, <xref "
 "linkend=\"is_contained_box2df_box2df\"/>"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Overright\"/>, <xref "
-"linkend=\"ST_Geometry_Overbelow\"/>, <xref linkend=\"ST_Geometry_Overleft\"/"
-">, <xref linkend=\"ST_Geometry_Contain\"/>, <xref "
-"linkend=\"ST_Geometry_Contained\"/>"
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if a 2D float precision bounding box "
 "(BOX2DF) is contained into a geometry's 2D bounding box."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
 #, no-c-format
@@ -18468,7 +18306,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"overlaps_box2df_geometry\"/>, <xref "
 "linkend=\"overlaps_box2df_box2df\"/>, <xref "
@@ -18478,19 +18316,13 @@ msgid ""
 "linkend=\"is_contained_geometry_box2df\"/>, <xref "
 "linkend=\"is_contained_box2df_box2df\"/>"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Overright\"/>, <xref "
-"linkend=\"ST_Geometry_Overbelow\"/>, <xref linkend=\"ST_Geometry_Overleft\"/"
-">, <xref linkend=\"ST_Geometry_Contain\"/>, <xref "
-"linkend=\"ST_Geometry_Contained\"/>"
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if a 2D float precision bounding box "
 "(BOX2DF) is contained into another 2D float precision bounding box."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
 #, no-c-format
@@ -18502,7 +18334,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"overlaps_box2df_geometry\"/>, <xref "
 "linkend=\"overlaps_box2df_box2df\"/>, <xref "
@@ -18512,10 +18344,6 @@ msgid ""
 "linkend=\"is_contained_geometry_box2df\"/>, <xref "
 "linkend=\"is_contained_box2df_geometry\"/>"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Overright\"/>, <xref "
-"linkend=\"ST_Geometry_Overbelow\"/>, <xref linkend=\"ST_Geometry_Overleft\"/"
-">, <xref linkend=\"ST_Geometry_Contain\"/>, <xref "
-"linkend=\"ST_Geometry_Contained\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18538,8 +18366,6 @@ msgid ""
 ", <xref linkend=\"ST_Geometry_Overright\"/>, <xref "
 "linkend=\"ST_Geometry_Overbelow\"/>, <xref linkend=\"ST_Geometry_Overleft\"/>"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Overright\"/>, <xref "
-"linkend=\"ST_Geometry_Overbelow\"/>, <xref linkend=\"ST_Geometry_Overleft\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18548,15 +18374,12 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <varname>|&gt;&gt;</varname> operator returns <varname>TRUE</varname> if "
 "the bounding box of geometry A is strictly above the bounding box of "
 "geometry B."
 msgstr ""
-"Operator <varname>&amp;&amp;</varname> zwraca <varname>TRUE</varname> jeśli "
-"dwuwymiarowe (2D) pole ograniczające geometrii A przecina dwuwymiarowe (2D) "
-"pole ograniczające geometrii B."
 
 #. Tag: para
 #, no-c-format
@@ -18564,8 +18387,6 @@ msgid ""
 ", <xref linkend=\"ST_Geometry_Right\"/>, <xref linkend=\"ST_Geometry_Below\"/"
 ">"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Right\"/>, <xref linkend=\"ST_Geometry_Below\"/"
-">"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18581,25 +18402,20 @@ msgid ""
 msgstr ""
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if a geometry's 2D bonding box contains a 2D "
 "float precision bounding box (GIDX)."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <varname>~</varname> operator returns <varname>TRUE</varname> if the 2D "
 "bounding box of a geometry A contains the 2D bounding box B, using float "
 "precision. This means that if B is a (double precision) box2d, it will be "
 "internally converted to a float precision 2D bounding box (BOX2DF)"
 msgstr ""
-"Operator <varname>&amp;&amp;</varname> zwraca <varname>TRUE</varname> jeśli "
-"dwuwymiarowe (2D) pole ograniczające geometrii A przecina dwuwymiarowe (2D) "
-"pole ograniczające geometrii B."
 
 #. Tag: para
 #, no-c-format
@@ -18614,13 +18430,11 @@ msgid ""
 msgstr ""
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if a 2D float precision bounding box "
 "(BOX2DF) contains a geometry's 2D bonding box."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
 #, no-c-format
@@ -18644,13 +18458,11 @@ msgid ""
 msgstr ""
 
 #. Tag: refpurpose
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Returns <varname>TRUE</varname> if a 2D float precision bounding box "
 "(BOX2DF) contains another 2D float precision bounding box (BOX2DF)."
 msgstr ""
-"Zwraca <varname>TRUE</varname> jeśli dwuwymiarowe (2D) pole ograniczające "
-"obiektu A przecina dwuwymiarowe (2D) pole ograniczające obiektu B."
 
 #. Tag: para
 #, no-c-format
@@ -18662,7 +18474,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 ", <xref linkend=\"overlaps_box2df_geometry\"/>, <xref "
 "linkend=\"overlaps_box2df_box2df\"/>, <xref "
@@ -18672,10 +18484,6 @@ msgid ""
 "linkend=\"is_contained_box2df_geometry\"/>, <xref "
 "linkend=\"is_contained_box2df_box2df\"/>"
 msgstr ""
-", <xref linkend=\"ST_Geometry_Overright\"/>, <xref "
-"linkend=\"ST_Geometry_Overbelow\"/>, <xref linkend=\"ST_Geometry_Overleft\"/"
-">, <xref linkend=\"ST_Geometry_Contain\"/>, <xref "
-"linkend=\"ST_Geometry_Contained\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18711,12 +18519,11 @@ msgstr ""
 msgid ""
 ", <xref linkend=\"ST_OrderingEquals\"/>, <xref linkend=\"ST_Geometry_EQ\"/>"
 msgstr ""
-", <xref linkend=\"ST_OrderingEquals\"/>, <xref linkend=\"ST_Geometry_EQ\"/>"
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Distance Operators"
-msgstr "Operatory"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -18809,7 +18616,6 @@ msgstr ""
 msgid ""
 ", <xref linkend=\"ST_Distance\"/>, <xref linkend=\"geometry_distance_box\"/>"
 msgstr ""
-", <xref linkend=\"ST_Distance\"/>, <xref linkend=\"geometry_distance_box\"/>"
 
 #. Tag: refpurpose
 #, no-c-format
@@ -19232,9 +19038,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Basic"
-msgstr "Podstawowe"
+msgstr "საწყისი"
 
 #. Tag: para
 #, no-c-format
@@ -20275,7 +20081,7 @@ msgstr ""
 #. Tag: entry
 #, no-c-format
 msgid "POINT"
-msgstr ""
+msgstr "წერტილი"
 
 #. Tag: entry
 #, no-c-format
@@ -24149,7 +23955,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "black circle"
-msgstr ""
+msgstr "შავი წრე"
 
 #. Tag: para
 #, no-c-format
@@ -25502,9 +25308,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"RT_ST_SetM\"/>"
-msgstr ", <xref linkend=\"ST_SRID\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -25523,9 +25329,9 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ", <xref linkend=\"RT_ST_SetZ\"/>"
-msgstr ", <xref linkend=\"ST_SRID\"/>"
+msgstr ""
 
 #. Tag: refpurpose
 #, no-c-format
@@ -25927,14 +25733,14 @@ msgid "NearestNeighbor (english or american spelling)"
 msgstr ""
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Bilinear"
-msgstr "Dwuliniowy"
+msgstr "ორხაზოვანი"
 
 #. Tag: para
 #, no-c-format
 msgid "Cubic"
-msgstr ""
+msgstr "კუბური"
 
 #. Tag: para
 #, no-c-format
@@ -25944,7 +25750,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Lanczos"
-msgstr ""
+msgstr "ლანცოში"
 
 #. Tag: para
 #, no-c-format
@@ -27831,7 +27637,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "original"
-msgstr ""
+msgstr "ორიგინალი"
 
 #. Tag: para
 #, no-c-format
@@ -34581,12 +34387,12 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Appendix"
-msgstr ""
+msgstr "დანართი"
 
 #. Tag: subtitle
 #, no-c-format
 msgid "Release Notes"
-msgstr ""
+msgstr "გამოცემის შენიშვნები"
 
 #. Tag: title
 #, no-c-format
@@ -34651,7 +34457,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "New features"
-msgstr ""
+msgstr "ახალი ფუნქციები"
 
 #. Tag: para
 #, no-c-format
@@ -35193,9 +34999,9 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Point"
-msgstr "Punkt"
+msgstr "წერტილი"
 
 #. Tag: para
 #, no-c-format
@@ -35235,9 +35041,9 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Polygon"
-msgstr "Poligon"
+msgstr "მრავალკუთხედი"
 
 #. Tag: para
 #, no-c-format
@@ -35308,7 +35114,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Triangle"
-msgstr ""
+msgstr "სამკუთხედი"
 
 #. Tag: para
 #, no-c-format
@@ -37109,7 +36915,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "(c|a|d|p) These are mutually exclusive options:"
-msgstr "(c|a|d|p) Są opcjami wzajemnie wykluczającymi się:"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -38620,12 +38426,12 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Raster Data Management, Queries, and Applications"
-msgstr "Zarządzanie danymi rastrowymi, kwerendy i aplikacje"
+msgstr ""
 
 #. Tag: title
 #, no-c-format
 msgid "Loading and Creating Rasters"
-msgstr "Wczytywanie i tworzenie rastrów"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -38634,14 +38440,11 @@ msgid ""
 "raster files using the packaged <varname>raster2pgsql</varname> raster "
 "loader."
 msgstr ""
-"W większości przypadków tworzenie rastrów w PostGIS będzie odbywa się "
-"poprzez wczytywanie istniejących plików rastrowych używając pakietu "
-"<varname>raster2pgsql</varname>."
 
 #. Tag: title
 #, no-c-format
 msgid "Using raster2pgsql to load rasters"
-msgstr "Wykorzystanie raster2pgsql do wczytywania plików rastrowych."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -38670,11 +38473,6 @@ msgid ""
 "href=\"http://trac.osgeo.org/postgis/ticket/1764\">http://trac.osgeo.org/"
 "postgis/ticket/1764</link> for an example where the overviews do not align."
 msgstr ""
-"Tworząc podglądy rastrów dla zbioru przylegających do siebie rastrów, przy "
-"określonym współczyniku, możliwym jest, że podglądy rastrów nie będą do "
-"siebie przylegać. Odwiedź  <link xlink:href=\"http://trac.osgeo.org/postgis/"
-"ticket/1764\">http://trac.osgeo.org/postgis/ticket/1764</link> aby zobaczyć "
-"przykład, w którym podglądy nie przylegają do siebie."
 
 #. Tag: title
 #, no-c-format
@@ -38730,13 +38528,11 @@ msgid ""
 "Display help screen. Help will also display if you don't pass in any "
 "arguments."
 msgstr ""
-"Wyświetla ekran pomocy. Pomoc zostanie wyświetlona również w sytuacji gdy "
-"nie zostanie podany żaden argument."
 
 #. Tag: para
 #, no-c-format
 msgid "Print the supported raster formats."
-msgstr "Wyświetla na ekranie listę wspieranych formatów rastrowych."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -38744,23 +38540,21 @@ msgid ""
 "Create new table and populate it with raster(s), <emphasis>this is the "
 "default mode</emphasis>"
 msgstr ""
-"Tworzy nową tabelę i wypełnia ją rastrem (rastrami), <emphasis>jest to tryb "
-"domyślny</emphasis>"
 
 #. Tag: para
 #, no-c-format
 msgid "Append raster(s) to an existing table."
-msgstr "Dopisuje raster (rastry) do istniejącej tabeli."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "Drop table, create new one and populate it with raster(s)"
-msgstr "Usuwa istniejącą tabelę, tworzy nową i wypełnia ją rastrem (rastrami)"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "Prepare mode, only create the table."
-msgstr "Tryb przygotowania, tworzy tabelę."
+msgstr ""
 
 #. Tag: term
 #, no-c-format
@@ -38768,8 +38562,6 @@ msgid ""
 "Raster processing: Applying constraints for proper registering in raster "
 "catalogs"
 msgstr ""
-"Przetwarzanie rastrów: Stosowanie ograniczeń w celu poprawnej rejestracji w "
-"katalogach rastrów"
 
 #. Tag: para
 #, no-c-format
@@ -38777,8 +38569,6 @@ msgid ""
 "Apply raster constraints -- srid, pixelsize etc. to ensure raster is "
 "properly registered in <varname>raster_columns</varname> view."
 msgstr ""
-"Użyj ograniczenia -- srid, rozmiar_piksela itd. aby zapewnić poprawną "
-"rejestrację rastra w widoku <varname>raster_columns</varname>."
 
 #. Tag: para
 #, no-c-format
@@ -38786,8 +38576,6 @@ msgid ""
 "Disable setting the max extent constraint. Only applied if -C flag is also "
 "used."
 msgstr ""
-"Wyłącza ustawienie ograniczenia maksymalnego zakresu przestrzennego. Używane "
-"wyłącznie jeżeli użyto też flagi -C."
 
 #. Tag: para
 #, no-c-format
@@ -38802,8 +38590,6 @@ msgid ""
 "Raster processing: Optional parameters used to manipulate input raster "
 "dataset"
 msgstr ""
-"Przetwarzanie rastrów: Opcjonalne parametry stosowane do manipulowania "
-"rastrowymi danymi wejściowymi."
 
 #. Tag: para
 #, no-c-format
@@ -38811,9 +38597,6 @@ msgid ""
 "Assign output raster with specified SRID. If not provided or is zero, "
 "raster's metadata will be checked to determine an appropriate SRID."
 msgstr ""
-"Przypisuje rastrowi wynikowemu określony SRID. Jeżeli wartość nie podana "
-"albo równa 0, metadane rastra zostaną sprawdzone w celu ustalenia "
-"odpowiedniego SRID."
 
 #. Tag: para
 #, no-c-format
@@ -38822,9 +38605,6 @@ msgid ""
 "index, separate with comma (,). If unspecified, all bands of raster will be "
 "extracted."
 msgstr ""
-"Indeks (numerowany od 1) zakresu, który będzie wydobyty z rastra. Dla więcej "
-"niż jednego zakresu należy numery rozdzielić przecinkiem (,). Jeżeli wartość "
-"nie podana użyte będą wszystkie zakresy rastra."
 
 #. Tag: para
 #, no-c-format
@@ -38845,7 +38625,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Register the raster as a filesystem (out-db) raster."
-msgstr "Rejestruje raster jako raster w systemie plikowym (out-db)."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -38853,8 +38633,6 @@ msgid ""
 "Only the metadata of the raster and path location to the raster is stored in "
 "the database (not the pixels)."
 msgstr ""
-"Jedynie metadane i ścieżka dostępu do pliku rastrowego są przechowywane w "
-"bazie danych (nie wartości pikseli)."
 
 #. Tag: para
 #, no-c-format
@@ -38871,23 +38649,22 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "NODATA value to use on bands without a NODATA value."
-msgstr "NODATA wartość, która zostanie użyta dla zakresów bez wartości NODATA."
+msgstr ""
 
 #. Tag: term
 #, no-c-format
 msgid "Optional parameters used to manipulate database objects"
-msgstr "Opcjonalne parametru używane do manipulacji obiektami bazodanowymi."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "Specify name of destination raster column, default is 'rast'"
 msgstr ""
-"Określa nazwę docelowej kolumny rastrowej, domyślnie przyjmuje wartość 'rast'"
 
 #. Tag: para
 #, no-c-format
 msgid "Add a column with the name of the file"
-msgstr "Dodaje kolumnę z nazwą pliku"
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -38902,12 +38679,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Create a GiST index on the raster column."
-msgstr "Tworzy indeks GiST na kolumnie rastrowej."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "Vacuum analyze the raster table."
-msgstr "Wykonuje VACUUM i ANALYZE na tabeli rastrowej."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -38924,9 +38701,6 @@ msgid ""
 "primary key) will still use the default tablespace unless the -X flag is "
 "also used."
 msgstr ""
-"Określa przestrzeń tabel dla tworzonej tabeli. Należy zauważyć, że indeksy "
-"(włączając klucz główny) w dalszym ciągu będą używały domyślnej przestrzeni "
-"tabel, chyba że użyta zostanie dodatkowo flaga -X."
 
 #. Tag: para
 #, no-c-format
@@ -38934,8 +38708,6 @@ msgid ""
 "Specify the tablespace for the table's new index. This applies to the "
 "primary key and the spatial index if the -I flag is used."
 msgstr ""
-"Określa przestrzeń tabel dla tworzonych indeksów. Dotyczy klucza głównego "
-"oraz, jeśli użyto flagi -I,  indeksu przestrzennego."
 
 #. Tag: para
 #, no-c-format
@@ -38947,7 +38719,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Execute each statement individually, do not use a transaction."
-msgstr "Wykonuje każdą instrukcję osobno, nie korzystając z transakcji."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -39705,7 +39477,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Aggregate"
-msgstr ""
+msgstr "შეკოწიწება"
 
 #. Tag: para
 #, no-c-format
@@ -39731,135 +39503,3 @@ msgstr ""
 #, no-c-format
 msgid "Supports geography"
 msgstr ""
-
-#, no-c-format
-#~ msgid ""
-#~ ", <xref linkend=\"CreateTopology\"/>, <xref linkend=\"DropTopology\"/>"
-#~ msgstr ""
-#~ ", <xref linkend=\"CreateTopology\"/>, <xref linkend=\"DropTopology\"/>"
-
-#, no-c-format
-#~ msgid ""
-#~ ", <xref linkend=\"TopoGeo_AddPolygon\"/>, <xref linkend=\"AddNode\"/>, "
-#~ "<xref linkend=\"CreateTopology\"/>"
-#~ msgstr ""
-#~ ", <xref linkend=\"TopoGeo_AddPolygon\"/>, <xref linkend=\"AddNode\"/>, "
-#~ "<xref linkend=\"CreateTopology\"/>"
-
-#, no-c-format
-#~ msgid ""
-#~ ", <xref linkend=\"TopoGeo_AddPolygon\"/>, <xref linkend=\"AddEdge\"/>, "
-#~ "<xref linkend=\"CreateTopology\"/>"
-#~ msgstr ""
-#~ ", <xref linkend=\"TopoGeo_AddPolygon\"/>, <xref linkend=\"AddEdge\"/>, "
-#~ "<xref linkend=\"CreateTopology\"/>"
-
-#, no-c-format
-#~ msgid ""
-#~ ", <xref linkend=\"TopoGeo_AddLineString\"/>, <xref linkend=\"AddFace\"/>, "
-#~ "<xref linkend=\"CreateTopology\"/>"
-#~ msgstr ""
-#~ ", <xref linkend=\"TopoGeo_AddLineString\"/>, <xref linkend=\"AddFace\"/>, "
-#~ "<xref linkend=\"CreateTopology\"/>"
-
-#, no-c-format
-#~ msgid ""
-#~ ", <xref linkend=\"ST_PointFromText\"/>, <xref linkend=\"ST_SetSRID\"/>, "
-#~ "<xref linkend=\"ST_MakePointM\"/>"
-#~ msgstr ""
-#~ ", <xref linkend=\"ST_PointFromText\"/>, <xref linkend=\"ST_SetSRID\"/>, "
-#~ "<xref linkend=\"ST_MakePointM\"/>"
-
-#, no-c-format
-#~ msgid ", <xref linkend=\"ST_MakePoint\"/>, <xref linkend=\"ST_SetSRID\"/>"
-#~ msgstr ", <xref linkend=\"ST_MakePoint\"/>, <xref linkend=\"ST_SetSRID\"/>"
-
-#, fuzzy, no-c-format
-#~ msgid ""
-#~ ", <xref linkend=\"ST_MakePoint\"/>, <xref linkend=\"ST_SetSRID\"/>, <xref "
-#~ "linkend=\"ST_Transform\"/>, <xref linkend=\"ST_PointZ\"/>, <xref "
-#~ "linkend=\"ST_PointM\"/>, <xref linkend=\"ST_PointZM\"/>"
-#~ msgstr ""
-#~ ", <xref linkend=\"ST_AsText\"/>, <xref linkend=\"ST_GeomFromEWKT\"/>, "
-#~ "<xref linkend=\"ST_GeomFromText\"/>, <xref linkend=\"ST_LineMerge\"/>, "
-#~ "<xref linkend=\"ST_MakePolygon\"/>"
-
-#, no-c-format
-#~ msgid "DIRECT"
-#~ msgstr "BEZPOŚREDNIE"
-
-#, no-c-format
-#~ msgid "<term>-c</term>"
-#~ msgstr "<term>-c</term>"
-
-#, no-c-format
-#~ msgid "<term>-a</term>"
-#~ msgstr "<term>-a</term>"
-
-#, no-c-format
-#~ msgid "<term>-d</term>"
-#~ msgstr "<term>-d</term>"
-
-#, no-c-format
-#~ msgid "<term>-p</term>"
-#~ msgstr "<term>-p</term>"
-
-#, no-c-format
-#~ msgid "<term>-?</term>"
-#~ msgstr "<term>-?</term>"
-
-#, no-c-format
-#~ msgid "<term>-I</term>"
-#~ msgstr "<term>-I</term>"
-
-#, no-c-format
-#~ msgid "<term>-e</term>"
-#~ msgstr "<term>-e</term>"
-
-#, no-c-format
-#~ msgid "<term>-G</term>"
-#~ msgstr "<term>-G</term>"
-
-#, no-c-format
-#~ msgid "<term>-r</term>"
-#~ msgstr "<term>-r</term>"
-
-#, no-c-format
-#~ msgid "<term>-C</term>"
-#~ msgstr "<term>-C</term>"
-
-#, no-c-format
-#~ msgid "<term>-x</term>"
-#~ msgstr "<term>-x</term>"
-
-#, no-c-format
-#~ msgid "-s &lt;SRID&gt;"
-#~ msgstr "-s &lt;SRID&gt;"
-
-#, no-c-format
-#~ msgid "-b BAND"
-#~ msgstr "-b ZAKRES"
-
-#, no-c-format
-#~ msgid "-t TILE_SIZE"
-#~ msgstr "-t ROZMIAR_KAFLA"
-
-#, no-c-format
-#~ msgid "-R, --register"
-#~ msgstr "-R, --register"
-
-#, no-c-format
-#~ msgid "-f COLUMN"
-#~ msgstr "-f KOLMUNA"
-
-#, no-c-format
-#~ msgid "<term>-F</term>"
-#~ msgstr "<term>-F</term>"
-
-#, no-c-format
-#~ msgid "<term>-q</term>"
-#~ msgstr "<term>-q</term>"
-
-#, no-c-format
-#~ msgid "<term>-M</term>"
-#~ msgstr "<term>-M</term>"

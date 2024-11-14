@@ -83,7 +83,7 @@ AC_SUBST([PICFLAGS])
 
 _LT_COMPILER_OPTION([if $compiler supports -fno-math-errno], [_cv_nomatherrno], [-fno-math-errno], [], [CFLAGS="$CFLAGS -fno-math-errno"], [])
 _LT_COMPILER_OPTION([if $compiler supports -fno-signed-zeros], [_cv_nosignedzeros], [-fno-signed-zeros], [], [CFLAGS="$CFLAGS -fno-signed-zeros"], [])
-_LT_COMPILER_OPTION([if $compiler supports -std=gnu99], [_cv_std], -std=gnu99, [], [CFLAGS="-std=gnu99 $CFLAGS"], [])
+_LT_COMPILER_OPTION([if $compiler supports -std=gnu11], [_cv_std], -std=gnu11, [], [CFLAGS="-std=gnu11 $CFLAGS"], [])
 
 
 dnl
@@ -481,7 +481,7 @@ AC_CHECK_FUNCS([iconvctl libiconvctl],[],[])
 LDFLAGS="$LDFLAGS_SAVE"
 CFLAGS="$CFLAGS_SAVE"
 
-dnl Only define HAVE_ICONV in postgis_config.h if we detect iconv sucessfully
+dnl Only define HAVE_ICONV in postgis_config.h if we detect iconv successfully
 if test "x$HAVE_ICONV" != "x"; then
 	AC_DEFINE_UNQUOTED([HAVE_ICONV], [$HAVE_ICONV], [Defined if libiconv headers and library are present])
 fi

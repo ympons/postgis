@@ -15,7 +15,7 @@
 #include "c.h" /* for UINT64_FORMAT and uint64 */
 #include "utils/builtins.h" /* for cstring_to_text */
 #include "utils/elog.h"
-#include "utils/memutils.h" /* for TopMemoryContext */
+#include "utils/memutils.h" /* for transaction contexts */
 #include "utils/array.h" /* for ArrayType */
 #include "catalog/pg_type.h" /* for INT4OID, TEXTOID */
 #include "lib/stringinfo.h"
@@ -793,12 +793,9 @@ fillEdgeFields(LWT_ISO_EDGE* edge, HeapTuple row, TupleDesc rowdesc, int fields)
     if ( ! isnull )
     {
       {
-        MemoryContext oldcontext = CurrentMemoryContext;
         geom = (GSERIALIZED *)PG_DETOAST_DATUM(dat);
         lwg = lwgeom_from_gserialized(geom);
-        MemoryContextSwitchTo( TopMemoryContext );
         edge->geom = lwgeom_as_lwline(lwgeom_clone_deep(lwg));
-        MemoryContextSwitchTo( oldcontext ); /* switch back */
         lwgeom_free(lwg);
         if ( DatumGetPointer(dat) != (Pointer)geom ) pfree(geom); /* IF_COPY */
       }
@@ -1525,7 +1522,7 @@ cb_getNodeWithinDistance2D(const LWT_BE_TOPOLOGY *topo,
     else
     {
       lwpgwarning("liblwgeom-topo invoked 'getNodeWithinDistance2D' "
-                  "backend callback with limit=%d and no fields",
+                  "backend callback with limit=%ld and no fields",
                   elems_requested);
       appendStringInfo(sql, "*");
     }
@@ -4106,8 +4103,8 @@ Datum ST_GetFaceGeometry(PG_FUNCTION_ARGS)
   }
 
   /* Serialize in upper memory context (outside of SPI) */
-  /* TODO: use a narrower context to switch to */
-  old_context = MemoryContextSwitchTo( TopMemoryContext );
+  /* TODO: use a narrower context to switch to ? */
+  old_context = MemoryContextSwitchTo( TopTransactionContext );
   geom = geometry_serialize(lwgeom);
   MemoryContextSwitchTo(old_context);
 
@@ -4229,6 +4226,8 @@ Datum ST_GetFaceEdges(PG_FUNCTION_ARGS)
 
   if ( state->curr == state->nelems )
   {
+    if ( state->nelems ) lwfree(state->elems);
+    lwfree( state );
     SRF_RETURN_DONE(funcctx);
   }
 
@@ -5111,6 +5110,7 @@ Datum TopoGeo_AddLinestring(PG_FUNCTION_ARGS)
     tol = PG_GETARG_FLOAT8(2);
     if ( tol < 0 )
     {
+      lwgeom_free(lwgeom);
       PG_FREE_IF_COPY(geom, 1);
       lwpgerror("Tolerance must be >=0");
       PG_RETURN_NULL();
@@ -5118,6 +5118,8 @@ Datum TopoGeo_AddLinestring(PG_FUNCTION_ARGS)
 
     if ( SPI_OK_CONNECT != SPI_connect() )
     {
+      lwgeom_free(lwgeom);
+      PG_FREE_IF_COPY(geom, 1);
       lwpgerror("Could not connect to SPI");
       PG_RETURN_NULL();
     }
@@ -5175,6 +5177,9 @@ Datum TopoGeo_AddLinestring(PG_FUNCTION_ARGS)
   if ( state->curr == state->nelems )
   {
     POSTGIS_DEBUG(1, "We're done, cleaning up all");
+
+    if ( state->nelems ) lwfree(state->elems);
+    lwfree( state );
     SRF_RETURN_DONE(funcctx);
   }
 
@@ -5380,6 +5385,8 @@ Datum TopoGeo_AddPolygon(PG_FUNCTION_ARGS)
   if ( state->curr == state->nelems )
   {
     POSTGIS_DEBUG(1, "We're done, cleaning up all");
+    if ( state->nelems ) lwfree(state->elems);
+    lwfree( state );
     SRF_RETURN_DONE(funcctx);
   }
 
@@ -5503,6 +5510,8 @@ Datum GetRingEdges(PG_FUNCTION_ARGS)
   if ( state->curr == state->nelems )
   {
     POSTGIS_DEBUG(1, "We're done, cleaning up all");
+    if ( state->nelems ) lwfree(state->elems);
+    lwfree( state );
     SRF_RETURN_DONE(funcctx);
   }
 

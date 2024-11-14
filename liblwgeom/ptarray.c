@@ -1596,7 +1596,7 @@ ptarray_remove_repeated_points_in_place(POINTARRAY *pa, double tolerance, uint32
 
 /* Out of the points in pa [itfist .. itlast], finds the one that's farthest away from
  * the segment determined by pts[itfist] and pts[itlast].
- * Returns itfirst if no point was found futher away than max_distance_sqr
+ * Returns itfirst if no point was found further away than max_distance_sqr
  */
 static uint32_t
 ptarray_dp_findsplit_in_place(const POINTARRAY *pts, uint32_t it_first, uint32_t it_last, double max_distance_sqr)
@@ -2088,7 +2088,7 @@ ptarray_startpoint(const POINTARRAY *pa, POINT4D *pt)
  *
  */
 void
-ptarray_grid_in_place(POINTARRAY *pa, const gridspec *grid)
+ptarray_grid_in_place(POINTARRAY *pa, gridspec *grid)
 {
 	uint32_t j = 0;
 	POINT4D *p, *p_out = NULL;
@@ -2108,11 +2108,24 @@ ptarray_grid_in_place(POINTARRAY *pa, const gridspec *grid)
 		if (ndims > 3)
 			m = p->m;
 
-		if (grid->xsize > 0)
-			x = rint((x - grid->ipx) / grid->xsize) * grid->xsize + grid->ipx;
+		/*
+		 * See https://github.com/libgeos/geos/pull/956
+		 * We use scale for rounding when gridsize is < 1 and
+		 * gridsize for rounding when scale < 1.
+		 */
+		if (grid->xsize > 0) {
+			if (grid->xsize < 1)
+				x = rint((x - grid->ipx) * grid->xscale) / grid->xscale + grid->ipx;
+			else
+				x = rint((x - grid->ipx) / grid->xsize) * grid->xsize + grid->ipx;
+		}
 
-		if (grid->ysize > 0)
-			y = rint((y - grid->ipy) / grid->ysize) * grid->ysize + grid->ipy;
+		if (grid->ysize > 0) {
+			if (grid->ysize < 1)
+				y = rint((y - grid->ipy) * grid->yscale) / grid->yscale + grid->ipy;
+			else
+				y = rint((y - grid->ipy) / grid->ysize) * grid->ysize + grid->ipy;
+		}
 
 		/* Read and round this point */
 		/* Z is always in third position */
@@ -2219,7 +2232,7 @@ ptarray_scroll_in_place(POINTARRAY *pa, const POINT4D *pt)
 	/* TODO: reduce allocations */
 	tmp = ptarray_construct(FLAGS_GET_Z(pa->flags), FLAGS_GET_M(pa->flags), pa->npoints);
 
-	bzero(getPoint_internal(tmp, 0), (size_t)ptsize * pa->npoints);
+	memset(getPoint_internal(tmp, 0), 0, (size_t)ptsize * pa->npoints);
 	/* Copy the block from found point to last point into the output array */
 	memcpy(
 		getPoint_internal(tmp, 0),

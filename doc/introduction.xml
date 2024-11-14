@@ -81,7 +81,7 @@
 		<varlistentry>
 			<term>Loïc Bartoletti</term>
 			<listitem>
-			  <para>SFCGAL enhancments and maintenance and ci support</para>
+			  <para>SFCGAL enhancements and maintenance and ci support</para>
 			</listitem>
 		</varlistentry>
 
@@ -252,6 +252,7 @@
 					<member>David Garnier</member>
 					<member>David Skea</member>
 					<member>David Techer</member>
+					<member>Dian M Fay</member>
 					<member>Dmitry Vasilyev</member>
 					<member>Eduin Carrillo</member>
 					<member>Esteban Zimanyi</member>
@@ -382,7 +383,7 @@
 				<listitem><simpara>Maponics</simpara></listitem>
 				<listitem><simpara><link xlink:href="http://www.mtri.org">Michigan Tech Research Institute</link></simpara></listitem>
 				<listitem><simpara><link xlink:href="https://www.nrcan.gc.ca">Natural Resources Canada</link></simpara></listitem>
-				<listitem><simpara>Norwegian Forest and Landscape Institue</simpara></listitem>
+				<listitem><simpara>Norwegian Forest and Landscape Institute</simpara></listitem>
 				<listitem><simpara><link xlink:href="https://www.nibio.no/">Norwegian Institute of Bioeconomy Research (NIBIO)</link></simpara></listitem>
 				<listitem><simpara><link xlink:href="https://www.osgeo.org">OSGeo</link></simpara></listitem>
 				<listitem><simpara><link xlink:href="https://oslandia.com">Oslandia</link></simpara></listitem>

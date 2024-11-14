@@ -57,12 +57,16 @@ fi
 
 sh autogen.sh
 
+# excluding topology cause it's erroring out on some tests
+EXTRA_CONFIGURE_ARGS="${EXTRA_CONFIGURE_ARGS} --without-topology"
+
 if [ -n "$PCRE_VER" ]; then
     export PATH="${PROJECTS}/pcre/rel-${PCRE_VER}w${OS_BUILD}${GCC_TYPE}/include:${PROJECTS}/pcre/rel-${PCRE_VER}w${OS_BUILD}${GCC_TYPE}/lib:${PATH}"
 fi
 
-
-if [[ "${INCLUDE_MINOR_LIB}" == "1" ]] ; then
+if [ $INCLUDE_MINOR_LIB == "1" ]; then
+  EXTRA_CONFIGURE_ARGS="${EXTRA_CONFIGURE_ARGS} --with-library-minor-version"
+fi
 
 #CPPFLAGS="-I${PGPATH}/include -I${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE}/include" \
 #CFLAGS="-Wall -fno-omit-frame-pointer"
@@ -79,20 +83,7 @@ LDFLAGS="-Wl,--enable-auto-import -L${PGPATH}/lib -L${LZ4_PATH}/lib -L${PROJECTS
   --with-gui --with-gettext=no \
   --with-sfcgal=${PROJECTS}/CGAL/rel-sfcgal-${SFCGAL_VER}w${OS_BUILD}${GCC_TYPE}/bin/sfcgal-config \
   --prefix=${PROJECTS}/postgis/liblwgeom-${POSTGIS_VER}w${OS_BUILD}${GCC_TYPE} --with-library-minor-version \
-  --without-topology
-  #exit
-else
-LDFLAGS="-Wl,--enable-auto-import -L${PGPATH}/lib -L${LZ4_PATH}/bin -L${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE}/lib -L${PROJECTS}/zlib/rel-zlib-${ZLIB_VER}w${OS_BUILD}${GCC_TYPE}/lib" \
-./configure \
-  --host=${MINGHOST} --with-xml2config=${PROJECTS}/libxml/rel-libxml2-${LIBXML_VER}w${OS_BUILD}${GCC_TYPE}/bin/xml2-config  \
-  --with-pgconfig=${PGPATH}/bin/pg_config \
-  --with-geosconfig=${PROJECTS}/geos/rel-${GEOS_VER}w${OS_BUILD}${GCC_TYPE}/bin/geos-config \
-  --with-libiconv=${PROJECTS}/rel-libiconv-${ICON_VER}w${OS_BUILD}${GCC_TYPE} \
-  --with-gui --with-gettext=no \
-  --with-sfcgal=${PROJECTS}/CGAL/rel-sfcgal-${SFCGAL_VER}w${OS_BUILD}${GCC_TYPE}/bin/sfcgal-config \
-  --prefix=${PROJECTS}/postgis/liblwgeom-${POSTGIS_VER}w${OS_BUILD}${GCC_TYPE} \
-  --without-topology
-fi;
+  ${EXTRA_CONFIGURE_ARGS}
 
 
 #make distclean
@@ -100,7 +91,7 @@ fi;
 #patch liblwgeom generated make to get rid of dynamic linking
 #sed -i 's/LDFLAGS += -no-undefined//g' liblwgeom/Makefile
 
-make
+make -j 4
 make install
 make check RUNTESTFLAGS=-v
 

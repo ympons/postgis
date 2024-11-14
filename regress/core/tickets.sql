@@ -908,7 +908,7 @@ SELECT '#3355',  ST_Intersects(
          'LINESTRING(124.983539 1.419224,91.181596 29.647798)'::geography
        , ST_Segmentize('LINESTRING(124.983539 1.419224,91.181596 29.647798)'::geography, 47487290)::geography);
 /** NOTE: change seems crazy but PG16s ordering of parenthesis is different from prior versions
-so to accomodate had to add and remove superfluous spaces **/
+so to accommodate had to add and remove superfluous spaces **/
 SELECT '#3356', ST_Summary(wkt::geometry) As wkt_geom,
    ST_Summary(wkt::geography) As wkt_geog,
    ST_Summary(wkt::geometry::geography) As geom_geog
@@ -1509,6 +1509,10 @@ SELECT '#5320', ST_SimplifyPreserveTopology('0106000020E864000001000000010300000
 
 DROP PROCEDURE IF EXISTS p_force_parellel_mode(text);
 SELECT '#5378', ST_SRID( ST_Buffer(ST_GeomFromText('POINT(-94 29.53)', 4269)::geography, 12)::geometry );
+
+SELECT '#5425', ST_AsText(ST_SnapToGrid(
+  ST_SnapToGrid('POINT(1.23456789 9.87654321)'::geometry, 0.001),
+  0.000001) );
 
 SELECT '#5627' AS ticket, bool_and(ST_Intersects(
     'MULTIPOINT(EMPTY,(-378 574))'::geometry,

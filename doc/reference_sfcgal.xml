@@ -913,12 +913,6 @@
     <refsection>
         <title>Description</title>
 
-        <warning>
-            <para>
-                <xref linkend="CG_3DDifference"/> is deprecated as of 3.5.0. Use <xref linkend="CG_3DDifference"/> instead.
-            </para>
-        </warning>
-
         <para>Returns that part of geom1 that is not part of geom2.</para>
         <para role="availability" conformance="3.5.0">Availability: 3.5.0</para>
         <para>&sfcgal_required;</para>
@@ -1407,7 +1401,7 @@ ST_GeomFromText('POLYHEDRALSURFACE Z( ((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0)),
         <refnamediv>
             <refname>CG_3DUnion</refname>
 
-            <refpurpose>Perform 3D union.</refpurpose>
+            <refpurpose>Perform 3D union using postgis_sfcgal.</refpurpose>
         </refnamediv>
 
         <refsynopsisdiv>
@@ -1426,13 +1420,6 @@ ST_GeomFromText('POLYHEDRALSURFACE Z( ((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0)),
 
         <refsection>
             <title>Description</title>
-
-            <warning>
-                <para>
-                    <xref linkend="CG_3DUnion"/> is deprecated as of 3.5.0. Use <xref linkend="CG_3DUnion"/> instead.
-                </para>
-            </warning>
-
 
             <para role="availability" conformance="3.5.0">Availability: 3.5.0</para>
             <para>&sfcgal_required;</para>
@@ -1885,12 +1872,6 @@ ST_GeomFromText('POLYHEDRALSURFACE Z( ((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0)),
 
         <refsection>
             <title>Description</title>
-
-            <warning>
-                <para>
-                    <xref linkend="CG_ConstrainedDelaunayTriangles"/> is deprecated as of 3.5.0. Use <xref linkend="CG_ConstrainedDelaunayTriangles"/> instead.
-                </para>
-            </warning>
 
             <para>
                 Return a <link xlink:href="https://en.wikipedia.org/wiki/Constrained_Delaunay_triangulation">Constrained Delaunay
@@ -2688,7 +2669,7 @@ ST_GeomFromText('POLYHEDRALSURFACE Z( ((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0)),
         <refnamediv>
             <refname>ST_Tesselate</refname>
 
-            <refpurpose>Perform surface Tesselation of a polygon or polyhedralsurface and returns as a TIN or collection of TINS</refpurpose>
+            <refpurpose>Perform surface Tessellation of a polygon or polyhedralsurface and returns as a TIN or collection of TINS</refpurpose>
         </refnamediv>
 
         <refsynopsisdiv>
@@ -2723,7 +2704,7 @@ ST_GeomFromText('POLYHEDRALSURFACE Z( ((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0)),
         <refnamediv>
             <refname>CG_Tesselate</refname>
 
-            <refpurpose>Perform surface Tesselation of a polygon or polyhedralsurface and returns as a TIN or collection of TINS</refpurpose>
+            <refpurpose>Perform surface Tessellation of a polygon or polyhedralsurface and returns as a TIN or collection of TINS</refpurpose>
         </refnamediv>
 
         <refsynopsisdiv>
@@ -2784,7 +2765,7 @@ ST_GeomFromText('POLYHEDRALSURFACE Z( ((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0)),
                                 <imageobject>
                                     <imagedata fileref="images/st_tesselate02.png"/>
                                 </imageobject>
-                                <caption><para>Tesselated Cube with triangles colored</para></caption>
+                                <caption><para>Tessellated Cube with triangles colored</para></caption>
                             </mediaobject>
                     </informalfigure></para>
                 </entry>
@@ -2815,7 +2796,7 @@ ST_GeomFromText('POLYHEDRALSURFACE Z( ((0 0 0, 0 0 1, 0 1 1, 0 1 0, 0 0 0)),
                         <imageobject>
                             <imagedata fileref="images/st_tesselate04.png"/>
                         </imageobject>
-                        <caption><para>Tesselated Polygon</para></caption>
+                        <caption><para>Tessellated Polygon</para></caption>
                     </mediaobject>
             </informalfigure></para>
         </entry>

@@ -8,17 +8,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: postgis 3.5\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2024-07-05 06:17+0000\n"
-"PO-Revision-Date: 2024-02-26 08:45+0000\n"
+"POT-Creation-Date: 2024-09-29 05:23+0000\n"
+"PO-Revision-Date: 2024-11-12 10:47+0000\n"
 "Last-Translator: Andreas Schild <andreas.schild@bfw.gv.at>\n"
-"Language-Team: German <https://weblate.osgeo.org/projects/postgis/postgis-"
-"manual/de/>\n"
+"Language-Team: German <https://weblate.osgeo.org/projects/postgis/"
+"postgis-manual/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.3\n"
+"X-Generator: Weblate 5.4.3\n"
 
 #. Tag: chapter
 #, no-c-format
@@ -62,7 +62,7 @@ msgstr ""
 "Hilfe der entsprechenden <xref linkend=\"PostGIS_GUC\"/> verwenden."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "If you want to enable offline raster:"
 msgstr "Wenn Sie Offline-Raster aktivieren möchten:"
 
@@ -97,7 +97,7 @@ msgstr ""
 "Unter Windows darf die Treiberliste nicht unter Hochkomma gestellt werden"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Setting environment variables varies depending on OS. For PostgreSQL "
 "installed on Ubuntu or Debian via apt-postgresql, the preferred way is to "
@@ -105,12 +105,12 @@ msgid ""
 "<replaceable>main</replaceable>/environment</filename> where 10 refers to "
 "version of PostgreSQL and main refers to the cluster."
 msgstr ""
-"Das Setzen von Umgebungsvariablen variiert je nach Betriebssystem. Für "
-"PostgreSQL, das unter Ubuntu oder Debian über apt-postgresql installiert "
-"wurde, ist der bevorzugte Weg, <filename>/etc/postgresql/<replaceable>10</"
-"replaceable>/<replaceable>main</replaceable>/environment</filename> zu "
-"editieren, wobei sich 10 auf die Version von PostgreSQL und main auf den "
-"Cluster bezieht."
+"Das Setzen von Umgebungsvariablen variiert je nach Betriebssystem. Für eine "
+"PostgreSQL Installation unter Ubuntu oder Debian mit apt-postgresql, sollte "
+"<filename>/etc/postgresql/"
+"<replaceable>10</replaceable>/<replaceable>main</replaceable>/environment</"
+"filename> editiert werden, wobei sich 10 auf die PostgreSQL-Version und main "
+"auf den Cluster bezieht."
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -131,53 +131,53 @@ msgstr ""
 "fügen Sie neue Systemvariablen hinzu."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "After you set the environment variables, you'll need to restart your "
 "PostgreSQL service for the changes to take effect."
 msgstr ""
-"Nachdem Sie die Umgebungsvariablen gesetzt haben, müssen Sie Ihren "
-"PostgreSQL-Dienst neu starten, damit die Änderungen wirksam werden."
+"Nachdem die Umgebungsvariablen gesetzt wurden, muss der PostgreSQL-Dienst "
+"neu gestartet werden, damit die Änderungen wirksam werden."
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Creating spatial databases"
 msgstr "Erstellung räumlicher Datenbanken"
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Spatially enable database using EXTENSION"
-msgstr "Datenbank mit EXTENSION räumlich aktivieren"
+msgstr "Die spatiale Datenbankerweiterung mittels EXTENSION aktivieren"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If you are using PostgreSQL 9.1+ and have compiled and installed the "
 "extensions/postgis modules, you can turn a database into a spatial one using "
 "the EXTENSION mechanism."
 msgstr ""
-"Wenn Sie PostgreSQL 9.1+ verwenden und die Extensions/Postgis-Module "
-"kompiliert und installiert haben, können Sie eine Datenbank mit Hilfe des "
-"EXTENSION-Mechanismus in eine räumliche Datenbank verwandeln."
+"Wenn ab PostgreSQL 9.1 die Extensions/Postgis-Module installiert sind, kann "
+"die Datenbank mit Hilfe des EXTENSION-Mechanismus in eine spatiale Datenbank "
+"verwandelt werden."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Core postgis extension includes geometry, geography, spatial_ref_sys and all "
 "the functions and comments. Raster and topology are packaged as a separate "
 "extension."
 msgstr ""
-"Die Kern-Postgis-Erweiterung enthält Geometrie, Geographie, spatial_ref_sys "
-"und alle Funktionen und Kommentare. Raster und Topologie sind als separate "
-"Erweiterung verpackt."
+"Die Postgis-Erweiterung selbst enthält die Module geometry, geography, "
+"spatial_ref_sys inklusive aller Funktionen und Kommentare. Die Module raster "
+"und topology sind in separate Erweiterungen verpackt."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Run the following SQL snippet in the database you want to enable spatially:"
 msgstr ""
-"Führen Sie das folgende SQL-Snippet in der Datenbank aus, die Sie räumlich "
-"aktivieren möchten:"
+"Um die spatiale Erweiterung in einer Datenbank zu aktivieren, wird der "
+"folgende SQL Befehl ausgeführt:"
 
 #. Tag: title
 #, fuzzy, no-c-format
@@ -186,15 +186,15 @@ msgstr ""
 "Datenbank räumlich aktivieren, ohne EXTENSION zu verwenden (nicht empfohlen)"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This is generally only needed if you cannot or don't want to get PostGIS "
 "installed in the PostgreSQL extension directory (for example during testing, "
 "development or in a restricted environment)."
 msgstr ""
-"Dies ist in der Regel nur notwendig, wenn Sie PostGIS nicht in das "
-"PostgreSQL-Erweiterungsverzeichnis installieren können oder wollen (z.B. "
-"beim Testen, bei der Entwicklung oder in einer eingeschränkten Umgebung)."
+"Dies ist in der Regel nur dann notwendig, wenn PostGIS nicht in das "
+"Erweiterungsverzeichnis von PostgreSQL installiert werden kann oder soll ("
+"wie in einer Test-, Entwicklungs- oder eingeschränkten Umgebung)."
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -289,20 +289,20 @@ msgstr ""
 "und ein HARD UPGRADE-Verfahren für Major-Versionen."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Before attempting to upgrade PostGIS, it is always worth to backup your "
 "data. If you use the -Fc flag to pg_dump you will always be able to restore "
 "the dump with a HARD UPGRADE."
 msgstr ""
-"Bevor Sie versuchen, PostGIS zu aktualisieren, lohnt es sich immer, Ihre "
-"Daten zu sichern. Wenn Sie das Flag -Fc für pg_dump verwenden, können Sie "
-"den Dump bei einem HARD UPGRADE immer wiederherstellen."
+"Bevor PostGIS aktualisiert wird, sollten die Daten unbedingt gesichert "
+"werden. Wenn die Option -Fc beim Befehl pg_dump verwendet wird, kann der "
+"Dump bei einem HARD UPGRADE immer wieder hergestellt werden."
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Soft upgrade"
-msgstr "Sanftes Upgrade"
+msgstr "Sanfte Aktualisierung"
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -318,9 +318,9 @@ msgstr ""
 "auf Erweiterungen umstellen, da das Skript nicht mehr unterstützt wird."
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Soft Upgrade 9.1+ using extensions"
-msgstr "Soft Upgrade 9.1+ mit Erweiterungen"
+msgstr "Sanfte Aktualisierung 9.1+ mittels Erweiterungen"
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -351,14 +351,14 @@ msgstr ""
 "Wenn Sie PostGIS 2.5 oder niedriger verwenden, gehen Sie wie folgt vor:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If you have multiple versions of PostGIS installed, and you don't want to "
 "upgrade to the latest, you can explicitly specify the version as follows:"
 msgstr ""
 "Wenn Sie mehrere Versionen von PostGIS installiert haben und nicht auf die "
-"neueste Version aktualisieren möchten, können Sie die Version wie folgt "
-"explizit angeben:"
+"neueste Version aktualisieren möchten, können Sie die gewünschte Version wie "
+"folgt explizit angeben:"
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -366,7 +366,7 @@ msgid "If you get an error notice something like:"
 msgstr "Wenn Sie eine Fehlermeldung wie diese erhalten:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Then you'll need to backup your database, create a fresh one as described in "
 "<xref linkend=\"create_new_db_extensions\"/> and then restore your backup on "
@@ -374,7 +374,7 @@ msgid ""
 msgstr ""
 "Dann müssen Sie eine Sicherungskopie Ihrer Datenbank anlegen, eine neue "
 "Datenbank erstellen, wie unter <xref linkend=\"create_new_db_extensions\"/> "
-"beschrieben, und dann Ihre Sicherungskopie auf dieser neuen Datenbank "
+"beschrieben, und dann Ihre Sicherungskopie in dieser neuen Datenbank "
 "wiederherstellen."
 
 #. Tag: para
@@ -383,7 +383,7 @@ msgid "If you get a notice message like:"
 msgstr "Wenn Sie eine Meldung wie diese erhalten:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Then everything is already up to date and you can safely ignore it. "
 "<emphasis role=\"bold\">UNLESS</emphasis> you're attempting to upgrade from "
@@ -391,7 +391,7 @@ msgid ""
 "in that case you can append \"next\" to the version string, and next time "
 "you'll need to drop the \"next\" suffix again:"
 msgstr ""
-"Dann ist bereits alles auf dem neuesten Stand und Sie können es getrost "
+"Dann ist bereits alles auf dem neuesten Stand und Sie können das getrost "
 "ignorieren. <emphasis role=\"bold\">Es sei denn,</emphasis> Sie versuchen, "
 "von einer Entwicklungsversion auf die nächste zu aktualisieren (die keine "
 "neue Versionsnummer erhält); in diesem Fall können Sie \"next\" an die "
@@ -412,32 +412,34 @@ msgstr ""
 "hat und somit die neueste Version bei der Wiederherstellung übernimmt."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If you are upgrading PostGIS extension from a version prior to 3.0.0, you "
 "will have a new extension <emphasis>postgis_raster</emphasis> which you can "
 "safely drop, if you don't need raster support. You can drop as follows:"
 msgstr ""
-"Wenn Sie die PostGIS-Erweiterung von einer Version vor 3.0.0 aktualisieren, "
-"erhalten Sie eine neue Erweiterung <emphasis>postgis_raster</emphasis>, die "
-"Sie getrost löschen können, wenn Sie die Rasterunterstützung nicht "
-"benötigen. Sie können sie wie folgt entfernen:"
+"Wenn Sie die PostGIS-Erweiterung von einer Version kleiner 3.0.0 "
+"aktualisieren, erhalten Sie eine neue Erweiterung <emphasis>postgis_raster</"
+"emphasis>, die Sie getrost löschen können, wenn Sie die Rasterunterstützung "
+"nicht benötigen. Sie können diese wie folgt entfernen:"
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Soft Upgrade Pre 9.1+ or without extensions"
-msgstr "Soft Upgrade Pre 9.1+ oder ohne Erweiterungen"
+msgstr ""
+"Sanfte Aktualisierung bei Version kleiner 9.1 oder wenn nicht mittels "
+"Erweiterungen installiert wurde"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This section applies only to those who installed PostGIS not using "
 "extensions. If you have extensions and try to upgrade with this approach "
 "you'll get messages like:"
 msgstr ""
-"Dieser Abschnitt gilt nur für diejenigen, die PostGIS ohne Erweiterungen "
-"installiert haben. Wenn Sie Erweiterungen haben und versuchen, mit diesem "
-"Ansatz zu aktualisieren, erhalten Sie Meldungen wie:"
+"Dieser Abschnitt gilt nur, wenn PostGIS ohne Erweiterungen installiert "
+"wurde. Wenn Erweiterungen existieren und eine Aktualiserung mit diesem "
+"Ansatz versucht wird, erhalten Sie eine Meldungen wie:"
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -2003,7 +2005,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ""
-"integer: definition number? - identifer used for that instance of the word"
+"integer: definition number? - identifier used for that instance of the word"
 msgstr ""
 "Integer: Kennzahl? - Kennung die für diese Instanz des Wortes verwendet wird."
 
@@ -2165,7 +2167,7 @@ msgstr "Verfügbarkeit: 2.2.0"
 
 #. Tag: para
 #, no-c-format
-msgid "Single Addresss"
+msgid "Single Address"
 msgstr "Einzelne Adresse"
 
 #. Tag: para
@@ -3683,7 +3685,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ""
-"<varname>parsed</varname> boolean - denotes if addess was formed from "
+"<varname>parsed</varname> boolean - denotes if address was formed from "
 "normalize process. The normalize_address function sets this to true before "
 "returning the address."
 msgstr ""
@@ -4524,12 +4526,12 @@ msgstr "<varname>error</varname> ist varchar: Gibt die Art des Fehlers an."
 #, no-c-format
 msgid ""
 "Current error descriptors are: coincident nodes, edge crosses node, edge not "
-"simple, edge end node geometry mis-match, edge start node geometry mismatch, "
+"simple, edge end node geometry mismatch, edge start node geometry mismatch, "
 "face overlaps face,face within face,"
 msgstr ""
 "Aktuell existieren folgende Fehlerbeschreibungen: zusammenfallende Knoten/"
 "coincident nodes, Kante ist nicht simple/edge not simple, Kanten- und "
-"Endknotengeometrie stimmen nicht überein/edge end node geometry mis-match, "
+"Endknotengeometrie stimmen nicht überein/edge end node geometry mismatch, "
 "Kanten- und Anfangsknotengeometrie stimmen nicht überein/edge start node "
 "geometry mismatch, Masche überlappt Masche/face overlaps face, Masche "
 "innerhalb einer Masche/face within face."
@@ -5054,8 +5056,8 @@ msgstr ""
 
 #. Tag: entry
 #, no-c-format
-msgid "edge start node geometry mis-match"
-msgstr "edge start node geometry mis-match"
+msgid "edge start node geometry mismatch"
+msgstr "edge start node geometry mismatch"
 
 #. Tag: entry
 #, fuzzy, no-c-format
@@ -5075,8 +5077,8 @@ msgstr ""
 
 #. Tag: entry
 #, no-c-format
-msgid "edge end node geometry mis-match"
-msgstr "edge end node geometry mis-match"
+msgid "edge end node geometry mismatch"
+msgstr "edge end node geometry mismatch"
 
 #. Tag: entry
 #, fuzzy, no-c-format
@@ -5696,19 +5698,17 @@ msgstr ""
 #, no-c-format
 msgid ""
 "Adds a linestring to an existing topology using a tolerance and possibly "
-"splitting existing edges/faces. Returns edge identifiers."
+"splitting existing edges/faces."
 msgstr ""
-"Fügt einen Linienzug, unter Berücksichtigung einer Toleranz, an eine "
-"bestehende Topologie an. Existierende Kanten/Maschen werden eventuell "
-"aufgetrennt. Gibt den Identifikator der Kante aus."
 
 #. Tag: para
 #, no-c-format
 msgid ""
-"Adds a linestring to an existing topology and returns a set of edge "
-"identifiers forming it up. The given line will snap to existing nodes or "
-"edges within given tolerance. Existing edges and faces may be split by the "
-"line. New nodes and faces may be added."
+"Adds a linestring to an existing topology and returns a set of signed edge "
+"identifiers forming it up (negative identifies mean the edge goes in the "
+"opposite direction of the input linestring). The given line will snap to "
+"existing nodes or edges within given tolerance. Existing edges and faces may "
+"be split by the line. New nodes and faces may be added."
 msgstr ""
 
 #. Tag: para
@@ -5720,6 +5720,11 @@ msgstr ""
 "Die Aktualisierung von Statistiken über Topologien, die über diese Funktion "
 "geladen werden, ist Sache des Aufrufers, siehe <xref "
 "linkend=\"Topology_StatsManagement\"/>."
+
+#. Tag: para
+#, no-c-format
+msgid "Enhanced: 3.2.0 added support for returning signed identifier."
+msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -8104,7 +8109,7 @@ msgstr ""
 #, fuzzy, no-c-format
 msgid ""
 "By default <filename>pgtopo_import</filename> reads the dump from the "
-"standard input so that it can be used in conjuction with "
+"standard input so that it can be used in conjunction with "
 "<filename>pgtopo_export</filename> in a pipeline. You can optionally specify "
 "an input filename with the <code>-f</code> commandline switch."
 msgstr ""
@@ -8278,7 +8283,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ""
-"For GEOS functionality, when you install PostgresSQL you may need to "
+"For GEOS functionality, when you install PostgreSQL you may need to "
 "explicitly link PostgreSQL against the standard C++ library:"
 msgstr ""
 "Um die GEOS Funktionen nutzen zu können, muss bei der Installation von "
@@ -10305,7 +10310,7 @@ msgstr "Loïc Bartoletti"
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "SFCGAL enhancments and maintenance and ci support"
+msgid "SFCGAL enhancements and maintenance and ci support"
 msgstr "SFCGAL-Verbesserungen und -Wartung sowie CI-Unterstützung"
 
 #. Tag: term
@@ -11302,7 +11307,7 @@ msgstr "Natürliche Ressourcen Kanada"
 
 #. Tag: simpara
 #, fuzzy, no-c-format
-msgid "Norwegian Forest and Landscape Institue"
+msgid "Norwegian Forest and Landscape Institute"
 msgstr "Norwegisches Institut für Forstwirtschaft und Landschaftspflege"
 
 #. Tag: link
@@ -13503,13 +13508,13 @@ msgid ""
 "Returns true if this Geometry has no anomalous geometric points, such as "
 "self-intersection or self-tangency. For more information on the OGC's "
 "definition of geometry simplicity and validity, refer to <link "
-"linkend=\"OGC_Validity\">\"Ensuring OpenGIS compliancy of geometries\"</link>"
+"linkend=\"OGC_Validity\">\"Ensuring OpenGIS compliance of geometries\"</link>"
 msgstr ""
 "Gibt TRUE zurück, wenn keine regelwidrigen geometrischen Merkmale, wie "
 "Geometrien die sich selbst kreuzen oder berühren, auftreten. Für "
 "weiterführende Information zur OGC-Definition von Simplizität und Gültigkeit "
 "von Geometrien, siehe <link linkend=\"OGC_Validity\">\"Ensuring OpenGIS "
-"compliancy of geometries\"</link>"
+"compliance of geometries\"</link>"
 
 #. Tag: para
 #, no-c-format
@@ -13795,7 +13800,7 @@ msgstr ""
 msgid ""
 "Return the number of points in an ST_LineString or ST_CircularString value. "
 "Prior to 1.4 only works with linestrings as the specs state. From 1.4 "
-"forward this is an alias for ST_NPoints which returns number of vertexes for "
+"forward this is an alias for ST_NPoints which returns number of vertices for "
 "not just linestrings. Consider using ST_NPoints instead which is multi-"
 "purpose and works with many geometry types."
 msgstr ""
@@ -14456,6 +14461,16 @@ msgstr ""
 "Wenn keine Statistiken vorhanden sind (leere Tabelle oder kein ANALYZE-"
 "Aufruf), gibt diese Funktion NULL zurück. Vor Version 1.5.4 wurde "
 "stattdessen eine Ausnahme ausgelöst."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Escaping names for tables and/or namespaces that include special characters "
+"and quotes may require special handling. A user notes: \"For schemas and "
+"tables, use identifier escaping rules to produce a double-quoted string, and "
+"afterwards remove the first and last double-quote character. For geometry "
+"column pass as is.\""
+msgstr ""
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -16138,10 +16153,10 @@ msgstr ""
 msgid ""
 "Creates a rectangular Polygon giving the extent of a tile in the <link xlink:"
 "href=\"https://en.wikipedia.org/wiki/Tiled_web_map\">XYZ tile system</link>. "
-"The tile is specifed by the zoom level Z and the XY index of the tile in the "
-"grid at that level. Can be used to define the tile bounds required by <xref "
-"linkend=\"ST_AsMVTGeom\"/> to convert geometry into the MVT tile coordinate "
-"space."
+"The tile is specified by the zoom level Z and the XY index of the tile in "
+"the grid at that level. Can be used to define the tile bounds required by "
+"<xref linkend=\"ST_AsMVTGeom\"/> to convert geometry into the MVT tile "
+"coordinate space."
 msgstr ""
 "Erzeugt ein rechteckiges Polygon, das die Ausdehnung einer Kachel im <link "
 "xlink:href=\"https://en.wikipedia.org/wiki/Tiled_web_map\">XYZ-Kachelsystem</"
@@ -16729,7 +16744,7 @@ msgstr ""
 msgid ""
 "A window function which simplifies the edges of polygons in a polygonal "
 "coverage. The simplification preserves the coverage topology. This means the "
-"simplified output polygons are consisent along shared edges, and still form "
+"simplified output polygons are consistent along shared edges, and still form "
 "a valid coverage."
 msgstr ""
 "Eine Fensterfunktion, die die Kanten von Polygonen in einer polygonalen "
@@ -16944,7 +16959,7 @@ msgstr "3 == POLYGON"
 #. Tag: para
 #, fuzzy, no-c-format
 msgid ""
-"For atomic geometry inputs, the geometry is retured unchanged if the input "
+"For atomic geometry inputs, the geometry is returned unchanged if the input "
 "type matches the requested type. Otherwise, the result is an EMPTY geometry "
 "of the specified type. If required, these can be converted to multi-"
 "geometries using <xref linkend=\"ST_Multi\"/>."
@@ -17870,7 +17885,7 @@ msgid ""
 "these inputs. As we can set these bits to any value, "
 "<code>ST_QuantizeCoordinates</code> sets the 22 insignificant bits to zero. "
 "For a long coordinate sequence this creates a pattern of blocks of "
-"consecutive zeros that is compressed by PostgreSQL more effeciently."
+"consecutive zeros that is compressed by PostgreSQL more efficiently."
 msgstr ""
 "Wenn 15 signifikante Ziffern verfügbar sind, gibt es viele mögliche "
 "Darstellungen einer Zahl mit 9 signifikanten Ziffern. Eine Gleitkommazahl "
@@ -18046,6 +18061,16 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ""
+"If <code>cartesian_hint</code> is set to <code>true</code>, the algorithm "
+"applies additional optimizations involving cartesian math to further reduce "
+"the resulting point number. Please note that using this option might "
+"introduce rendering artifacts if the resulting coordinates are projected "
+"into another (non-cartesian) coordinate system before rendering."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
 "For polygons, this function does currently not ensure that the result is "
 "valid. This situation can be checked with <xref linkend=\"ST_IsValid\"/> and "
 "repaired with <xref linkend=\"ST_MakeValid\"/>."
@@ -18202,7 +18227,7 @@ msgstr "Gibt die Geometrie in umgekehrter Knotenreihenfolge zurück."
 
 #. Tag: para
 #, no-c-format
-msgid "Can be used on any geometry and reverses the order of the vertexes."
+msgid "Can be used on any geometry and reverses the order of the vertices."
 msgstr ""
 "Kann mit jedem geometrischen Datentyp verwendet werden; kehrt die "
 "Reihenfolge der Knoten um"
@@ -18710,7 +18735,7 @@ msgid ""
 "Bounding boxes are automatically added to geometries so in general this is "
 "not needed unless the generated bounding box somehow becomes corrupted or "
 "you have an old install that is lacking bounding boxes. Then you need to "
-"drop the old and readd."
+"drop the old and re-add."
 msgstr ""
 "Die umschreibenden Rechtecke werden üblicherweise automatisch der Geometrie "
 "beigefügt, so dass es nicht nötig ist dies händisch zu tun, außer das "
@@ -18750,11 +18775,11 @@ msgid ""
 "Bounding boxes are automatically added to geometries and improve speed of "
 "queries so in general this is not needed unless the generated bounding box "
 "somehow becomes corrupted or you have an old install that is lacking "
-"bounding boxes. Then you need to drop the old and readd. This kind of "
+"bounding boxes. Then you need to drop the old and re-add. This kind of "
 "corruption has been observed in 8.3-8.3.6 series whereby cached bboxes were "
 "not always recalculated when a geometry changed and upgrading to a newer "
 "version without a dump reload will not correct already corrupted boxes. So "
-"one can manually correct using below and readd the bbox or do a dump reload."
+"one can manually correct using below and re-add the bbox or do a dump reload."
 msgstr ""
 "Umschreibende Rechtecke werden üblicherweise automatisch der Geometrie "
 "beigefügt, um die Geschwindigkeit von Abfragen zu steigern. Somit ist es "
@@ -22436,7 +22461,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ""
-"The smaller densifyFrac we specify, the more acurate Fréchet distance we "
+"The smaller densifyFrac we specify, the more accurate Fréchet distance we "
 "get. But, the computation time and the memory usage increase with the square "
 "of the number of subsegments."
 msgstr ""
@@ -23004,7 +23029,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ""
-"No vertex is closer than <varname>e</varname> to a line segement of which it "
+"No vertex is closer than <varname>e</varname> to a line segment of which it "
 "is not an endpoint."
 msgstr ""
 "Kein Knoten liegt näher als <varname>e</varname> bei einem Liniensegment, "
@@ -25275,6 +25300,11 @@ msgid "3D geometries are supported:"
 msgstr "3D-Geometrien werden unterstützt:"
 
 #. Tag: para
+#, no-c-format
+msgid "Options argument can be used to add BBOX and CRS in GeoJSON output:"
+msgstr ""
+
+#. Tag: para
 #, fuzzy, no-c-format
 msgid ""
 ", <xref linkend=\"ST_ForcePolygonCCW\"/>, <xref linkend=\"ST_Transform\"/>"
@@ -25344,10 +25374,10 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ""
-"16: Declare that datas are lat/lon (e.g srid=4326). Default is to assume "
-"that data are planars. This option is useful for GML 3.1.1 output only, "
-"related to axis order. So if you set it, it will swap the coordinates so "
-"order is lat lon instead of database lon lat."
+"16: Declare that data are lat/lon (e.g srid=4326). Default is to assume that "
+"data are planars. This option is useful for GML 3.1.1 output only, related "
+"to axis order. So if you set it, it will swap the coordinates so order is "
+"lat lon instead of database lon lat."
 msgstr ""
 "16: Deklarieren, dass die Daten in Breite/Länge (z.B. SRID=4326) vorliegen. "
 "Standardmäßig wird angenommen, dass die Daten planar sind. Diese Option ist "
@@ -25688,7 +25718,7 @@ msgstr ""
 #. Tag: para
 #, fuzzy, no-c-format
 msgid ""
-"Converting a <varname>POINT</varname> to MARC21/XML formated as hdddmmss "
+"Converting a <varname>POINT</varname> to MARC21/XML formatted as hdddmmss "
 "(default)"
 msgstr ""
 "Konvertierung eines <varname>POINT</varname> in MARC21/XML im Format "
@@ -25697,7 +25727,7 @@ msgstr ""
 #. Tag: para
 #, fuzzy, no-c-format
 msgid ""
-"Converting a <varname>POLYGON</varname> to MARC21/XML formated in decimal "
+"Converting a <varname>POLYGON</varname> to MARC21/XML formatted in decimal "
 "degrees"
 msgstr ""
 "Konvertierung eines <varname>POLYGON</varname> in MARC21/XML in dezimaler "
@@ -25706,9 +25736,9 @@ msgstr ""
 #. Tag: para
 #, fuzzy, no-c-format
 msgid ""
-"Converting a <varname>GEOMETRYCOLLECTION</varname> to MARC21/XML formated in "
-"decimal minutes. The geometries order in the MARC21/XML output correspond to "
-"their order in the collection."
+"Converting a <varname>GEOMETRYCOLLECTION</varname> to MARC21/XML formatted "
+"in decimal minutes. The geometries order in the MARC21/XML output correspond "
+"to their order in the collection."
 msgstr ""
 "Konvertierung einer <varname>GEOMETRYCOLLECTION</varname> in MARC21/XML im "
 "Dezimalminutenformat. Die Reihenfolge der Geometrien in der MARC21/XML-"
@@ -27570,8 +27600,8 @@ msgid ""
 "The optional third parameter controls the buffer accuracy and style. The "
 "accuracy of circular arcs in the buffer is specified as the number of line "
 "segments used to approximate a quarter circle (default is 8). The buffer "
-"style can be specifed by providing a list of blank-separated key=value pairs "
-"as follows:"
+"style can be specified by providing a list of blank-separated key=value "
+"pairs as follows:"
 msgstr ""
 "Der optionale dritte Parameter steuert die Genauigkeit und den Stil des "
 "Puffers. Die Genauigkeit der Kreisbögen im Puffer wird als die Anzahl der "
@@ -28047,7 +28077,7 @@ msgstr ""
 #. Tag: para
 #, fuzzy, no-c-format
 msgid ""
-"The result has interpolated values for the Z and M dimenions when present."
+"The result has interpolated values for the Z and M dimensions when present."
 msgstr ""
 "Das Ergebnis enthält interpolierte Werte für die Z- und M-Dimensionen, "
 "sofern vorhanden."
@@ -28772,7 +28802,7 @@ msgid ""
 "input geometry. The circle center is the point in the interior of the "
 "boundary which has the farthest distance from the obstacles. The circle "
 "itself is provided by the center point and a nearest point lying on an "
-"obstacle detemining the circle radius."
+"obstacle determining the circle radius."
 msgstr ""
 "Findet den größten Kreis, der einen Satz von Punkt- und Linienhindernissen "
 "nicht überschneidet. (Polygonale Geometrien können als Hindernisse "
@@ -28878,7 +28908,7 @@ msgstr ""
 #. Tag: para
 #, fuzzy, no-c-format
 msgid ""
-"To compute two points lying on the mimimum circle (the \"maximum diameter\") "
+"To compute two points lying on the minimum circle (the \"maximum diameter\") "
 "use <xref linkend=\"ST_LongestLine\"/>."
 msgstr ""
 "Um zwei Punkte zu berechnen, die auf dem minimalen Kreis (dem \"maximalen "
@@ -29645,7 +29675,7 @@ msgid ""
 "The reduction in vertex count is controlled by the <varname>vertex_fraction</"
 "varname> parameter, which is a number in the range 0 to 1. Lower values "
 "produce simpler results, with smaller vertex count and less concaveness. For "
-"both outer and inner hulls a vertex fraction of 1.0 produces the orginal "
+"both outer and inner hulls a vertex fraction of 1.0 produces the original "
 "geometry. For outer hulls a value of 0.0 produces the convex hull (for a "
 "single polygon); for inner hulls it produces a triangle."
 msgstr ""
@@ -29812,7 +29842,7 @@ msgstr ""
 msgid ""
 "Sets the effective area for each vertex, using the Visvalingam-Whyatt "
 "algorithm. The effective area is stored as the M-value of the vertex. If the "
-"optional \"theshold\" parameter is used, a simplified geometry will be "
+"optional \"threshold\" parameter is used, a simplified geometry will be "
 "returned, containing only vertices with an effective area greater than or "
 "equal to the threshold value."
 msgstr ""
@@ -30552,7 +30582,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid ""
-"<varname>extent</varname> computes extent of whole table and applys "
+"<varname>extent</varname> computes extent of whole table and applies "
 "constraint all rasters must be within that extent"
 msgstr ""
 "<varname>extent</varname> berechnet die räumliche Ausdehnung der ganzen "
@@ -31512,7 +31542,7 @@ msgstr ""
 msgid ""
 "For the <code>nbands</code> as text variant of function, the default "
 "delimiter is <code>,</code> which means you can ask for <code>'1,2,3'</code> "
-"and if you wanted to use a different delimeter you would do "
+"and if you wanted to use a different delimiter you would do "
 "<code>ST_Band(rast, '1@2@3', '@')</code>. For asking for multiple bands, we "
 "strongly suggest you use the array form of this function e.g. "
 "<code>ST_Band(rast, '{1,2,3}'::int[]);</code> since the <code>text</code> "
@@ -35482,13 +35512,12 @@ msgstr "Rasterverarbeitung: Kartenalgebra"
 #. Tag: refpurpose
 #, no-c-format
 msgid ""
-"Returns the raster clipped by the input geometry. If band number not is "
+"Returns the raster clipped by the input geometry. If band number is not "
 "specified, all bands are processed. If <varname>crop</varname> is not "
-"specified or TRUE, the output raster is cropped."
+"specified or TRUE, the output raster is cropped. If <varname>touched</"
+"varname> is set to TRUE, then touched pixels are included, otherwise only if "
+"the center of the pixel is in the geometry it is included."
 msgstr ""
-"Schneidet den Raster nach der Eingabegeometrie. Wenn die Bandnummer nicht "
-"angegeben ist, werden alle Bänder bearbeitet. Wenn <varname>crop</varname> "
-"nicht angegeben oder TRUE ist, wird der Ausgaberaster abgeschnitten."
 
 #. Tag: para
 #, no-c-format
@@ -36127,7 +36156,7 @@ msgstr ""
 msgid ""
 "Band numbers of the raster to be evaluated. nband can be an integer or "
 "integer[] denoting the bands. nband1 is band on rast1 and nband2 is band on "
-"rast2 for hte 2 raster/2band case."
+"rast2 for the 2 raster/2band case."
 msgstr ""
 "Die Nummern der Rasterbänder, die ausgewertet werden sollen. Die Bänder "
 "können über \"nband\" als Integer oder Integer[] angegeben werden. Bei der "
@@ -37382,7 +37411,7 @@ msgstr "Das erste Band Unseres Rasters"
 
 #. Tag: para
 #, no-c-format
-msgid "new raster after averaging pixels withing 4x4 pixels of each other"
+msgid "new raster after averaging pixels within 4x4 pixels of each other"
 msgstr ""
 "neuer Raster mit dem Durchschnittswert der Pixel innerhalb von 4x4 Pixel"
 
@@ -40274,7 +40303,7 @@ msgstr ""
 #. Tag: para
 #, fuzzy, no-c-format
 msgid ""
-"To determine a list of roads that cross a highway, use a query similiar to:"
+"To determine a list of roads that cross a highway, use a query similar to:"
 msgstr ""
 "Um eine Liste von Straßen zu ermitteln, die eine Autobahn kreuzen, verwenden "
 "Sie eine Abfrage, die der folgenden ähnelt:"
@@ -40875,7 +40904,8 @@ msgstr ""
 msgid ""
 "It is better to use a named relationship function if available, since they "
 "automatically use a spatial index where one exists. Also, they may implement "
-"performance optimizations which are not available with full relate evalation."
+"performance optimizations which are not available with full relate "
+"evaluation."
 msgstr ""
 "Es ist besser, eine benannte Beziehungsfunktion zu verwenden, wenn sie "
 "verfügbar ist, da sie automatisch einen räumlichen Index verwendet, wenn "
@@ -42082,6 +42112,11 @@ msgstr ""
 "die Funktionen SUM() und AVG() tun, und wie die meisten Aggregate ignoriert "
 "sie auch NULL-Geometrien."
 
+#. Tag: refpurpose
+#, no-c-format
+msgid "Perform 3D union using postgis_sfcgal."
+msgstr ""
+
 #. Tag: para
 #, no-c-format
 msgid ""
@@ -42696,8 +42731,8 @@ msgstr ""
 #. Tag: refpurpose
 #, fuzzy, no-c-format
 msgid ""
-"Perform surface Tesselation of a polygon or polyhedralsurface and returns as "
-"a TIN or collection of TINS"
+"Perform surface Tessellation of a polygon or polyhedralsurface and returns "
+"as a TIN or collection of TINS"
 msgstr ""
 "Führt eine Oberflächentesselierung eines Polygons oder einer Polyederfläche "
 "durch und gibt diese als TIN oder Sammlung von TINS zurück"
@@ -42740,12 +42775,12 @@ msgstr "ST_AsText-Ausgabe:"
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "Tesselated Cube with triangles colored"
+msgid "Tessellated Cube with triangles colored"
 msgstr "Tessellierter Würfel mit farbigen Dreiecken"
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "Tesselated Polygon"
+msgid "Tessellated Polygon"
 msgstr "Mosaikförmiges Polygon"
 
 #. Tag: para
@@ -43398,7 +43433,7 @@ msgstr ""
 #, fuzzy, no-c-format
 msgid ""
 "Return metadata records for projected coordinate systems that have areas of "
-"useage that fully contain the bounds parameter."
+"usage that fully contain the bounds parameter."
 msgstr ""
 "Gibt Metadatensätze für projizierte Koordinatensysteme zurück, die "
 "Nutzungsbereiche haben, die den Parameter bounds vollständig enthalten."
@@ -43407,7 +43442,7 @@ msgstr ""
 #, fuzzy, no-c-format
 msgid ""
 "Return a set of metadata records for projected coordinate systems that have "
-"areas of useage that fully contain the bounds parameter. Each record will "
+"areas of usage that fully contain the bounds parameter. Each record will "
 "have the <varname>auth_name</varname>, <varname>auth_srid</varname>, "
 "<varname>srname</varname>, <varname>srtext</varname>, <varname>proj4text</"
 "varname>, and the corners of the area of usage, <varname>point_sw</varname> "
@@ -43872,7 +43907,7 @@ msgid ""
 "The three-geometry variant allows a \"false origin\" for the scaling to be "
 "passed in. This allows \"scaling in place\", for example using the centroid "
 "of the geometry as the false origin. Without a false origin, scaling takes "
-"place relative to the actual origin, so all coordinates are just multipled "
+"place relative to the actual origin, so all coordinates are just multiplied "
 "by the scale factor."
 msgstr ""
 "Bei der Variante mit drei Geometrien kann ein \"falscher Ursprung\" für die "
@@ -44146,7 +44181,7 @@ msgstr ""
 #, fuzzy, no-c-format
 msgid ""
 "The representation contains the values <varname>xmin, ymin, zmin, xmax, "
-"ymax, zmax</varname>. These are the minimum and maxium values of the X, Y "
+"ymax, zmax</varname>. These are the minimum and maximum values of the X, Y "
 "and Z extents."
 msgstr ""
 "Die Darstellung enthält die Werte <varname>xmin, ymin, zmin, xmax, ymax, "
@@ -44873,6 +44908,16 @@ msgstr ""
 ">, <xref linkend=\"PostGIS_Version\"/>"
 
 #. Tag: refpurpose
+#, no-c-format
+msgid "Returns the version number of the libjson-c library."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Returns the version number of the LibJSON-C library."
+msgstr ""
+
+#. Tag: refpurpose
 #, fuzzy, no-c-format
 msgid "<refpurpose>Returns build date of the PostGIS library.</refpurpose>"
 msgstr ""
@@ -45126,331 +45171,12 @@ msgstr "Anmerkungen zur Release"
 
 #. Tag: title
 #, no-c-format
-msgid "PostGIS 3.5.0"
+msgid "PostGIS 3.6.0"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "2024/xx/xx"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"This version requires PostgreSQL 12-17, GEOS 3.8 or higher, and Proj 6.1+. "
-"To take advantage of all features, GEOS 3.12+ is needed. To take advantage "
-"of all SFCGAL featurs, SFCGAL 1.5.0+ is needed."
-msgstr ""
-
-#. Tag: para
-#, fuzzy, no-c-format
-msgid "Many thanks to our translation teams, in particular:"
-msgstr "Vielen Dank insbesondere an unsere Übersetzungsteams:"
-
-#. Tag: para
-#, no-c-format
-msgid "Dapeng Wang, Zuo Chenwei from HighGo (Chinese Team)"
-msgstr ""
-
-#. Tag: para
-#, fuzzy, no-c-format
-msgid "Teramoto Ikuhiro (Japanese Team)"
-msgstr "Teramoto Ikuhiro (Japanische Mannschaft)"
-
-#. Tag: para
-#, fuzzy, no-c-format
-msgid "Vincent Bre (French Team)"
-msgstr "Vincent Bre (Französische Mannschaft)"
-
-#. Tag: title
-#, fuzzy, no-c-format
-msgid "Breaking Changes"
-msgstr "Wechselnde Änderungen"
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5546\">#5546</"
-"link>, TopoGeometry &lt;&gt; TopoGeometry is now ambiguous, to get the old "
-"behaviour, assuming your TopoGeometry objects are named tg1 and tg2, use: "
-"( id(tg1) &lt;&gt; id(tg2) OR topology_id(tg1) &lt;&gt; topology_id(tg2) OR "
-"layer_id(tg1) &lt;&gt; layer_id(tg2) OR type(tg1) &lt;&gt; type(tg2) ) "
-"(Sandro Santilli)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5536\">#5536</"
-"link>, comments are not anymore included in PostGIS extensions (Sandro "
-"Santilli)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "xmllint is now required to build comments (Sandro Santilli)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "DocBook5 XSL is now required to build html (Sandro Santilli)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5602\">#5602</"
-"link>, Drop support for GEOS 3.6 and 3.7 (Regina Obe)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5571\">#5571</"
-"link>, Improve ST_GeneratePoints performance, but old seeded pseudo random "
-"points will need to be regenerated."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5596\">#5596</"
-"link>, GH-749, Allow promoting column as an id in ST_AsGeoJson(record,..). "
-"Views and materialized views that use the ST_AsGeoJSON(record ..) will need "
-"rebuilding to upgrade to new signature (Jan Tojnar)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5496\">#5496</"
-"link>, ST_Clip all variants replaced, will require rebuilding of "
-"materialized views that use them (Regina Obe)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5659\">#5659</"
-"link>, ST_DFullyWithin behaviour has changed to be ST_Contains(ST_Buffer(A, "
-"R), B) (Paul Ramsey)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Remove the WFS_locks extra package. (Paul Ramsey)"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Deprecated signatures"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://github.com/postgis/postgis/pull/761\">GH-761</"
-"link>, ST_StraightSkeleton => CG_StraightSkeleton (Loïc Bartoletti)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://git.osgeo.org/gitea/postgis/postgis/"
-"pulls/189\">GH-189</link>, All SFCGAL functions now use the prefix CG_, with "
-"the old ones using ST_ being deprecated. (Loïc Bartoletti)"
-msgstr ""
-
-#. Tag: title
-#, fuzzy, no-c-format
-msgid "New features"
-msgstr "Neue Funktionen"
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"Improvements in the 'postgis' script: <itemizedlist> <listitem><para>new "
-"command list-enabled</para></listitem> <listitem><para>new command list-all</"
-"para></listitem> <listitem><para>command upgrade upgrades all databases that "
-"need to be</para></listitem> <listitem><para>command status reports status "
-"of all databases</para></listitem> </itemizedlist> (Sandro Santilli)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5742\">#5742</"
-"link>, expose version of PROJ at compile time (Sandro Santilli)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5721\">#5721</"
-"link>, postgis_topology: Allow sharing sequences between different "
-"topologies (Lars Opsahl)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5667\">#5667</"
-"link>, postgis_topology: TopoGeo_LoadGeometry (Sandro Santilli)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5055\">#5055</"
-"link>, add explicit &lt;&gt; geometry operator to prevent non-unique error "
-"with &lt;&gt; and &#x21;= (Paul Ramsey)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Add ST_HasZ/ST_HasM (Loïc Bartoletti)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://git.osgeo.org/gitea/postgis/postgis/"
-"pulls/123\">GT-123</link>, postgis_sfcgal: CG_YMonotonePartition, "
-"CG_ApproxConvexPartition, CG_GreeneApproxConvexPartition and "
-"CG_OptimalConvexPartition (Loïc Bartoletti)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://git.osgeo.org/gitea/postgis/postgis/"
-"pulls/156\">GT-156</link>, postgis_sfcgal: CG_Visibility (Loïc Bartoletti)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://git.osgeo.org/gitea/postgis/postgis/"
-"pulls/157\">GT-157</link>, postgis_sfcgal: Add ST_ExtrudeStraightSkeleton "
-"(Loïc Bartoletti)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5496\">#5496</"
-"link>, postgis_raster: ST_Clip support for touched (Regina Obe)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://github.com/postgis/postgis/pull/760\">GH-760</"
-"link>, postgis_sfcgal: CG_Intersection, CG_3DIntersects, CG_Intersects, "
-"CG_Difference, CG_Union (and aggregate), CG_Triangulate, CG_Area, "
-"CG_3DDistance, CG_Distance (Loïc Bartoletti)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5687\">#5687</"
-"link>, Don't rely on search_path to determine postgis schema Fix for PG17 "
-"security change (Regina Obe)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5705\">#5705</"
-"link>, <link xlink:href=\"https://github.com/postgis/postgis/"
-"pull/767\">GH-767</link>, ST_RemoveIrrelevantPointsForView (Sam Peters)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5706\">#5706</"
-"link>, <link xlink:href=\"https://github.com/postgis/postgis/"
-"pull/768\">GH-768</link>, ST_RemoveSmallParts (Sam Peters)"
-msgstr ""
-
-#. Tag: title
-#, fuzzy, no-c-format
-msgid "Enhancements"
-msgstr "Erweiterungen"
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/3587\">#3587</"
-"link>, postgis_topology: faster load of big lines in topologies (Sandro "
-"Santilli)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5670\">#5670</"
-"link>, postgis_topology: faster ST_CreateTopoGeo (Sandro Santilli)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5531\">#5531</"
-"link>, documentation format upgraded to DocBook 5 (Sandro Santilli)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5543\">#5543</"
-"link>, allow building without documentation (Sandro Santilli)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5596\">#5596</"
-"link>, <link xlink:href=\"https://github.com/postgis/postgis/"
-"pull/749\">GH-749</link>, Allow promoting column as an id in "
-"ST_AsGeoJson(record,..). (Jan Tojnar)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://github.com/postgis/postgis/pull/744\">GH-744</"
-"link>, Don't create docbook.css for the HTML manual, use style.css instead "
-"(Chris Mayo)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Faster implementation of point-in-poly cached index (Paul Ramsey)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Improve performance of ST_GeneratePoints (Paul Ramsey)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://trac.osgeo.org/postgis/ticket/5361\">#5361</"
-"link>, ST_CurveN, ST_NumCurves and consistency in accessors on curved "
-"geometry (Paul Ramsey)"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid ""
-"<link xlink:href=\"https://github.com/postgis/postgis/pull/761\">GH-761</"
-"link>, postgis_sfcgal: Add an optional parameter to CG_StraightSkeleton (was "
-"ST_StraightSkeleton) to use m as a distance in result (Hannes Janetzek, Loïc "
-"Bartoletti)"
+msgid "2025/xx/xx"
 msgstr ""
 
 #. Tag: title
@@ -47378,7 +47104,7 @@ msgstr "Ein <varname>POLYGON</varname> ist <emphasis>gültig</emphasis> wenn:"
 msgid ""
 "the polygon boundary rings (the exterior shell ring and interior hole rings) "
 "are <emphasis>simple</emphasis> (do not cross or self-touch). Because of "
-"this a polygon cannnot have cut lines, spikes or loops. This implies that "
+"this a polygon cannot have cut lines, spikes or loops. This implies that "
 "polygon holes must be represented as interior rings, rather than by the "
 "exterior ring self-touching (a so-called \"inverted hole\")."
 msgstr ""
@@ -50461,7 +50187,7 @@ msgstr ""
 msgid ""
 "This query takes a while, because every road in the table is summarized into "
 "the final result (about 250K roads for the example table). For smaller "
-"datsets (several thousand records on several hundred) the response can be "
+"datasets (several thousand records on several hundred) the response can be "
 "very fast."
 msgstr ""
 "Diese Abfrage dauert eine Weile, da jede Straße in der Tabelle im "
@@ -51957,6 +51683,50 @@ msgid "Supports geography"
 msgstr "Unterstützt Geographie"
 
 #, fuzzy, no-c-format
+#~ msgid "Many thanks to our translation teams, in particular:"
+#~ msgstr "Vielen Dank insbesondere an unsere Übersetzungsteams:"
+
+#, fuzzy, no-c-format
+#~ msgid "Teramoto Ikuhiro (Japanese Team)"
+#~ msgstr "Teramoto Ikuhiro (Japanische Mannschaft)"
+
+#, fuzzy, no-c-format
+#~ msgid "Vincent Bre (French Team)"
+#~ msgstr "Vincent Bre (Französische Mannschaft)"
+
+#, fuzzy, no-c-format
+#~ msgid "Breaking Changes"
+#~ msgstr "Wechselnde Änderungen"
+
+#, fuzzy, no-c-format
+#~ msgid "New features"
+#~ msgstr "Neue Funktionen"
+
+#, fuzzy, no-c-format
+#~ msgid "Enhancements"
+#~ msgstr "Erweiterungen"
+
+#, no-c-format
+#~ msgid ""
+#~ "Adds a linestring to an existing topology using a tolerance and possibly "
+#~ "splitting existing edges/faces. Returns edge identifiers."
+#~ msgstr ""
+#~ "Fügt einen Linienzug, unter Berücksichtigung einer Toleranz, an eine "
+#~ "bestehende Topologie an. Existierende Kanten/Maschen werden eventuell "
+#~ "aufgetrennt. Gibt den Identifikator der Kante aus."
+
+#, no-c-format
+#~ msgid ""
+#~ "Returns the raster clipped by the input geometry. If band number not is "
+#~ "specified, all bands are processed. If <varname>crop</varname> is not "
+#~ "specified or TRUE, the output raster is cropped."
+#~ msgstr ""
+#~ "Schneidet den Raster nach der Eingabegeometrie. Wenn die Bandnummer nicht "
+#~ "angegeben ist, werden alle Bänder bearbeitet. Wenn <varname>crop</"
+#~ "varname> nicht angegeben oder TRUE ist, wird der Ausgaberaster "
+#~ "abgeschnitten."
+
+#, fuzzy, no-c-format
 #~ msgid ""
 #~ "GDAL, version 2+ is required 3+ is preferred. This is required for raster "
 #~ "support. <link xlink:href=\"https://gdal.org/download.html\">https://gdal."
@@ -52007,7 +51777,7 @@ msgstr "Unterstützt Geographie"
 #~ msgid ""
 #~ "This version requires PostgreSQL 12-16, GEOS 3.6 or higher, and Proj "
 #~ "6.1+. To take advantage of all features, GEOS 3.12+ is needed. To take "
-#~ "advantage of all SFCGAL featurs, SFCGAL 1.4.1+ is needed."
+#~ "advantage of all SFCGAL features, SFCGAL 1.4.1+ is needed."
 #~ msgstr ""
 #~ "Diese Version benötigt PostgreSQL 12-16, GEOS 3.6 oder höher, und Proj "
 #~ "6.1+. Um alle Funktionen nutzen zu können, ist GEOS 3.12+ erforderlich. "

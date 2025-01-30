@@ -13,3 +13,8 @@ PostGIS 3.6.0
   - #1247, ST_AsRasterAgg (Sandro Santilli)
   - #5784, GT-223 Export circ_tree_distance_tree_internal for mobilitydb use
            (Maxime Schoemans)
+  - GT-228 Add new functions (Scale, Translate, Rotate, Buffer 3D and
+           Straight Skeleton Partition) from SFCGAL 2 (Loïc Bartoletti)
+  - New GUC postgis.gdal_cpl_debug, enables GDAL debugging messages
+    and routes them into the PostgreSQL logging system. (Paul Ramsey)
+  - #5841, Change interrupt handling to remove use of pqsignal (Paul Ramsey)
